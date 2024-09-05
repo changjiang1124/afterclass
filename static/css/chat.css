@@ -1,0 +1,95 @@
+/* 基本样式 */
+
+.container {
+    max-width: 800px;
+}
+
+.chat-box {
+    height: 60vh;
+    overflow-y: auto;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.sticky-bottom {
+    position: sticky;
+    bottom: 0;
+    background-color: #fff;
+    padding: 10px 0;
+    border-top: 1px solid #ddd;
+}
+
+.message {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.message.user {
+    background-color: #e9ecef;
+}
+
+.message.ai {
+    background-color: #d1e7dd;
+}
+
+/* Markdown 内容样式 */
+.message h1, .message h2, .message h3, .message h4, .message h5, .message h6 {
+    font-size: 1.2em;
+    margin: 0.5em 0;
+}
+
+.message p {
+    margin: 0.5em 0;
+    font-size: 1em;
+}
+
+.message code {
+    background-color: #f8f9fa;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.message pre {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    overflow-x: auto;
+}
+
+.message blockquote {
+    border-left: 4px solid #ddd;
+    padding-left: 10px;
+    margin: 0.5em 0;
+    color: #555;
+}
+
+.message ul, .message ol {
+    margin: 0.5em 0;
+    padding-left: 20px;
+}
+
+.message a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.message a:hover {
+    text-decoration: underline;
+}
+
+.placeholder {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
+}
+
+.speak-button {
+    vertical-align: top;
+}

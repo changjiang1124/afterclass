@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <h2>AI Staff List</h2>
+    <div class="row">
+        {% for chatbot in chatbots %}
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-img-container">
+                        <img src="{{ chatbot.banner.url }}" class="card-img-top" alt="{{ chatbot.title }}">
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ chatbot.title }}</h5>
+                        <p class="card-text">{{ chatbot.description }}</p>
+                        <a href="{% url 'chatbots:chatbot_detail' chatbot.id %}" class="btn btn-primary">Start Chat</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/chatbot_list.css' %}">
+{% endblock %}

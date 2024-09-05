@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container d-flex flex-column" style="height: 100vh;">
+    <h2 class="text-center my-4">{{ chatbot.title }}</h2>
+    <div id="chat-box" class="chat-box flex-grow-1">
+        {% for conversation in conversations %}
+            <div class="message user">
+                <strong>You:</strong> {{ conversation.message }}
+            </div>
+            <div class="message ai">
+                <strong>AI:</strong> {{ conversation.response|safe }}
+            </div>
+        {% endfor %}
+    </div>
+    <div class="sticky-bottom">
+        <form id="chat-form" method="post" class="mt-3">
+            {% csrf_token %}
+            <div class="input-group">
+                <input type="text" class="form-control" id="message" name="message" placeholder="Sending..." required>
+                <div class="input-group-append">
+                    <button type="submit" class="btn btn-primary">Send</button>
+                </div>
+            </div>
+        </form>
+        <form method="post" action="{% url 'chatbots:clear_conversation' chatbot.id %}" class="mt-3">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Clear Conversation</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/chat.js' %}"></script>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/chat.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+{% endblock %}
