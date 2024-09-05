@@ -37,7 +37,7 @@ if socket.gethostname() == 'CJs-MBP-1421.local':
 else:
     DEBUG = False
 
-ALLOWED_HOSTS = ['aistaff.bytepulse.com.au', '127.0.0.1', 'afterclass.tongcove.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'afterclass.tongcove.com']
 
 
 # Application definition
