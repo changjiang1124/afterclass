@@ -1,0 +1,52 @@
+:root {
+  --primary-color: #8e44ad;
+  --secondary-color: #f3e5f5;
+  --text-color: #333;
+  --light-text-color: #fff;
+}
+
+body {
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+}
+
+.navbar {
+  background-color: var(--primary-color) !important;
+}
+
+.navbar-light .navbar-brand,
+.navbar-light .navbar-nav .nav-link {
+  color: var(--light-text-color) !important;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: #6c3483;
+  border-color: #6c3483;
+}
+
+.card {
+  border-color: var(--primary-color);
+}
+
+.card-header {
+  background-color: var(--primary-color);
+  color: var(--light-text-color);
+}
+
+.chat-box {
+  background-color: #fff;
+  border: 1px solid var(--primary-color);
+}
+
+.message.user {
+  background-color: #e8daef;
+}
+
+.message.ai {
+  background-color: #d5f5e3;
+}
