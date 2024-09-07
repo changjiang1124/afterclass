@@ -6,6 +6,8 @@ from django.http import JsonResponse
 import markdown
 from django.conf import settings
 import re
+from django.http import HttpResponse
+import io
 
 @login_required
 def chatbot_list(request):
@@ -70,3 +72,21 @@ def clear_conversation(request, chatbot_id):
     chatbot = get_object_or_404(Chatbot, id=chatbot_id)
     Conversation.objects.filter(user=request.user, chatbot=chatbot).delete()
     return redirect('chatbots:chatbot_detail', chatbot_id=chatbot_id)
+
+
+
+def text_to_speech(request):
+    if request.method == 'POST':
+        text = request.POST.get('text', '')
+        voice = request.POST.get('voice', 'alloy')
+
+        client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        response = client.audio.speech.create(
+            model="tts-1",
+            voice=voice,
+            input=text
+        )
+
+        audio_content = io.BytesIO(response.content)
+        return HttpResponse(audio_content, content_type='audio/mpeg')
+    return HttpResponse("Invalid request", status=400)

@@ -8,29 +8,27 @@ $(document).ready(function() {
     }
 
     function speakMessage(text) {
-        const utterance = new SpeechSynthesisUtterance(text);
+        var voice = /[\u4e00-\u9fa5]/.test(text) ? 'shimmer' : 'alloy';
         
-        // 检测语言
-        if (/[\u4e00-\u9fa5]/.test(text)) {
-            utterance.lang = 'zh-CN'; // 中文
-        } else {
-            utterance.lang = 'en-US'; // 英文
-        }
-        
-        // 设置语速和音调
-        utterance.rate = 1.0; // 正常语速
-        utterance.pitch = 1.0; // 正常音调
-        
-        // 获取可用的语音
-        let voices = speechSynthesis.getVoices();
-        
-        // 选择合适的语音
-        let voice = voices.find(voice => voice.lang === utterance.lang && voice.name.includes('Google'));
-        if (voice) {
-            utterance.voice = voice;
-        }
-        
-        speechSynthesis.speak(utterance);
+        $.ajax({
+            url: '/chatbots/tts/',
+            method: 'POST',
+            data: {
+                text: text,
+                voice: voice,
+                csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+            },
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: function(data) {
+                var audio = new Audio(URL.createObjectURL(data));
+                audio.play();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error("Error in text-to-speech: ", textStatus, errorThrown);
+            }
+        });
     }
 
     function addSpeakButton(messageElement) {
@@ -54,7 +52,7 @@ $(document).ready(function() {
 
         var messageElement = $('<div>')
             .addClass('message ' + messageClass)
-            .html('<strong>' + senderName + ':</strong> <span class="message-text">' + content + '</span>');
+            .html('</strong> <span class="message-text">' + content + '</span>');
 
         if (isAI) {
             addSpeakButton(messageElement);
@@ -116,3 +114,35 @@ $(document).ready(function() {
 speechSynthesis.onvoiceschanged = () => {
     voices = speechSynthesis.getVoices();
 };
+
+function addAIResponse(response) {
+    var responseHtml = '<div class="message ai">' +
+        '<span class="message-text"></span>' +
+        '<button class="btn btn-sm btn-outline-secondary ml-2 speak-button">' +
+        '<i class="fas fa-volume-up"></i></button></div>';
+    var $responseElement = $(responseHtml);
+    chatBox.append($responseElement);
+    scrollToBottom();
+    
+    // 模拟打字效果
+    var $messageText = $responseElement.find('.message-text');
+    var words = response.split(' ');
+    var i = 0;
+    var intervalId = setInterval(function() {
+        if (i < words.length) {
+            var $word = $('<span class="typed-word">').text(words[i] + ' ');
+            $messageText.append($word);
+            $word.animate({opacity: 1}, 100); // 淡入效果
+            scrollToBottom();
+            i++;
+        } else {
+            clearInterval(intervalId);
+            $responseElement.find('.speak-button').fadeIn(300);
+        }
+    }, 50); // 调整这个数值可以改变"打字"速度
+
+    // 添加语音功能
+    $responseElement.find('.speak-button').click(function() {
+        speakMessage(response);
+    });
+}

@@ -41,6 +41,8 @@
     background-color: #ffffff;
     align-self: flex-start;
     margin-right: auto;
+    opacity: 0;
+    animation: fadeIn 0.5s forwards;
 }
 
 /* Markdown 内容样式 */
@@ -112,6 +114,11 @@
     100% { opacity: 0.5; }
 }
 
+.typed-word {
+    opacity: 0;
+    transition: opacity 0.1s;
+}
+
 .speak-button {
     background-color: transparent;
     border: none;
@@ -126,11 +133,18 @@
     color: #0056b3;
 }
 
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 .chat-input {
     background-color: #fff;
     border-radius: 25px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     overflow: hidden;
+    display: flex;
+    align-items: center;
 }
 
 .chat-input .form-control {
@@ -139,25 +153,27 @@
     padding: 12px 20px;
     font-size: 16px;
     background-color: transparent;
+    height: auto;
+    line-height: 1.5;
 }
 
 .chat-input .form-control:focus {
     outline: none;
 }
 
-.chat-input .btn-primary {
-    border: none;
-    background-color: #8e44ad;
-    color: #fff;
-    padding: 12px 20px;
-    font-size: 18px;
-    transition: background-color 0.3s ease;
-}
-
-.chat-input .btn-primary:hover {
-    background-color: #732d91;
+.chat-input .input-group-append {
+    margin-left: 0;
 }
 
 .send-button {
     border-radius: 0 25px 25px 0;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.send-button i {
+    font-size: 18px;
 }
