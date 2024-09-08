@@ -1,52 +1,81 @@
 :root {
-  --primary-color: #8e44ad;
-  --secondary-color: #f3e5f5;
-  --text-color: #333;
-  --light-text-color: #fff;
+  --primary-color: #333333;
+  --secondary-color: #f5f5f5;
+  --accent-color: #6c5ce7;
+  --text-color: #333333;
+  --light-text-color: #ffffff;
+  --border-radius: 12px;
 }
 
 body {
   background-color: var(--secondary-color);
   color: var(--text-color);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .navbar {
-  background-color: var(--primary-color) !important;
+  background-color: var(--light-text-color) !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 .navbar-light .navbar-brand,
 .navbar-light .navbar-nav .nav-link {
-  color: var(--light-text-color) !important;
+  color: var(--primary-color) !important;
 }
 
 .btn-primary {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  border-radius: var(--border-radius);
 }
 
 .btn-primary:hover {
-  background-color: #6c3483;
-  border-color: #6c3483;
+  background-color: #5649c0;
+  border-color: #5649c0;
 }
 
 .card {
-  border-color: var(--primary-color);
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
 }
 
 .card-header {
-  background-color: var(--primary-color);
-  color: var(--light-text-color);
+  background-color: var(--light-text-color);
+  color: var(--primary-color);
+  border-bottom: 1px solid #eaeaea;
 }
 
 .chat-box {
-  background-color: #fff;
-  border: 1px solid var(--primary-color);
+  background-color: var(--light-text-color);
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 .message.user {
-  background-color: #e8daef;
+  background-color: #e8f0fe;
+  border-radius: var(--border-radius);
 }
 
 .message.ai {
-  background-color: #d5f5e3;
+  background-color: #f0f4f8;
+  border-radius: var(--border-radius);
+}
+
+.chat-input {
+  border-radius: var(--border-radius);
+}
+
+.send-button {
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+.container {
+  max-width: 1200px;
 }

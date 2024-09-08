@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'accounts',
     'chatbots',
+    'dashboard',
 ]
 
 MIDDLEWARE = [
@@ -144,4 +145,4 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Login redirect configuration
 LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/chatbots/'
+LOGIN_REDIRECT_URL = '/dashboard/'

@@ -25,5 +25,6 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('chatbots/', include('chatbots.urls')),
     # 添加以下行来设置默认页面
-    path('', RedirectView.as_view(url='/chatbots/', permanent=True)),
+    path('', RedirectView.as_view(url='/dashboard/', permanent=True)),
+    path('dashboard/', include('dashboard.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

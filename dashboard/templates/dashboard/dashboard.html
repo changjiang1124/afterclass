@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">欢迎回来, {{ user.username }}!</h2>
+    <div class="row">
+        {% for feature in features %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100" style="background-color: {{ feature.color }};">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="feature-label mr-2">{{ feature.label }}</div>
+                            <h5 class="card-title mb-0">{{ feature.title }}</h5>
+                        </div>
+                        <p class="card-text">{{ feature.description }}</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-0">
+                        <a href="{{ feature.link }}" class="btn btn-primary btn-block">进入</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
