@@ -10,3 +10,19 @@
     object-fit: cover;
     object-position: center;
 }
+
+.centered-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.card-column {
+    display: flex;
+    justify-content: center;
+}
+
+.card {
+    width: 100%;
+    max-width: 350px;
+}

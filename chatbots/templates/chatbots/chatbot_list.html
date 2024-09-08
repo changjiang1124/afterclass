@@ -4,9 +4,9 @@
 {% block content %}
 <div class="container mt-4">
     <h2 class="text-center mb-4" style="color: var(--primary-color);">Chinese Learning Assistants</h2>
-    <div class="row">
+    <div class="row centered-row">
         {% for chatbot in chatbots %}
-            <div class="col-md-4 mb-4">
+            <div class="col-md-4 mb-4 card-column">
                 <div class="card">
                     <div class="card-img-container">
                         <img src="{{ chatbot.banner.url }}" class="card-img-top" alt="{{ chatbot.title }}">

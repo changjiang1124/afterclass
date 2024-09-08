@@ -7,8 +7,27 @@ $(document).ready(function() {
         chatBox.scrollTop(chatBox[0].scrollHeight);
     }
 
-    function speakMessage(text) {
+    let currentAudio = null;
+
+    function speakMessage(text, button) {
+        if (currentAudio) {
+            currentAudio.pause();
+            $(currentAudio.dataset.button).removeClass('speaking requesting');
+            if (currentAudio.dataset.buttonId === button.id) {
+                currentAudio = null;
+                return;
+            }
+        }
+
+        // 确保文本不为空
+        if (!text.trim()) {
+            console.error("Empty text, cannot synthesize speech");
+            return;
+        }
+
         var voice = /[\u4e00-\u9fa5]/.test(text) ? 'shimmer' : 'alloy';
+        
+        $(button).addClass('requesting');
         
         $.ajax({
             url: '/chatbots/tts/',
@@ -22,11 +41,21 @@ $(document).ready(function() {
                 responseType: 'blob'
             },
             success: function(data) {
-                var audio = new Audio(URL.createObjectURL(data));
-                audio.play();
+                $(button).removeClass('requesting').addClass('speaking');
+                currentAudio = new Audio(URL.createObjectURL(data));
+                currentAudio.dataset.buttonId = button.id;
+                currentAudio.dataset.button = button;
+                currentAudio.play();
+                currentAudio.onended = function() {
+                    $(button).removeClass('speaking');
+                    currentAudio = null;
+                };
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                console.error("Error in text-to-speech: ", textStatus, errorThrown);
+                $(button).removeClass('requesting speaking');
+                console.error("Error in text-to-speech:", textStatus, errorThrown);
+                // 打印响应内容
+                console.error("Response:", jqXHR.responseText);
             }
         });
     }
@@ -43,7 +72,7 @@ $(document).ready(function() {
 
     $(document).on('click', '.speak-button', function() {
         const messageText = $(this).siblings('.message-text').text();
-        speakMessage(messageText);
+        speakMessage(messageText, this);
     });
 
     function addMessage(sender, content, isAI = false) {
@@ -116,10 +145,12 @@ speechSynthesis.onvoiceschanged = () => {
 };
 
 function addAIResponse(response) {
+    var uniqueId = 'speak-' + Date.now();
     var responseHtml = '<div class="message ai">' +
         '<span class="message-text"></span>' +
-        '<button class="btn btn-sm btn-outline-secondary ml-2 speak-button">' +
-        '<i class="fas fa-volume-up"></i></button></div>';
+        '<button id="' + uniqueId + '" class="btn btn-sm btn-outline-secondary ml-2 speak-button">' +
+        '<i class="fas fa-volume-up"></i>' +
+        '<span class="status-dot"></span></button></div>';
     var $responseElement = $(responseHtml);
     chatBox.append($responseElement);
     scrollToBottom();
@@ -139,10 +170,10 @@ function addAIResponse(response) {
             clearInterval(intervalId);
             $responseElement.find('.speak-button').fadeIn(300);
         }
-    }, 50); // 调整这个数值可以改变"打字"速度
+    }, 50); // 调整这个数值可以改变"��字"速度
 
     // 添加语音功能
     $responseElement.find('.speak-button').click(function() {
-        speakMessage(response);
+        speakMessage(response, this);
     });
 }

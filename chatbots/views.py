@@ -8,6 +8,7 @@ from django.conf import settings
 import re
 from django.http import HttpResponse
 import io
+from aip import AipSpeech
 
 @login_required
 def chatbot_list(request):
@@ -74,19 +75,50 @@ def clear_conversation(request, chatbot_id):
     return redirect('chatbots:chatbot_detail', chatbot_id=chatbot_id)
 
 
+# openai tts
+# def text_to_speech(request):
+#     if request.method == 'POST':
+#         text = request.POST.get('text', '')
+#         voice = request.POST.get('voice', 'alloy')
+
+#         client = OpenAI(api_key=settings.OPENAI_API_KEY)
+#         response = client.audio.speech.create(
+#             model="tts-1",
+#             voice=voice,
+#             input=text
+#         )
+
+#         audio_content = io.BytesIO(response.content)
+#         return HttpResponse(audio_content, content_type='audio/mpeg')
+#     return HttpResponse("Invalid request", status=400)
+
+
 
 def text_to_speech(request):
     if request.method == 'POST':
         text = request.POST.get('text', '')
-        voice = request.POST.get('voice', 'alloy')
+        
+        # 替换为你的百度 API 密钥
+        APP_ID = '115502863'
+        API_KEY = 'rq7cYlg8xnSDLCopaUdxEkll'
+        SECRET_KEY = 'VY3VuptumfY7H553oeKJSD5R9ijNuzxw'
 
-        client = OpenAI(api_key=settings.OPENAI_API_KEY)
-        response = client.audio.speech.create(
-            model="tts-1",
-            voice=voice,
-            input=text
-        )
+        client = AipSpeech(APP_ID, API_KEY, SECRET_KEY)
+        auth_resp = client._auth()
+        if isinstance(auth_resp, dict) and 'access_token' in auth_resp:
+            print("Access token obtained successfully")
+        else:
+            print("Failed to obtain access token:", auth_resp)
+        
+        result = client.synthesis(text, 'zh', 1, {
+            'spd': 5,  # 语速
+            'pit': 5,  # 音调
+            'vol': 5,  # 音量
+            'per': 4,  # 发音人, 4 为情感合成-度丫丫
+        })
 
-        audio_content = io.BytesIO(response.content)
-        return HttpResponse(audio_content, content_type='audio/mpeg')
+        if not isinstance(result, dict):
+            return HttpResponse(result, content_type='audio/mp3')
+        else:
+            return HttpResponse("语音合成失败", status=400)
     return HttpResponse("Invalid request", status=400)
