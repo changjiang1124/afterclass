@@ -9,6 +9,9 @@ import re
 from django.http import HttpResponse
 import io
 from aip import AipSpeech
+import logging
+
+logger = logging.getLogger(__name__)
 
 @login_required
 def chatbot_list(request):
@@ -97,6 +100,7 @@ def clear_conversation(request, chatbot_id):
 def text_to_speech(request):
     if request.method == 'POST':
         text = request.POST.get('text', '')
+        logger.info(f"Received TTS request for text: {text[:50]}...")  # 记录前50个字符
         
         # 替换为你的百度 API 密钥
         APP_ID = '115502863'
@@ -118,7 +122,10 @@ def text_to_speech(request):
         })
 
         if not isinstance(result, dict):
+            logger.info("TTS synthesis successful")
             return HttpResponse(result, content_type='audio/mp3')
         else:
+            logger.error(f"TTS synthesis failed: {result}")
             return HttpResponse("语音合成失败", status=400)
+    logger.warning("Invalid TTS request method")
     return HttpResponse("Invalid request", status=400)

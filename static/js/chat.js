@@ -8,33 +8,36 @@ $(document).ready(function() {
     }
 
     let currentAudio = null;
+    let currentButton = null;
 
     function speakMessage(text, button) {
+        // 如果有正在播放的音频，停止它
         if (currentAudio) {
             currentAudio.pause();
-            $(currentAudio.dataset.button).removeClass('speaking requesting');
-            if (currentAudio.dataset.buttonId === button.id) {
-                currentAudio = null;
-                return;
-            }
+            $(currentButton).removeClass('speaking');
         }
 
-        // 确保文本不为空
-        if (!text.trim()) {
-            console.error("Empty text, cannot synthesize speech");
+        // 如果点击的是当前正在播放的按钮，只需停止播放
+        if (button === currentButton) {
+            currentAudio = null;
+            currentButton = null;
             return;
         }
 
-        var voice = /[\u4e00-\u9fa5]/.test(text) ? 'shimmer' : 'alloy';
-        
+        // 设置新的当前按钮
+        currentButton = button;
+
+        // 重置所有按钮状态
+        $('.speak-button').removeClass('speaking requesting');
+
+        // 设置当前按钮状态
         $(button).addClass('requesting');
-        
+
         $.ajax({
             url: '/chatbots/tts/',
             method: 'POST',
             data: {
                 text: text,
-                voice: voice,
                 csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
             },
             xhrFields: {
@@ -43,50 +46,47 @@ $(document).ready(function() {
             success: function(data) {
                 $(button).removeClass('requesting').addClass('speaking');
                 currentAudio = new Audio(URL.createObjectURL(data));
-                currentAudio.dataset.buttonId = button.id;
-                currentAudio.dataset.button = button;
                 currentAudio.play();
                 currentAudio.onended = function() {
                     $(button).removeClass('speaking');
                     currentAudio = null;
+                    currentButton = null;
                 };
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 $(button).removeClass('requesting speaking');
                 console.error("Error in text-to-speech:", textStatus, errorThrown);
-                // 打印响应内容
-                console.error("Response:", jqXHR.responseText);
+                alert("语音合成失败，请稍后再试。");
+                currentButton = null;
             }
         });
     }
 
-    function addSpeakButton(messageElement) {
-        const speakButton = $('<button>')
-            .addClass('btn btn-sm btn-outline-secondary ml-2')
-            .html('<i class="fas fa-volume-up"></i>')
-            .click(function() {
-                const messageText = messageElement.find('span.message-text').text();
-                speakMessage(messageText);
-            });
-    }
-
-    $(document).on('click', '.speak-button', function() {
-        const messageText = $(this).siblings('.message-text').text();
-        speakMessage(messageText, this);
+    // 使用事件委托来处理speak按钮的点击
+    $(document).on('click', '.speak-button', function(e) {
+        e.preventDefault();
+        const messageText = $(this).closest('.message').find('.message-text').text().trim();
+        if (messageText) {
+            speakMessage(messageText, this);
+        } else {
+            console.error("Empty message text");
+        }
     });
 
     function addMessage(sender, content, isAI = false) {
         var messageClass = isAI ? 'ai' : 'user';
-        var senderName = isAI ? 'AI' : 'You';
-
-        var messageElement = $('<div>')
-            .addClass('message ' + messageClass)
-            .html('</strong> <span class="message-text">' + content + '</span>');
-
+        var messageHtml = '<div class="message ' + messageClass + '">' +
+            '<span class="message-text">' + content + '</span>';
+        
         if (isAI) {
-            addSpeakButton(messageElement);
+            messageHtml += '<button class="btn btn-sm btn-outline-secondary ml-2 speak-button">' +
+                '<i class="fas fa-volume-up"></i>' +
+                '<span class="status-dot"></span></button>';
         }
+        
+        messageHtml += '</div>';
 
+        var messageElement = $(messageHtml);
         chatBox.append(messageElement);
         scrollToBottom();
     }
@@ -105,7 +105,7 @@ $(document).ready(function() {
 
         var placeholderElement = $('<div>')
             .addClass('message ai placeholder')
-            .html('<strong>AI:</strong> <span>Thinking...</span>');
+            .html('<span>Thinking...</span>');
         chatBox.append(placeholderElement);
         scrollToBottom();
 
@@ -119,10 +119,6 @@ $(document).ready(function() {
             success: function(response) {
                 placeholderElement.remove();
                 addMessage('AI', response.response, true);
-                $(".speak-button").off('click').on('click', function() {
-                    const messageText = $(this).siblings('.message-text').text();
-                    speakMessage(messageText);
-                });
             },
             error: function() {
                 placeholderElement.remove();
@@ -138,42 +134,3 @@ $(document).ready(function() {
 
     scrollToBottom();
 });
-
-// 确保语音列表已加载
-speechSynthesis.onvoiceschanged = () => {
-    voices = speechSynthesis.getVoices();
-};
-
-function addAIResponse(response) {
-    var uniqueId = 'speak-' + Date.now();
-    var responseHtml = '<div class="message ai">' +
-        '<span class="message-text"></span>' +
-        '<button id="' + uniqueId + '" class="btn btn-sm btn-outline-secondary ml-2 speak-button">' +
-        '<i class="fas fa-volume-up"></i>' +
-        '<span class="status-dot"></span></button></div>';
-    var $responseElement = $(responseHtml);
-    chatBox.append($responseElement);
-    scrollToBottom();
-    
-    // 模拟打字效果
-    var $messageText = $responseElement.find('.message-text');
-    var words = response.split(' ');
-    var i = 0;
-    var intervalId = setInterval(function() {
-        if (i < words.length) {
-            var $word = $('<span class="typed-word">').text(words[i] + ' ');
-            $messageText.append($word);
-            $word.animate({opacity: 1}, 100); // 淡入效果
-            scrollToBottom();
-            i++;
-        } else {
-            clearInterval(intervalId);
-            $responseElement.find('.speak-button').fadeIn(300);
-        }
-    }, 50); // 调整这个数值可以改变"��字"速度
-
-    // 添加语音功能
-    $responseElement.find('.speak-button').click(function() {
-        speakMessage(response, this);
-    });
-}
