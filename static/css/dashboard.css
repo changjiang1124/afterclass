@@ -1,25 +1,62 @@
+/* 新增的横幅样式 */
+.dashboard-banner {
+    background: linear-gradient(to right, #99E7C5, #F4CB9B); 
+    padding: 40px 0; /* 上下各40px的内边距 */
+    margin-bottom: 30px; /* 与下面内容的间距 */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* 轻微的阴影效果 */
+    /* background-image: url('/static/images/chinese-banner.jpg'); /* 请确保图片路径正确 */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: #fff; /* 确保文字在背景图片上清晰可见 */
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5); /* 为文字添加阴影以增加可读性 */
+    width: 100%;
+    height: 400px;
+    text-align: center;
+    vertical-align: middle;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dashboard-banner h1 {
+    font-size: 2.5rem;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.dashboard-banner p {
+    font-size: 1.2rem;
+    color: #666;
+}
+
+/* 原有的样式 */
 .feature-label {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 1);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 20px;
     font-weight: bold;
 }
+
 .card {
     border-radius: 15px;
     transition: transform 0.3s;
 }
+
 .card:hover {
     transform: translateY(-5px);
 }
+
 .btn-primary {
     background-color: rgba(255, 255, 255, 0.3);
     border: none;
 }
+
 .btn-primary:hover {
     background-color: rgba(255, 255, 255, 0.5);
 }
