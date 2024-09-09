@@ -1,27 +1,64 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/assignments.css' %}">
+{% endblock %}
 
 {% block content %}
-<h2>{{ assignment.title }}</h2>
-<p>Due: {{ assignment.due_date }}</p>
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'assignments:assignment_list' %}">Assignments</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ assignment.title }}</li>
+        </ol>
+    </nav>
 
-<form method="post">
     {% csrf_token %}
-    {% for question in questions %}
-    <div>
-        <p><strong>Question {{ forloop.counter }}:</strong> {{ question.description }}</p>
-        {% load assignment_tags %}
-        {% if question.question_type == 'single_choice' %}
-            {% for choice in question.choices.all %}
-            <label>
-                <input type="radio" name="question_{{ question.id }}" value="{{ choice.id }}" {% if question.student_answer == choice.id|stringformat:"s" %}checked{% endif %}>
-                {{ forloop.counter|letter_index }}. {{ choice.text }}
-            </label><br>
-            {% endfor %}
-        {% else %}
-            <textarea name="question_{{ question.id }}">{{ question.student_answer }}</textarea>
-        {% endif %}
+
+    <div class="progress mb-4">
+        <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
     </div>
-    {% endfor %}
-    <button type="submit">Submit</button>
-</form>
+
+    <div id="question-container" class="card">
+        {% for question in questions %}
+        <div class="question card-body fade-in" data-question-id="{{ question.id }}" style="display: {% if forloop.first %}block{% else %}none{% endif %};">
+            <div class="question-content">
+                <button class="btn btn-sm btn-outline-secondary speak-button mr-2" data-text="{{ question.description }}">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                <h4 class="card-text d-inline">{{ question.description|linebreaks }}</h4>
+            </div>
+            {% load assignment_tags %}
+            {% if question.question_type == 'single_choice' %}
+                {% for choice in question.choices.all %}
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="question_{{ question.id }}" id="choice_{{ choice.id }}" value="{{ choice.id }}" {% if question.student_answer == choice.id|stringformat:"s" %}checked{% endif %}>
+                    <label class="form-check-label" for="choice_{{ choice.id }}">
+                        {{ forloop.counter|letter_index }}. {{ choice.text }}
+                    </label>
+                </div>
+                {% endfor %}
+            {% else %}
+                <textarea class="form-control" name="question_{{ question.id }}" rows="3">{{ question.student_answer }}</textarea>
+            {% endif %}
+            <button class="btn btn-primary submit-answer mt-3" data-question-id="{{ question.id }}">
+                {% if forloop.last %}Finish{% else %}Next{% endif %}
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div id="assignment-complete" class="card mt-4" style="display: none;">
+        <div class="card-body text-center">
+            <h3 class="card-title">Assignment Completed!</h3>
+            <a href="{% url 'assignments:assignment_list' %}" class="btn btn-primary">Back to Assignments</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/assignments.js' %}"></script>
 {% endblock %}

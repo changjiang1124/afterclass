@@ -29,7 +29,7 @@ class Question(models.Model):
     assignment_set = models.ForeignKey(AssignmentSet, on_delete=models.CASCADE, related_name='questions')
     description = models.TextField()
     question_type = models.CharField(max_length=20, choices=QUESTION_TYPES, default='single_choice')
-    reference_answer = models.TextField(null=True, blank=True)
+    reference_answer = models.TextField(null=True, blank=True) # not for strict checking, as here might be for open questions
     student_answer = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     # status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='not_started')
@@ -41,7 +41,7 @@ class Question(models.Model):
 class Choice(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='choices')
     text = models.CharField(max_length=200)
-    is_correct = models.BooleanField(default=False)
+    # is_correct = models.BooleanField(default=False) # the check should be in questions, not choices, by comparing the answer with reference_answer
 
     def __str__(self):
         return self.text

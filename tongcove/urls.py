@@ -19,6 +19,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
+from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -28,4 +29,5 @@ urlpatterns = [
     path('', RedirectView.as_view(url='/dashboard/', permanent=True)),
     path('dashboard/', include('dashboard.urls')),
     path('assignments/', include('assignments.urls')),
+    path('tts/', views.text_to_speech, name='text_to_speech'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
