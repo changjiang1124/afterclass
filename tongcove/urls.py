@@ -27,4 +27,5 @@ urlpatterns = [
     # 添加以下行来设置默认页面
     path('', RedirectView.as_view(url='/dashboard/', permanent=True)),
     path('dashboard/', include('dashboard.urls')),
+    path('assignments/', include('assignments.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
