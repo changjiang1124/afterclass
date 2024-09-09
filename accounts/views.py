@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 
@@ -12,7 +12,7 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('chatbots:chatbot_list')
+            return redirect('/')
         else:
             return render(request, 'accounts/login.html', {'error': '用户名或密码不正确'})
     return render(request, 'accounts/login.html')
@@ -20,3 +20,8 @@ def login_view(request):
 @login_required
 def profile_view(request):
     return render(request, 'accounts/profile.html')
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('/')

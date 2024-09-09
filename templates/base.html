@@ -16,7 +16,7 @@
         <div class="navbar-nav ml-auto">
             {% if user.is_authenticated %}
                 {% comment %} <a class="nav-item nav-link" href="{% url 'accounts:profile' %}">Profile(in construction)</a> {% endcomment %}
-                {% comment %} <a class="nav-item nav-link" href="{% url 'accounts:logout' %}">退出</a> {% endcomment %}
+                <a class="nav-item nav-link" href="{% url 'accounts:logout' %}">Sign out</a>
             {% else %}
                 <a class="nav-item nav-link" href="{% url 'accounts:login' %}">Sign in</a>
             {% endif %}
