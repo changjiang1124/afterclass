@@ -1,12 +1,40 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load assignment_tags %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/assignments.css' %}">
+{% endblock %}
 
 {% block content %}
-<h2>Your Incomplete Assignments</h2>
-<ul>
-    {% for assignment in assignments %}
-    <li><a href="{% url 'assignments:assignment_detail' assignment.id %}">{{ assignment.title }}</a> (Due: {{ assignment.due_date }})</li>
-    {% empty %}
-    <li>No incomplete assignments.</li>
-    {% endfor %}
-</ul>
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Your Assignments</h2>
+    <div class="row">
+        {% for assignment in assignments %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card assignment-card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ assignment.title }}</h5>
+                    <p class="card-text">
+                        <span class="badge {% if assignment.due_date|days_until < 3 %}badge-danger{% elif assignment.due_date|days_until < 7 %}badge-warning{% else %}badge-success{% endif %}">
+                            Due in {{ assignment.due_date|days_until }} days
+                        </span>
+                    </p>
+                    <a href="{% url 'assignments:assignment_detail' assignment.id %}" class="btn btn-primary">Start Assignment</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                No incomplete assignments. Great job!
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/assignments.js' %}"></script>
 {% endblock %}

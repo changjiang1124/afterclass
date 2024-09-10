@@ -80,4 +80,22 @@ $(document).ready(function() {
             }
         });
     }
+
+    // Enter animation for assignment cards
+    $('.assignment-card').each(function(index) {
+        $(this).css({
+            'opacity': '1',
+            'transform': 'translateY(20px)'
+        });
+        $(this).delay(index * 100).animate({
+            opacity: 1,
+            transform: 'translateY(0)'
+        }, 500, function() {
+            // 动画完成后，移除内联样式以避免与悬停效果冲突
+            $(this).css({
+                'opacity': '',
+                'transform': ''
+            });
+        });
+    });
 });
