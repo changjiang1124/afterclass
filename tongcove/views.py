@@ -1,5 +1,11 @@
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect
+from django.http import HttpResponse
+from aip import AipSpeech
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def login_view(request):
     if request.method == 'POST':
@@ -15,6 +21,8 @@ def login_view(request):
 
 
 def text_to_speech(request):
+    # 512 char limit #TODO 
+    
     if request.method == 'POST':
         text = request.POST.get('text', '')
         logger.info(f"Received TTS request for text: {text[:50]}...")  # 记录前50个字符

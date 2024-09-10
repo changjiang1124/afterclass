@@ -36,7 +36,7 @@ class Question(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"Question for {self.assignment_set.title}"
+        return f"{self.description[:10]}... - {self.assignment_set.title}"
 
 class Choice(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='choices')

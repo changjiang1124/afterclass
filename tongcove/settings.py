@@ -60,6 +60,10 @@ INSTALLED_APPS = [
     'chatbots',
     'dashboard',
     'assignments',
+    'stories',
+    # 'ckeditor',
+    'ckeditor_uploader',
+    'django_ckeditor_5',
 ]
 
 MIDDLEWARE = [
@@ -154,3 +158,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Login redirect configuration
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
+
+CKEDITOR_UPLOAD_PATH = "uploads/"
+
+CKEDITOR_5_CONFIGS = {
+    'default': {
+        'toolbar': ['heading', '|', 'bold', 'italic', 'link',
+                    'bulletedList', 'numberedList', 'blockQuote', 'imageUpload'],
+    },
+}
+
+CKEDITOR_5_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"

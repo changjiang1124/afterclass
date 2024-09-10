@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4">{{ story.title }}</h1>
+    <div class="text-center mb-4">
+        <button id="speak-button" class="btn btn-lg btn-primary">
+            <i class="fas fa-volume-up"></i> Read Aloud
+        </button>
+    </div>
+    <div class="story-content">
+        {% csrf_token %}
+        {{ story.content|safe }}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/story_tts.js' %}"></script>
+{% endblock %}

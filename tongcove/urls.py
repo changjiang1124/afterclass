@@ -30,4 +30,6 @@ urlpatterns = [
     path('dashboard/', include('dashboard.urls')),
     path('assignments/', include('assignments.urls')),
     path('tts/', views.text_to_speech, name='text_to_speech'),
+    path('stories/', include('stories.urls')),
+    path('ckeditor5/', include('django_ckeditor_5.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

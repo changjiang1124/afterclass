@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Stories</h2>
+    <div class="row">
+        {% for story in stories %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <img src="{{ story.banner.url }}" class="card-img-top" alt="{{ story.title }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ story.title }}</h5>
+                    <p class="card-text">{{ story.excerpt }}</p>
+                    <a href="{% url 'stories:story_detail' story.id %}" class="btn btn-primary">Read Story</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -61,7 +61,7 @@ $(document).ready(function() {
 
     function speakText(text, button) {
         $.ajax({
-            url: '/chatbots/tts/',
+            url: '/tts/',
             method: 'POST',
             data: {
                 text: text,
