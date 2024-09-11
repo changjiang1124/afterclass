@@ -1,13 +1,22 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/stories.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h1 class="text-center mb-4">{{ story.title }}</h1>
+<div class="story-container">
+    <h1 class="story-title">{{ story.title }}</h1>
     <div class="text-center mb-4">
-        <button id="speak-button" class="btn btn-lg btn-primary">
+        <button id="speak-button" class="btn btn-lg btn-primary speak-button">
             <i class="fas fa-volume-up"></i> Read Aloud
         </button>
+        <div id="loading-indicator" class="mt-2" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
     </div>
     <div class="story-content">
         {% csrf_token %}
