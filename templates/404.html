@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}404 - Page Not Found{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/404.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <h1 class="error-title">404</h1>
+    <div class="error-image">
+        <img src="{% static 'images/confused_panda.png' %}" alt="Confused Panda">
+    </div>
+    <p class="error-message">哎呀！这只熊猫把页面吃掉了！</p>
+    <p class="error-submessage">别担心，我们正在训练它吐出来...</p>
+    <a href="{% url 'home' %}" class="btn btn-primary">回到首页</a>
+</div>
+{% endblock %}

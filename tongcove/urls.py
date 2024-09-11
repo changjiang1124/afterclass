@@ -26,7 +26,7 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('chatbots/', include('chatbots.urls')),
     # 添加以下行来设置默认页面
-    path('', RedirectView.as_view(url='/dashboard/', permanent=True)),
+    path('', RedirectView.as_view(url='/dashboard/', permanent=True), name='home'),
     path('dashboard/', include('dashboard.urls')),
     path('assignments/', include('assignments.urls')),
     path('tts/', views.text_to_speech, name='text_to_speech'),
