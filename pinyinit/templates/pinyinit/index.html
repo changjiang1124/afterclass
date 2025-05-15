@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .pinyin-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .page-title {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #3a3a3a;
+        font-weight: bold;
+    }
+    
+    .pinyin-form {
+        margin-bottom: 30px;
+    }
+    
+    .form-control {
+        border-radius: 5px;
+        resize: vertical;
+        min-height: 150px;
+    }
+    
+    .btn-submit {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .btn-submit:hover {
+        background-color: #c0392b;
+        color: white;
+    }
+    
+    .result-box {
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+        margin-top: 20px;
+        border: 1px solid #ddd;
+    }
+    
+    .hanzi-group {
+        display: inline-block;
+        text-align: center;
+        width: 42px;
+        margin: 0 2px;
+        vertical-align: top;
+    }
+    
+    .pinyin {
+        font-size: 13px;
+        height: 20px;
+        color: #666;
+        margin-top: 1em;
+        font-family: 'Poppins', sans-serif;
+    }
+    
+    .hanzi {
+        font-size: 30px;
+    }
+    
+    .punctuation {
+        display: inline-block;
+        width: 30px;
+        margin: 0 2px;
+        text-align: left;
+        vertical-align: bottom;
+    }
+    
+    .info-box {
+        margin-top: 30px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        border-left: 4px solid #e74c3c;
+    }
+
+    @media (max-width: 768px) {
+        .pinyin-container {
+            padding: 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="pinyin-container">
+        <h2 class="page-title">拼音转换工具</h2>
+        
+        <div class="pinyin-form">
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="input_text"><i class="fas fa-keyboard mr-2"></i>输入中文文本</label>
+                    <textarea class="form-control" id="input_text" name="input_text" rows="6" placeholder="请在此输入中文文本...">{{ input_text }}</textarea>
+                </div>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-submit">
+                        <i class="fas fa-language mr-2"></i>转换为拼音
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        {% if result_html %}
+        <div class="result-box">
+            {{ result_html|safe }}
+        </div>
+        {% endif %}
+        
+        <div class="info-box">
+            <h5><i class="fas fa-info-circle mr-2"></i>关于此工具</h5>
+            <p>拼音转换工具可以为中文文本添加拼音注音，帮助学习者正确发音。该工具支持针对多音字的智能识别，提高注音准确度。</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 自动调整文本区域高度
+    $(document).ready(function() {
+        $('#input_text').on('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    });
+</script>
+{% endblock %} 

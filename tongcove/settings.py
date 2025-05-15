@@ -44,7 +44,7 @@ if socket.gethostname() == 'CJs-MBP-1421.local':
 else:
     DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', 'afterclass.tongcove.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'afterclass.learnchineseperth.com.au']
 
 
 # Application definition
@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'dashboard',
     'assignments',
     'stories',
+    'pinyinit',
     # 'ckeditor',
     'ckeditor_uploader',
     'django_ckeditor_5',
@@ -165,7 +166,12 @@ CKEDITOR_5_CONFIGS = {
     'default': {
         'toolbar': ['heading', '|', 'bold', 'italic', 'link',
                     'bulletedList', 'numberedList', 'blockQuote', 'imageUpload'],
+        'upload': {
+            'types': ['png', 'jpg', 'jpeg', 'gif', 'webp'],
+        }
     },
 }
+
+ALLOWED_UPLOAD_IMAGES = ['png', 'jpg', 'jpeg', 'gif', 'webp']
 
 CKEDITOR_5_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
