@@ -9,6 +9,7 @@ import requests
 import os
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
 
 # 创建PinyinMarker实例
 pinyin_marker = PinyinMarker()
@@ -23,6 +24,65 @@ OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 @login_required
 def home(request):
     return render(request, 'typingchinese/home.html')
+
+# 生成随机主题建议 - AJAX
+@csrf_exempt
+@login_required
+@require_http_methods(["GET"])
+def generate_topic_suggestions(request):
+    try:
+        # 调用OpenAI API生成主题建议
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {OPENAI_API_KEY}"
+        }
+        
+        system_prompt = """
+        You are a helpful assistant for Chinese learners. Please provide 5 short topic suggestions for Chinese typing practice, each with 1-3 words in Australian English.
+        These topics should be diverse and interesting, and able to inspire users to generate meaningful Chinese content for typing practice.
+        Only return the list of topics, no explanation or additional text. One topic per line.
+        """
+        
+        user_prompt = "Please provide 5 short topic suggestions for Chinese typing practice in Australian English, covering life, culture, technology, education, etc."
+        
+        payload = {
+            "model": "gpt-4.1",
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            "temperature": 0.7,
+            "max_tokens": 200
+        }
+        
+        response = requests.post(OPENAI_API_URL, headers=headers, json=payload)
+        response_data = response.json()
+        
+        if response.status_code == 200 and "choices" in response_data:
+            topics_text = response_data["choices"][0]["message"]["content"].strip()
+            
+            # 将AI返回的多行主题文本分割为列表
+            topics = [topic.strip() for topic in topics_text.split('\n') if topic.strip()]
+            
+            # 只取前5个主题
+            topics = topics[:5]
+            
+            return JsonResponse({
+                'success': True,
+                'topics': topics
+            })
+        else:
+            error_message = response_data.get("error", {}).get("message", "Error generating topics, please try again")
+            return JsonResponse({
+                'success': False,
+                'error': error_message
+            })
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f"API调用失败: {str(e)}"
+        })
 
 # 处理AI文本生成请求 - AJAX
 @csrf_exempt
@@ -47,7 +107,6 @@ def generate_ai_text(request):
         
         规则：
         1. 总是尝试用中文去生成回复（虽然输入可能会是任何语言），除非用户明确要求使用其他语言。只有当用户的指令可以用于生成适合中文练习的内容时才生成文本
-        2. 如果用户的指令跟生成可供中文打字练习的文本无关（如包含不当内容、无法理解、要求非中文内容等），回复"无效指令"并简要说明原因
         3. 生成的文本应该是纯中文的，可以包含标点符号，但不要包含英文、数字等非中文字符
         4. 不要在回复中加入任何前缀、标题或者解释，直接返回生成的文本内容
         5. 确保内容长度符合要求
@@ -106,7 +165,7 @@ def generate_ai_text(request):
                     'id': text_obj.id
                 })
             else:
-                error_message = response_data.get("error", {}).get("message", "生成过程中出现问题，请重试")
+                error_message = response_data.get("error", {}).get("message", "An error occurred during generation, please try again")
                 return JsonResponse({
                     'success': False,
                     'error': error_message

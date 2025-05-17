@@ -442,4 +442,40 @@
 /* 字符状态样式 */
 .char-to-type {
     transition: all 0.2s ease;
+}
+
+/* 主题建议样式 */
+.topic-suggestions-container {
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.topic-item {
+    background-color: #f8f9fa;
+    border: 1px solid #e3e3e3;
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #555;
+}
+
+.topic-item:hover {
+    background-color: #efefef;
+    border-color: #d5d5d5;
+    color: #333;
+    transform: translateY(-1px);
+}
+
+.topic-item:active {
+    transform: translateY(0);
+    background-color: #e6e6e6;
+}
+
+.active-topic {
+    background-color: #ffdfc7;
+    border-color: #FE4D01;
+    color: #FE4D01;
+    pointer-events: none;
 } 

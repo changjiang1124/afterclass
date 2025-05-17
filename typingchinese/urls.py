@@ -9,4 +9,5 @@ urlpatterns = [
     path('generate-ai/', views.generate_ai_text, name='generate_ai_text'),
     path('practice/', views.practice, name='practice'),
     path('process-pinyin/', views.process_pinyin, name='process_pinyin'),
+    path('topic-suggestions/', views.generate_topic_suggestions, name='topic_suggestions'),
 ] 

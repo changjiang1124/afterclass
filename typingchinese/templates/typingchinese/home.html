@@ -65,6 +65,22 @@
                     </div>
                     <div id="instruction-feedback" class="mt-2" style="display: none;"></div>
                 </div>
+                
+                <!-- 主题建议区域 -->
+                <div class="form-group mt-2">
+                    <div class="d-flex align-items-center mb-2">
+                        <label class="mb-0 mr-auto"><i class="fas fa-tags mr-1"></i> Quick Topics</label>
+                        <button id="refresh-topics-btn" class="btn btn-sm btn-outline-secondary" title="Refresh topics">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div id="topic-suggestions" class="topic-suggestions-container d-flex flex-wrap">
+                        <div class="spinner-border spinner-border-sm text-primary mx-auto" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="form-group ai-length-options">
                     <label class="ai-length-label"><i class="fas fa-text-height mr-1"></i> Text Length</label>
                     <div class="length-options-container">
@@ -105,6 +121,90 @@
     $(document).ready(function() {
         let generatedTextId = null;
         
+        // 加载主题建议
+        function loadTopicSuggestions() {
+            $("#topic-suggestions").html('<div class="spinner-border spinner-border-sm text-primary mx-auto" role="status"><span class="sr-only">Loading...</span></div>');
+            
+            fetch('{% url "typingchinese:topic_suggestions" %}')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.topics && data.topics.length > 0) {
+                        let topicsHtml = '';
+                        data.topics.forEach(topic => {
+                            topicsHtml += `<div class="topic-item">${topic}</div>`;
+                        });
+                        $("#topic-suggestions").html(topicsHtml);
+                        
+                        // 绑定主题点击事件
+                        $(".topic-item").click(function() {
+                            const topicText = $(this).text();
+                            // 显示生成中状态
+                            $(this).addClass('active-topic');
+                            $(".topic-item").prop('disabled', true);
+                            $("#confirm-generate-btn").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...');
+                            $("#confirm-generate-btn").prop('disabled', true);
+                            
+                            // 获取当前选中的文本长度
+                            const length = $("input[name='textLength']:checked").val();
+                            
+                            // 直接发送请求生成内容
+                            fetch('{% url "typingchinese:generate_ai_text" %}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    instruction: `Generate content about ${topicText}`,
+                                    length: length
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    $("#chinese-text").val(data.text);
+                                    generatedTextId = data.id;
+                                    checkTextareaContent();
+                                    $("#generateModal").modal('hide');
+                                } else {
+                                    // 显示错误信息
+                                    $("#instruction-feedback")
+                                        .html(`<div class="alert alert-danger">${data.error}</div>`)
+                                        .show();
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                $("#instruction-feedback")
+                                    .html('<div class="alert alert-danger">生成过程中出现错误，请重试</div>')
+                                    .show();
+                            })
+                            .finally(() => {
+                                $(".topic-item").removeClass('active-topic');
+                                $(".topic-item").prop('disabled', false);
+                                $("#confirm-generate-btn").html('<i class="fas fa-wand-magic-sparkles mr-1"></i> Generate');
+                                $("#confirm-generate-btn").prop('disabled', false);
+                            });
+                        });
+                    } else {
+                        $("#topic-suggestions").html('<div class="text-muted small">无法加载主题建议，请手动输入或刷新重试。</div>');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    $("#topic-suggestions").html('<div class="text-muted small">加载主题建议失败，请手动输入或刷新重试。</div>');
+                });
+        }
+        
+        // 刷新主题按钮点击事件
+        $("#refresh-topics-btn").click(function() {
+            loadTopicSuggestions();
+        });
+        
+        // 模态框显示时加载主题建议
+        $("#generateModal").on('shown.bs.modal', function() {
+            loadTopicSuggestions();
+        });
+        
         // Check if textarea has content, decide whether to show "Start Practice" button
         function checkTextareaContent() {
             if ($("#chinese-text").val().trim().length > 0) {
@@ -136,7 +236,7 @@
             // Validate instruction not empty
             if (!instruction) {
                 $("#instruction-feedback")
-                    .html('<div class="alert alert-warning">Please enter generation instructions</div>')
+                    .html('<div class="alert alert-warning">请输入生成指令</div>')
                     .show();
                 return;
             }
@@ -174,7 +274,7 @@
             .catch(error => {
                 console.error('Error:', error);
                 $("#instruction-feedback")
-                    .html('<div class="alert alert-danger">An error occurred during generation, please try again</div>')
+                    .html('<div class="alert alert-danger">生成过程中出现错误，请重试</div>')
                     .show();
             })
             .finally(() => {
