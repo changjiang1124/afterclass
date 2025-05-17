@@ -87,6 +87,28 @@
         border-radius: 5px;
         border-left: 4px solid #e74c3c;
     }
+    
+    /* 添加段落样式，增加段落间距 */
+    .result-box p {
+        margin-bottom: 2em;
+    }
+    
+    /* 当需要更明显的段落分隔时，可以添加底部边框 */
+    .result-box p:not(:last-child) {
+        border-bottom: 1px solid #eaeaea;
+        padding-bottom: 1.5em;
+    }
+    
+    /* 为带缩进的段落添加额外样式 */
+    .paragraph-with-indent {
+        margin-top: 2em;
+        position: relative;
+    }
+    
+    /* 为第一个段落添加特殊样式，避免顶部过大间距 */
+    .result-box p:first-child {
+        margin-top: 0.5em;
+    }
 
     @media (max-width: 768px) {
         .pinyin-container {

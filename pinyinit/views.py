@@ -91,7 +91,8 @@ class PinyinMarker:
                 py = self.get_pinyin_for_char(char, text, i)
                 
                 # 如果是多音字，添加一个特殊的类
-                polyphonic_class = ' polyphonic-char' if self.is_polyphonic(char) else ''
+                # polyphonic_class = ' polyphonic-char' if self.is_polyphonic(char) else ''
+                polyphonic_class = '' # 暂时不显示多音字
                 
                 result += f'<div class="hanzi-group{polyphonic_class}"><div class="pinyin">{py}</div><div class="hanzi">{char}</div></div>'
             else:
@@ -146,7 +147,7 @@ class PinyinMarker:
             # 如果是普通段落且不在列表项内（通过检查前面的HTML来判断）
             if tag == 'p' and not re.search(r'<li[^>]*>(?:(?!</li>).)*$', processed_html[:match.start()], re.DOTALL):
                 indent = '<div class="hanzi-group"><div class="pinyin"></div><div class="hanzi"></div></div>' * 2
-                return f'<p>{indent}{content}</p>'
+                return f'<p class="paragraph-with-indent">{indent}{content}</p>'
             return full_tag
         
         # 查找所有段落标签并添加缩进

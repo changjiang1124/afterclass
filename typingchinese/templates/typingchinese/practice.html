@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/typingchinese.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="practice-page-container mt-4">
+    <div class="row mb-3">
+        <div class="col-12">
+            <h2 class="text-center">中文打字练习</h2>
+            <div class="text-center mb-3">
+                <div class="d-inline-flex align-items-center">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="show-pinyin" checked>
+                        <label class="custom-control-label" for="show-pinyin">显示拼音</label>
+                    </div>
+                    <a href="{% url 'typingchinese:home' %}" class="btn btn-sm btn-outline-secondary ml-3">返回主页</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row practice-container">
+        <!-- 左侧源文本 -->
+        <div class="col-md-6 mb-3 mb-md-0">
+            <div class="source-text-container">
+                <!-- 拼音和汉字内容容器 -->
+                <div id="pinyin-content-container">
+                    <!-- 内容会通过Ajax动态加载 -->
+                    <div class="text-center p-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">加载中...</span>
+                        </div>
+                        <p class="mt-2">正在处理拼音...</p>
+                    </div>
+                </div>
+                
+                <!-- 原始文本，用于对照和处理，但不显示 -->
+                <div id="source-text" class="chinese-text d-none">{{ text }}</div>
+            </div>
+        </div>
+        
+        <!-- 右侧打字区域 -->
+        <div class="col-md-6">
+            <div class="typing-container">
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <div id="accuracy" class="stat-value">100%</div>
+                        <div class="stat-label">准确率</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="wpm" class="stat-value">0</div>
+                        <div class="stat-label">字/分钟</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="progress" class="stat-value">0%</div>
+                        <div class="stat-label">进度</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="timer" class="stat-value">00:00</div>
+                        <div class="stat-label">时间</div>
+                    </div>
+                </div>
+                
+                <textarea id="typing-input" class="form-control" placeholder="在此输入中文文本..."></textarea>
+                
+                <div class="typing-controls">
+                    <button id="reset-btn" class="btn">重置</button>
+                    <button id="finish-btn" class="btn btn-primary" disabled>完成</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        const sourceText = $("#source-text").text().trim();
+        let startTime = null;
+        let timerInterval = null;
+        let totalSeconds = 0;
+        let correctChars = 0;
+        let incorrectChars = 0;
+        
+        // 处理拼音显示
+        function processPinyinText() {
+            if (sourceText.length > 0) {
+                // 发送AJAX请求处理拼音
+                fetch('{% url "typingchinese:process_pinyin" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: sourceText
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 更新拼音内容容器
+                        $("#pinyin-content-container").html(data.html);
+                        
+                        // 设置拼音显示状态
+                        const showPinyin = $("#show-pinyin").is(":checked");
+                        togglePinyinDisplay(showPinyin);
+                    } else {
+                        $("#pinyin-content-container").html('<div class="alert alert-danger">处理拼音时出错，请重试。</div>');
+                    }
+                })
+                .catch(error => {
+                    console.error('拼音处理错误:', error);
+                    $("#pinyin-content-container").html('<div class="alert alert-danger">拼音处理发生错误，请刷新页面重试。</div>');
+                });
+            } else {
+                $("#pinyin-content-container").html('<div class="alert alert-warning">没有文本内容可处理。</div>');
+            }
+        }
+        
+        // 切换拼音显示
+        function togglePinyinDisplay(show) {
+            if (show) {
+                $(".hanzi-group .pinyin").show();
+            } else {
+                $(".hanzi-group .pinyin").hide();
+            }
+        }
+        
+        // 更新拼音显示的可见性
+        $("#show-pinyin").change(function() {
+            const showPinyin = $(this).is(":checked");
+            togglePinyinDisplay(showPinyin);
+        });
+        
+        // 初始化拼音
+        processPinyinText();
+        
+        // 启动计时器
+        function startTimer() {
+            if (startTime === null) {
+                startTime = new Date();
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+        }
+        
+        // 更新计时器显示
+        function updateTimer() {
+            totalSeconds++;
+            const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+            const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+            $("#timer").text(`${minutes}:${seconds}`);
+            
+            // 如果已经开始打字，更新WPM
+            if (correctChars > 0) {
+                // 假设平均每个汉字是一个词
+                const minutes = totalSeconds / 60;
+                const wpm = Math.round(correctChars / minutes);
+                $("#wpm").text(wpm);
+            }
+        }
+        
+        // 重置计时器
+        function resetTimer() {
+            clearInterval(timerInterval);
+            startTime = null;
+            totalSeconds = 0;
+            $("#timer").text("00:00");
+            $("#wpm").text("0");
+        }
+        
+        // 监听输入
+        $("#typing-input").on('input', function() {
+            const currentInput = $(this).val();
+            
+            // 如果是第一次输入，启动计时器
+            if (currentInput.length === 1) {
+                startTimer();
+            }
+            
+            // 计算正确和错误的字符
+            correctChars = 0;
+            incorrectChars = 0;
+            
+            const normalizedSourceText = sourceText.replace(/\r\n/g, '\n'); // 标准化换行符
+            const normalizedInput = currentInput.replace(/\r\n/g, '\n'); // 标准化换行符
+            
+            for (let i = 0; i < normalizedInput.length; i++) {
+                if (i < normalizedSourceText.length) {
+                    if (normalizedInput[i] === normalizedSourceText[i]) {
+                        correctChars++;
+                    } else {
+                        incorrectChars++;
+                    }
+                }
+            }
+            
+            // 更新统计信息
+            const totalTyped = correctChars + incorrectChars;
+            const accuracy = totalTyped > 0 ? Math.round((correctChars / totalTyped) * 100) : 100;
+            const progress = Math.round((normalizedInput.length / normalizedSourceText.length) * 100);
+            
+            $("#accuracy").text(accuracy + "%");
+            $("#progress").text(progress + "%");
+            
+            // 如果完成了全部文本，启用完成按钮
+            if (normalizedInput.length >= normalizedSourceText.length) {
+                $("#finish-btn").prop('disabled', false);
+            } else {
+                $("#finish-btn").prop('disabled', true);
+            }
+        });
+        
+        // 重置按钮
+        $("#reset-btn").click(function() {
+            $("#typing-input").val('');
+            resetTimer();
+            correctChars = 0;
+            incorrectChars = 0;
+            $("#accuracy").text("100%");
+            $("#progress").text("0%");
+            $("#wpm").text("0");
+            $("#finish-btn").prop('disabled', true);
+        });
+        
+        // 完成按钮
+        $("#finish-btn").click(function() {
+            clearInterval(timerInterval);
+            alert("恭喜你完成打字练习！\n\n准确率: " + $("#accuracy").text() + "\n速度: " + $("#wpm").text() + " 字/分钟\n用时: " + $("#timer").text());
+        });
+    });
+</script>
+{% endblock %} 
