@@ -17,6 +17,139 @@
     margin-bottom: 1.5rem;
 }
 
+/* 按钮统一样式 */
+.generate-btn, .start-btn {
+    background-color: #FE4D01 !important;
+    border-color: #FE4D01 !important;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.generate-btn:hover, .start-btn:hover {
+    background-color: #FF7E43 !important;
+    border-color: #FF7E43 !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+}
+
+/* 导航样式 */
+.dashboard-nav .breadcrumb {
+    border-left: 4px solid #FE4D01;
+    transition: all 0.3s ease;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.dashboard-link {
+    color: #FE4D01;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.dashboard-link:hover {
+    color: #FF7E43;
+    text-decoration: none;
+}
+
+/* AI生成模态框样式 */
+.ai-modal-header {
+    background: linear-gradient(135deg, #FE4D01, #FF7E43);
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    padding: 1rem 1.5rem;
+    color: white;
+}
+
+.ai-modal-header .modal-title {
+    color: white;
+    font-weight: 600;
+}
+
+.ai-modal-header .close {
+    color: white;
+    opacity: 0.8;
+    text-shadow: none;
+}
+
+.ai-modal-header .close:hover {
+    opacity: 1;
+}
+
+.ai-modal-body {
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+}
+
+.ai-instruction-label {
+    color: #444;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.input-wrapper {
+    position: relative;
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.ai-instruction-input {
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+    background-color: #fff;
+}
+
+.ai-instruction-input:focus {
+    background-color: #fff;
+    box-shadow: 0 0 0 0.2rem rgba(254, 77, 1, 0.25);
+    border-color: #FE4D01;
+}
+
+.ai-length-options {
+    background-color: #fff;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    border: 1px solid #eee;
+}
+
+.ai-length-label {
+    color: #444;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.length-options-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.length-option {
+    margin-bottom: 0;
+    flex: 1;
+    min-width: 150px;
+}
+
+.ai-modal-footer {
+    border-top: 1px solid rgba(0,0,0,0.1);
+    padding: 1rem 1.5rem;
+    background-color: #f8f9fa;
+}
+
+.ai-generate-btn {
+    min-width: 100px;
+    font-weight: 500;
+    background-color: #FE4D01;
+    border-color: #FE4D01;
+    transition: all 0.3s ease;
+}
+
+.ai-generate-btn:hover {
+    background-color: #FF7E43;
+    border-color: #FF7E43;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+}
+
 /* 练习页面样式 */
 .practice-container {
     min-height: 500px;
@@ -128,12 +261,15 @@
 }
 
 .error-char {
-    color: #dc3545;
+    color: #dc3545 !important;
     text-decoration: underline wavy #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
 }
 
 .current-char {
     background-color: #ffc107;
+    border-radius: 3px;
+    box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.5);
 }
 
 /* 按钮样式 */
@@ -160,14 +296,14 @@
 }
 
 #finish-btn {
-    background-color: #17a2b8;
-    border-color: #17a2b8;
+    background-color: #FE4D01;
+    border-color: #FE4D01;
     color: white;
 }
 
 #finish-btn:hover {
-    background-color: #138496;
-    border-color: #138496;
+    background-color: #FF7E43;
+    border-color: #FF7E43;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     transform: translateY(-1px);
 }
@@ -284,4 +420,26 @@
     .source-text-container, .typing-container {
         height: calc(85vh - 120px);
     }
+}
+
+/* 验证字符样式 */
+.correct-char {
+    color: #28a745 !important;
+}
+
+#verification-display {
+    font-family: 'SimSun', 'Songti SC', serif;
+    padding: 15px;
+    line-height: 1.8;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    min-height: 60px;
+    margin-top: 20px;
+    border: 1px solid #e3e3e3;
+    overflow-wrap: break-word;
+}
+
+/* 字符状态样式 */
+.char-to-type {
+    transition: all 0.2s ease;
 } 

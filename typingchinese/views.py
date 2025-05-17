@@ -8,6 +8,7 @@ from pinyinit.views import PinyinMarker
 import requests
 import os
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 
 # 创建PinyinMarker实例
 pinyin_marker = PinyinMarker()
@@ -19,11 +20,13 @@ OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 # Create your views here.
 
 # 首页视图 - 显示文本输入框和生成按钮
+@login_required
 def home(request):
     return render(request, 'typingchinese/home.html')
 
 # 处理AI文本生成请求 - AJAX
 @csrf_exempt
+@login_required
 def generate_ai_text(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -43,8 +46,8 @@ def generate_ai_text(request):
         你是一个专业的中文内容生成助手，用于帮助用户生成适合中文打字练习的文本。
         
         规则：
-        1. 总是尝试用中文去生成回复，除非用户明确要求使用其他语言。只有当用户的指令可以用于生成适合中文练习的内容时才生成文本
-        2. 如果用户的指令跟生成中文打字练习无关（如包含不当内容、无法理解、要求非中文内容等），回复"无效指令"并简要说明原因
+        1. 总是尝试用中文去生成回复（虽然输入可能会是任何语言），除非用户明确要求使用其他语言。只有当用户的指令可以用于生成适合中文练习的内容时才生成文本
+        2. 如果用户的指令跟生成可供中文打字练习的文本无关（如包含不当内容、无法理解、要求非中文内容等），回复"无效指令"并简要说明原因
         3. 生成的文本应该是纯中文的，可以包含标点符号，但不要包含英文、数字等非中文字符
         4. 不要在回复中加入任何前缀、标题或者解释，直接返回生成的文本内容
         5. 确保内容长度符合要求
@@ -119,6 +122,7 @@ def generate_ai_text(request):
 
 # 处理文本生成请求 - AJAX (保留原始随机文本生成功能)
 @csrf_exempt
+@login_required
 def generate_text(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -165,6 +169,7 @@ def generate_text(request):
 
 # 处理拼音生成 - AJAX
 @csrf_exempt
+@login_required
 def process_pinyin(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -190,6 +195,7 @@ def process_pinyin(request):
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
 # 练习页面视图
+@login_required
 def practice(request):
     text_id = request.GET.get('text_id')
     text_content = request.GET.get('text')

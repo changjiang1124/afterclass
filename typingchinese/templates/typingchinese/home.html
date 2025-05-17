@@ -7,24 +7,34 @@
 
 {% block content %}
 <div class="container mt-5">
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb" class="dashboard-nav">
+                <ol class="breadcrumb bg-light py-2 px-3 rounded shadow-sm">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:dashboard' %}" class="dashboard-link"><i class="fas fa-home mr-1"></i> Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Chinese Typing Practice</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
     <div class="row">
         <div class="col-md-12">
             <div class="chinese-input-container shadow-sm rounded bg-white">
-                <h2 class="text-center mb-4">中文打字练习</h2>
-                <p class="text-center text-muted mb-4">输入或生成中文文本进行打字练习</p>
+                <h2 class="text-center mb-4">Chinese Typing Practice</h2>
+                <p class="text-center text-muted mb-4">Enter or generate Chinese text for typing practice</p>
                 
                 <div class="textarea-container">
-                    <textarea id="chinese-text" class="form-control" rows="8" placeholder="在这里输入中文文本，或点击下方按钮生成随机文本..."></textarea>
+                    <textarea id="chinese-text" class="form-control" rows="8" placeholder="Enter Chinese text here, or click the button below to generate random text..."></textarea>
                 </div>
                 
                 <div class="buttons-container d-flex justify-content-between mt-3">
                     <div>
                         <button id="generate-btn" class="btn btn-primary generate-btn">
-                            <i class="fas fa-robot mr-1"></i> AI 生成文本
+                            <i class="fas fa-robot mr-1"></i> AI Generate Text
                         </button>
                     </div>
                     <div id="start-practice-container" style="display: none;">
-                        <button id="start-practice-btn" class="btn btn-success start-btn">开始练习</button>
+                        <button id="start-practice-btn" class="btn btn-success start-btn">Start Practice</button>
                     </div>
                 </div>
             </div>
@@ -32,52 +42,58 @@
     </div>
 </div>
 
-<!-- 生成文本模态框 -->
+<!-- Generate Text Modal -->
 <div class="modal fade" id="generateModal" tabindex="-1" role="dialog" aria-labelledby="generateModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="generateModalLabel">AI 生成中文文本</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="instruction-input">
-                            <i class="fas fa-lightbulb mr-1"></i> 生成指令
-                            <small class="text-muted">(请输入指令，告诉AI你想要生成什么内容)</small>
-                        </label>
-                        <textarea class="form-control" id="instruction-input" rows="4" placeholder="例如：生成一段关于中国传统节日的介绍，或者写一篇关于环保的短文..."></textarea>
-                        <div id="instruction-feedback" class="mt-2" style="display: none;"></div>
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header ai-modal-header">
+                <h5 class="modal-title" id="generateModalLabel">
+                    <i class="fas fa-magic mr-2"></i>AI Generate Chinese Text
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body ai-modal-body">
+                <div class="form-group">
+                    <label for="instruction-input" class="ai-instruction-label">
+                        <i class="fas fa-lightbulb mr-1"></i> Generation Prompt
+                        <small class="text-muted">(Please enter instructions for what content you want the AI to generate)</small>
+                    </label>
+                    <div class="input-wrapper">
+                        <textarea class="form-control ai-instruction-input" id="instruction-input" rows="4" placeholder="For example: Generate an introduction about traditional Chinese festivals, or write a short article about environmental protection..."></textarea>
                     </div>
-                    <div class="form-group">
-                        <label>文本长度</label>
-                        <div class="form-check">
+                    <div id="instruction-feedback" class="mt-2" style="display: none;"></div>
+                </div>
+                <div class="form-group ai-length-options">
+                    <label class="ai-length-label"><i class="fas fa-text-height mr-1"></i> Text Length</label>
+                    <div class="length-options-container">
+                        <div class="form-check length-option">
                             <input class="form-check-input" type="radio" name="textLength" id="lengthShort" value="short">
                             <label class="form-check-label" for="lengthShort">
-                                短 (约50-100字)
+                                Short <span class="text-muted">(approx. 50-100 characters)</span>
                             </label>
                         </div>
-                        <div class="form-check">
+                        <div class="form-check length-option">
                             <input class="form-check-input" type="radio" name="textLength" id="lengthMedium" value="medium" checked>
                             <label class="form-check-label" for="lengthMedium">
-                                中 (约100-200字)
+                                Medium <span class="text-muted">(approx. 100-200 characters)</span>
                             </label>
                         </div>
-                        <div class="form-check">
+                        <div class="form-check length-option">
                             <input class="form-check-input" type="radio" name="textLength" id="lengthLong" value="long">
                             <label class="form-check-label" for="lengthLong">
-                                长 (约200-300字)
+                                Long <span class="text-muted">(approx. 200-300 characters)</span>
                             </label>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" id="confirm-generate-btn">生成</button>
-                </div>
+            </div>
+            <div class="modal-footer ai-modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary ai-generate-btn" id="confirm-generate-btn">
+                    <i class="fas fa-wand-magic-sparkles mr-1"></i> Generate
+                </button>
             </div>
         </div>
     </div>
@@ -89,7 +105,7 @@
     $(document).ready(function() {
         let generatedTextId = null;
         
-        // 检查文本区域是否有内容，决定是否显示"开始练习"按钮
+        // Check if textarea has content, decide whether to show "Start Practice" button
         function checkTextareaContent() {
             if ($("#chinese-text").val().trim().length > 0) {
                 $("#start-practice-container").show();
@@ -98,39 +114,39 @@
             }
         }
         
-        // 监听文本输入变化
+        // Listen for text input changes
         $("#chinese-text").on('input', function() {
             checkTextareaContent();
         });
         
-        // 打开生成文本模态框
+        // Open generate text modal
         $("#generate-btn").click(function() {
-            // 清空反馈信息和指令输入
+            // Clear feedback and instruction input
             $("#instruction-input").val('');
             $("#instruction-feedback").hide().html('');
             
             $("#generateModal").modal('show');
         });
         
-        // 确认生成文本按钮
+        // Confirm generate text button
         $("#confirm-generate-btn").click(function() {
             const instruction = $("#instruction-input").val().trim();
             const length = $("input[name='textLength']:checked").val();
             
-            // 验证指令不为空
+            // Validate instruction not empty
             if (!instruction) {
                 $("#instruction-feedback")
-                    .html('<div class="alert alert-warning">请输入生成指令</div>')
+                    .html('<div class="alert alert-warning">Please enter generation instructions</div>')
                     .show();
                 return;
             }
             
-            // 显示加载状态
-            $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 生成中...');
+            // Show loading state
+            $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...');
             $(this).prop('disabled', true);
             $("#instruction-feedback").hide().html('');
             
-            // 发送AJAX请求生成文本
+            // Send AJAX request to generate text
             fetch('{% url "typingchinese:generate_ai_text" %}', {
                 method: 'POST',
                 headers: {
@@ -149,7 +165,7 @@
                     checkTextareaContent();
                     $("#generateModal").modal('hide');
                 } else {
-                    // 显示错误信息
+                    // Show error message
                     $("#instruction-feedback")
                         .html(`<div class="alert alert-danger">${data.error}</div>`)
                         .show();
@@ -158,20 +174,20 @@
             .catch(error => {
                 console.error('Error:', error);
                 $("#instruction-feedback")
-                    .html('<div class="alert alert-danger">生成过程中发生错误，请重试</div>')
+                    .html('<div class="alert alert-danger">An error occurred during generation, please try again</div>')
                     .show();
             })
             .finally(() => {
-                $("#confirm-generate-btn").html('生成');
+                $("#confirm-generate-btn").html('<i class="fas fa-wand-magic-sparkles mr-1"></i> Generate');
                 $("#confirm-generate-btn").prop('disabled', false);
             });
         });
         
-        // 开始练习按钮
+        // Start practice button
         $("#start-practice-btn").click(function() {
             const text = $("#chinese-text").val().trim();
             if (text.length > 0) {
-                // 构建URL，包含文本内容
+                // Build URL with text content
                 let url = '{% url "typingchinese:practice" %}?';
                 
                 if (generatedTextId) {
@@ -182,11 +198,11 @@
                 
                 window.location.href = url;
             } else {
-                alert('请先输入或生成文本');
+                alert('Please enter or generate text first');
             }
         });
         
-        // 页面加载时检查文本区域
+        // Check textarea on page load
         checkTextareaContent();
     });
 </script>

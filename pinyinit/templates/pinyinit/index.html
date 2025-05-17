@@ -88,24 +88,24 @@
         border-left: 4px solid #e74c3c;
     }
     
-    /* 添加段落样式，增加段落间距 */
+    /* Add paragraph styling with increased spacing between paragraphs */
     .result-box p {
         margin-bottom: 2em;
     }
     
-    /* 当需要更明显的段落分隔时，可以添加底部边框 */
+    /* For more obvious paragraph separation, add bottom border */
     .result-box p:not(:last-child) {
         border-bottom: 1px solid #eaeaea;
         padding-bottom: 1.5em;
     }
     
-    /* 为带缩进的段落添加额外样式 */
+    /* Add extra styling for indented paragraphs */
     .paragraph-with-indent {
         margin-top: 2em;
         position: relative;
     }
     
-    /* 为第一个段落添加特殊样式，避免顶部过大间距 */
+    /* Special styling for the first paragraph to avoid excessive top spacing */
     .result-box p:first-child {
         margin-top: 0.5em;
     }
@@ -121,18 +121,18 @@
 {% block content %}
 <div class="container py-5">
     <div class="pinyin-container">
-        <h2 class="page-title">拼音转换工具</h2>
+        <h2 class="page-title">Pinyin Converter Tool</h2>
         
         <div class="pinyin-form">
             <form method="post">
                 {% csrf_token %}
                 <div class="form-group">
-                    <label for="input_text"><i class="fas fa-keyboard mr-2"></i>输入中文文本</label>
-                    <textarea class="form-control" id="input_text" name="input_text" rows="6" placeholder="请在此输入中文文本...">{{ input_text }}</textarea>
+                    <label for="input_text"><i class="fas fa-keyboard mr-2"></i>Enter Chinese Text</label>
+                    <textarea class="form-control" id="input_text" name="input_text" rows="6" placeholder="Please enter Chinese text here...">{{ input_text }}</textarea>
                 </div>
                 <div class="text-center">
                     <button type="submit" class="btn btn-submit">
-                        <i class="fas fa-language mr-2"></i>转换为拼音
+                        <i class="fas fa-language mr-2"></i>Convert to Pinyin
                     </button>
                 </div>
             </form>
@@ -145,8 +145,8 @@
         {% endif %}
         
         <div class="info-box">
-            <h5><i class="fas fa-info-circle mr-2"></i>关于此工具</h5>
-            <p>拼音转换工具可以为中文文本添加拼音注音，帮助学习者正确发音。该工具支持针对多音字的智能识别，提高注音准确度。</p>
+            <h5><i class="fas fa-info-circle mr-2"></i>About This Tool</h5>
+            <p>The Pinyin Converter Tool adds phonetic pinyin notation to Chinese text, helping learners with correct pronunciation. This tool intelligently recognizes characters with multiple pronunciations to improve annotation accuracy.</p>
         </div>
     </div>
 </div>
@@ -154,7 +154,7 @@
 
 {% block extra_js %}
 <script>
-    // 自动调整文本区域高度
+    // Automatically adjust text area height
     $(document).ready(function() {
         $('#input_text').on('input', function() {
             this.style.height = 'auto';

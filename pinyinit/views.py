@@ -4,6 +4,7 @@ import re
 from pypinyin import pinyin, Style, lazy_pinyin
 import jieba
 from typing import List, Tuple
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 
@@ -163,6 +164,7 @@ class PinyinMarker:
 # 创建PinyinMarker实例
 marker = PinyinMarker()
 
+@login_required
 def index(request):
     result_html = None
     input_text = ""

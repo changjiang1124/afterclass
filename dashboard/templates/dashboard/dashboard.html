@@ -8,22 +8,22 @@
 
 {% block content %}
 <div class="dashboard-container">
-    <!-- 顶部欢迎区域 -->
+    <!-- Top Welcome Section -->
     <div class="welcome-section">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-7">
-                    <h1 class="welcome-title">你好, {{ user.username }}!</h1>
-                    <p class="welcome-subtitle">欢迎来到珀斯中文学习平台</p>
-                    <p class="welcome-message">今天开始您的中文学习旅程吧。</p>
+                    <h1 class="welcome-title">Hello, {{ user.username }}!</h1>
+                    <p class="welcome-subtitle">Welcome to Learn Chinese Perth Platform</p>
+                    <p class="welcome-message">Start your Chinese learning journey today.</p>
                 </div>
                 <div class="col-md-5">
                     <div class="quick-stats">
                         <div class="stat-card">
                             <i class="fas fa-calendar-check"></i>
                             <div class="stat-info">
-                                <h3>今日学习</h3>
-                                <p>开始学习吧</p>
+                                <h3>Today's Learning</h3>
+                                <p>Let's start learning</p>
                             </div>
                         </div>
                     </div>
@@ -32,37 +32,37 @@
         </div>
     </div>
 
-    <!-- 主要内容区域 -->
+    <!-- Main Content Area -->
     <div class="container main-content">
-        <!-- 功能区分类显示 -->
+        <!-- Feature Categories -->
         <div class="row">
-            <!-- 拼音助手卡片 -->
+            <!-- Pinyin Assistant Card -->
             <div class="col-md-4 mb-4">
                 <div class="feature-card pinyin-feature-card">
                     <div class="pinyin-icon-wrapper">
                         <i class="fas fa-language card-icon"></i>
                     </div>
-                    <h3>拼音助手</h3>
-                    <p>轻松学习中文拼音，提高发音准确度。自动识别多音字，呈现精准拼音标注。</p>
+                    <h3>Pinyin Assistant</h3>
+                    <p>Learn Chinese pinyin with ease and improve pronunciation accuracy. Automatically recognize multi-pronunciation characters and provide precise pinyin annotations.</p>
                     <a href="{% url 'pinyinit:index' %}" class="btn btn-feature">
-                        <i class="fas fa-arrow-right"></i> 开始使用
+                        <i class="fas fa-arrow-right"></i> Start Using
                     </a>
                 </div>
             </div>
-            <!-- 打字练习卡片 -->
+            <!-- Typing Practice Card -->
             <div class="col-md-4 mb-4">
                 <div class="feature-card typing-feature-card">
                     <div class="typing-icon-wrapper">
                         <i class="fas fa-keyboard card-icon"></i>
                     </div>
-                    <h3>打字练习</h3>
-                    <p>提高中文打字速度与准确度，自定义或生成练习文本，实时统计打字效率和进度。</p>
+                    <h3>Typing Practice</h3>
+                    <p>Improve Chinese typing speed and accuracy. Customize or generate practice text, and track typing efficiency and progress in real-time.</p>
                     <a href="{% url 'typingchinese:home' %}" class="btn btn-feature">
-                        <i class="fas fa-arrow-right"></i> 开始练习
+                        <i class="fas fa-arrow-right"></i> Start Practice
                     </a>
                 </div>
             </div>
-            <!-- 其他功能卡片可以在这里添加 -->
+            <!-- Additional feature cards can be added here -->
         </div>
     </div>
 </div>
@@ -70,9 +70,9 @@
 
 {% block extra_js %}
 <script>
-    // 如果需要添加任何JS交互效果
+    // Add any JS interaction effects if needed
     document.addEventListener('DOMContentLoaded', function() {
-        // 页面加载动效
+        // Page loading animation
         const featureCards = document.querySelectorAll('.feature-card');
         featureCards.forEach((card, index) => {
             setTimeout(() => {
