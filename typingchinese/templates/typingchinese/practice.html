@@ -23,7 +23,6 @@
                         <input type="checkbox" class="custom-control-input" id="show-pinyin" checked>
                         <label class="custom-control-label" for="show-pinyin">Show Pinyin</label>
                     </div>
-                    <a href="{% url 'typingchinese:home' %}" class="btn btn-sm btn-outline-secondary ml-3">Return to Home</a>
                 </div>
             </div>
         </div>
@@ -51,12 +50,16 @@
         
         <!-- Right Typing Area -->
         <div class="col-md-6">
-            <div class="typing-container">                
+            <div class="typing-container">
+                <div class="progress mb-2">
+                    <div id="typing-progress" class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+                
                 <textarea id="typing-input" class="form-control" placeholder="Type Chinese text here..."></textarea>
                 
-                <div class="typing-controls">
-                    <button id="reset-btn" class="btn">Reset</button>
-                    <button id="finish-btn" class="btn btn-primary" disabled>Finish</button>
+                <div class="typing-controls mt-3">
+                    <button id="reset-btn" class="btn btn-secondary"><i class="fas fa-redo mr-1"></i> Reset</button>
+                    <a href="{% url 'typingchinese:home' %}" class="btn btn-primary"><i class="fas fa-sync mr-1"></i> New Text</a>
                 </div>
             </div>
         </div>

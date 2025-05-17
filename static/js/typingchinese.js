@@ -64,6 +64,23 @@ $(document).ready(function() {
     // 初始化拼音
     processPinyinText();
     
+    // 更新进度条
+    function updateProgressBar(current, total) {
+        const percentage = Math.min(100, Math.round((current / total) * 100));
+        $("#typing-progress").css("width", percentage + "%");
+        $("#typing-progress").attr("aria-valuenow", percentage);
+        $("#typing-progress").text(percentage + "%");
+        
+        // 根据进度更新进度条颜色
+        if (percentage < 30) {
+            $("#typing-progress").removeClass("bg-warning bg-success").addClass("bg-info");
+        } else if (percentage < 70) {
+            $("#typing-progress").removeClass("bg-info bg-success").addClass("bg-warning");
+        } else {
+            $("#typing-progress").removeClass("bg-info bg-warning").addClass("bg-success");
+        }
+    }
+    
     // 监听输入，实时更新界面颜色
     $("#typing-input").on('input', function() {
         const currentInput = $(this).val();
@@ -96,11 +113,29 @@ $(document).ready(function() {
             $(`.hanzi-group .hanzi[data-index="${currentPosition}"]`).addClass("current-char");
         }
         
-        // 如果完成了全部文本，启用完成按钮
+        // 更新进度条
+        updateProgressBar(currentPosition, normalizedSourceText.length);
+        
+        // 当输入结束时显示提示
         if (normalizedInput.length >= normalizedSourceText.length) {
-            $("#finish-btn").prop('disabled', false);
+            const totalTyped = correctChars + incorrectChars;
+            const accuracy = totalTyped > 0 ? Math.round((correctChars / totalTyped) * 100) : 100;
+            
+            // 如果尚未显示成功提示，则显示
+            if (!$("#completion-alert").length) {
+                const alertHtml = `
+                    <div id="completion-alert" class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                        <strong>恭喜你完成打字练习!</strong> 准确率: ${accuracy}%
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                `;
+                $(".typing-container").append(alertHtml);
+            }
         } else {
-            $("#finish-btn").prop('disabled', true);
+            // 如果还在输入中，移除已有的成功提示
+            $("#completion-alert").remove();
         }
     });
     
@@ -114,14 +149,10 @@ $(document).ready(function() {
         // 重置所有字符的样式
         $(".char-to-type").removeClass("correct-char error-char current-char");
         
-        $("#finish-btn").prop('disabled', true);
-    });
-    
-    // 完成按钮
-    $("#finish-btn").click(function() {
-        const totalTyped = correctChars + incorrectChars;
-        const accuracy = totalTyped > 0 ? Math.round((correctChars / totalTyped) * 100) : 100;
+        // 重置进度条
+        updateProgressBar(0, sourceText.length);
         
-        alert("恭喜你完成打字练习！\n\n准确率: " + accuracy + "%");
+        // 移除完成提示
+        $("#completion-alert").remove();
     });
 }); 

@@ -141,8 +141,7 @@
                             // 显示生成中状态
                             $(this).addClass('active-topic');
                             $(".topic-item").prop('disabled', true);
-                            $("#confirm-generate-btn").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...');
-                            $("#confirm-generate-btn").prop('disabled', true);
+                            $("#confirm-generate-btn").prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...');
                             
                             // 获取当前选中的文本长度
                             const length = $("input[name='textLength']:checked").val();
@@ -181,8 +180,7 @@
                             .finally(() => {
                                 $(".topic-item").removeClass('active-topic');
                                 $(".topic-item").prop('disabled', false);
-                                $("#confirm-generate-btn").html('<i class="fas fa-wand-magic-sparkles mr-1"></i> Generate');
-                                $("#confirm-generate-btn").prop('disabled', false);
+                                $("#confirm-generate-btn").prop('disabled', false).html('<i class="fas fa-wand-magic-sparkles mr-1"></i> Generate');
                             });
                         });
                     } else {
@@ -242,8 +240,7 @@
             }
             
             // Show loading state
-            $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...');
-            $(this).prop('disabled', true);
+            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...');
             $("#instruction-feedback").hide().html('');
             
             // Send AJAX request to generate text
@@ -278,8 +275,7 @@
                     .show();
             })
             .finally(() => {
-                $("#confirm-generate-btn").html('<i class="fas fa-wand-magic-sparkles mr-1"></i> Generate');
-                $("#confirm-generate-btn").prop('disabled', false);
+                $("#confirm-generate-btn").prop('disabled', false).html('<i class="fas fa-wand-magic-sparkles mr-1"></i> Generate');
             });
         });
         
