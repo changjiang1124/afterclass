@@ -22,28 +22,41 @@
     min-height: 500px;
     margin-top: 1.5rem;
     margin-bottom: 2rem;
+    display: flex;
+    flex-wrap: wrap;
 }
 
 .source-text-container {
-    background-color: #f9f9f9;
-    border-right: 1px solid #ddd;
-    padding: 1.5rem 2rem;
-    height: 100%;
+    height: calc(80vh - 100px);
     overflow-y: auto;
+    border: 1px solid #e3e3e3;
     border-radius: 8px;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
-    white-space: pre-wrap;
-    word-wrap: break-word;
+    padding: 1.5rem;
+    margin-bottom: 15px;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* 确保固定高度适应不同屏幕尺寸 */
+@media (min-height: 800px) {
+    .source-text-container {
+        height: calc(85vh - 100px);
+    }
+    
+    .typing-container {
+        height: calc(85vh - 100px);
+    }
 }
 
 .typing-container {
-    padding: 1.5rem 2rem;
-    height: 100%;
+    padding: 1.5rem;
+    height: calc(80vh - 100px);
     display: flex;
     flex-direction: column;
     background-color: #fff;
     border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    border: 1px solid #e3e3e3;
 }
 
 .pinyin-text {
@@ -66,41 +79,40 @@
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     padding: 1rem;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.03);
+    box-shadow: inset 0 0 3px rgba(0,0,0,0.03);
     white-space: pre-wrap;
     word-wrap: break-word;
+    min-height: 320px;
+    margin-top: 15px;
+    margin-bottom: auto;
 }
 
 .typing-controls {
-    margin-top: 1.5rem;
+    margin-top: 15px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    justify-content: flex-end;
+    gap: 15px;
+    padding-bottom: 5px;
 }
 
 .stats-container {
     display: flex;
-    gap: 1.5rem;
-    margin-top: 0.5rem;
-    margin-bottom: 1rem;
+    justify-content: space-between;
+    margin-bottom: 15px;
     background-color: #f8f9fa;
     border-radius: 8px;
-    padding: 1rem;
+    padding: 15px;
+    border: 1px solid #eee;
 }
 
 .stat-item {
     text-align: center;
     flex-grow: 1;
-    border-right: 1px solid #e6e6e6;
     padding: 0 0.5rem;
 }
 
-.stat-item:last-child {
-    border-right: none;
-}
-
 .stat-value {
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     font-weight: bold;
     color: #333;
 }
@@ -108,7 +120,7 @@
 .stat-label {
     font-size: 0.85rem;
     color: #666;
-    margin-top: 0.3rem;
+    margin-top: 0.5rem;
 }
 
 .completed-char {
@@ -129,30 +141,41 @@
     padding: 0.5rem 1.5rem;
     border-radius: 6px;
     font-weight: 500;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    min-width: 90px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 #reset-btn {
-    background-color: #ffc107;
-    border-color: #ffc107;
-    color: #212529;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    color: #555;
 }
 
 #reset-btn:hover {
-    background-color: #e0a800;
-    border-color: #e0a800;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    color: #333;
 }
 
 #finish-btn {
     background-color: #17a2b8;
     border-color: #17a2b8;
+    color: white;
 }
 
 #finish-btn:hover {
     background-color: #138496;
     border-color: #138496;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+}
+
+#finish-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* 页面布局调整 */
@@ -167,7 +190,7 @@
     display: inline-block;
     text-align: center;
     width: 42px;
-    margin: 0 2px;
+    margin: 0 2px 5px;
     vertical-align: top;
 }
 
@@ -175,12 +198,26 @@
     font-size: 13px;
     height: 20px;
     color: #666;
-    margin-bottom: 5px;
+    margin-bottom: 3px;
     font-family: 'Poppins', sans-serif;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .hanzi-group .hanzi {
-    font-size: 30px;
+    font-size: 28px;
+    line-height: 1.2;
+}
+
+/* 处理段落和行距 */
+#pinyin-content-container {
+    line-height: 1.6;
+}
+
+#pinyin-content-container br {
+    display: block;
+    content: "";
+    margin-top: 15px;
 }
 
 .polyphonic-char {
@@ -211,11 +248,12 @@
 @media (max-width: 768px) {
     .source-text-container, .typing-container {
         padding: 1rem;
+        height: calc(70vh - 100px);
     }
     
     .stats-container {
         flex-wrap: wrap;
-        gap: 1rem;
+        gap: 0.5rem;
     }
     
     .stat-item {
@@ -227,5 +265,23 @@
     
     .stat-item:nth-last-child(-n+2) {
         border-bottom: none;
+    }
+    
+    .typing-controls {
+        justify-content: center;
+    }
+    
+    .practice-container {
+        margin-bottom: 4rem;
+    }
+    
+    #typing-input {
+        min-height: 200px;
+    }
+}
+
+@media (min-width: 992px) {
+    .source-text-container, .typing-container {
+        height: calc(85vh - 120px);
     }
 } 
