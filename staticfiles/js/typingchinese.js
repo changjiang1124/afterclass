@@ -5,14 +5,12 @@ $(document).ready(function() {
     let incorrectChars = 0;
     let currentPosition = 0;
     let chineseCharIndices = []; // 存储中文字符的索引位置
+    let displayedCharsMap = {}; // 存储显示的字符与原始文本索引的映射
     
-    // 检查字符是否为中文（包括汉字和中文标点）
+    // 检查字符是否为汉字（只检测汉字，忽略所有标点）
     function isChinese(char) {
-        // \u4e00-\u9fa5: 基本汉字
-        // \u3000-\u303F: 中文标点符号（部分）
-        // \uFF00-\uFFEF: 全角字符（包括中文标点）
-        // \u2018-\u201F, \u2026, \u3001-\u3002: 引号，省略号，顿号和句号
-        return /[\u4e00-\u9fa5\u3000-\u303F\uFF00-\uFFEF\u2018-\u201F\u2026\u3001-\u3002]/.test(char);
+        // 只检测基本汉字范围 \u4e00-\u9fa5
+        return /[\u4e00-\u9fa5]/.test(char);
     }
     
     // 提取文本中的中文字符及其索引
@@ -48,10 +46,23 @@ $(document).ready(function() {
                     // 更新拼音内容容器
                     $("#pinyin-content-container").html(data.html);
                     
-                    // 为每个汉字添加数据索引
-                    $(".hanzi-group .hanzi").each(function(index) {
-                        $(this).attr('data-index', index);
-                        $(this).addClass('char-to-type');
+                    // 为每个汉字添加数据索引并创建显示字符与原始索引的映射
+                    let displayIndex = 0;
+                    $(".hanzi-group .hanzi").each(function() {
+                        const text = $(this).text().trim();
+                        if (isChinese(text)) {
+                            $(this).attr('data-index', displayIndex);
+                            $(this).addClass('char-to-type');
+                            
+                            // 在原始文本中查找这个字符
+                            for (let i = 0; i < sourceText.length; i++) {
+                                if (sourceText[i] === text && !Object.values(displayedCharsMap).includes(i)) {
+                                    displayedCharsMap[displayIndex] = i;
+                                    break;
+                                }
+                            }
+                            displayIndex++;
+                        }
                     });
                     
                     // 设置拼音显示状态
@@ -88,7 +99,7 @@ $(document).ready(function() {
     // 初始化拼音
     processPinyinText();
     
-    // 更新进度条 - 只计算中文字符的进度
+    // 更新进度条 - 只计算汉字的进度
     function updateProgressBar(typedChineseCount, totalChineseChars) {
         const percentage = Math.min(100, Math.round((typedChineseCount / totalChineseChars) * 100));
         $("#typing-progress").css("width", percentage + "%");
@@ -118,48 +129,47 @@ $(document).ready(function() {
         incorrectChars = 0;
         let typedChineseCount = 0;
         
-        // 更新字符状态 - 只追踪中文字符
+        // 获取显示的汉字及其对应元素
+        const displayedChars = [];
+        const displayedElements = [];
+        $(".hanzi-group .hanzi").each(function() {
+            const text = $(this).text().trim();
+            if (isChinese(text)) {
+                displayedChars.push(text);
+                displayedElements.push($(this));
+            }
+        });
+        
+        // 从输入中提取汉字
+        let inputText = "";
         for (let i = 0; i < normalizedInput.length; i++) {
-            if (i < normalizedSourceText.length) {
-                // 只有当当前字符是中文时才计入进度
-                if (isChinese(normalizedSourceText[i])) {
-                    typedChineseCount++;
-                    const hanziIndex = chineseCharIndices.indexOf(i);
-                    if (hanziIndex !== -1) {
-                        const $char = $(`.hanzi-group .hanzi[data-index="${hanziIndex}"]`);
-                        if (normalizedInput[i] === normalizedSourceText[i]) {
-                            $char.addClass("correct-char");
-                            correctChars++;
-                        } else {
-                            $char.addClass("error-char");
-                            incorrectChars++;
-                        }
-                    }
-                }
+            if (isChinese(normalizedInput[i])) {
+                inputText += normalizedInput[i];
             }
         }
         
-        // 当前打字位置
-        currentPosition = normalizedInput.length;
-        
-        // 找到下一个要输入的中文字符位置
-        let nextChineseCharIndex = -1;
-        for (let i = 0; i < chineseCharIndices.length; i++) {
-            if (chineseCharIndices[i] >= currentPosition) {
-                nextChineseCharIndex = i;
-                break;
+        // 逐字符比较输入的汉字和显示的汉字
+        for (let i = 0; i < Math.min(inputText.length, displayedChars.length); i++) {
+            if (inputText[i] === displayedChars[i]) {
+                displayedElements[i].addClass("correct-char");
+                correctChars++;
+            } else {
+                displayedElements[i].addClass("error-char");
+                incorrectChars++;
             }
+            typedChineseCount++;
         }
         
-        if (nextChineseCharIndex !== -1) {
-            $(`.hanzi-group .hanzi[data-index="${nextChineseCharIndex}"]`).addClass("current-char");
+        // 找到下一个要输入的汉字位置
+        if (typedChineseCount < displayedChars.length) {
+            displayedElements[typedChineseCount].addClass("current-char");
         }
         
-        // 更新进度条 - 只计算中文字符
-        updateProgressBar(typedChineseCount, chineseCharIndices.length);
+        // 更新进度条 - 只计算汉字
+        updateProgressBar(typedChineseCount, displayedChars.length);
         
-        // 当输入所有中文字符后显示提示
-        if (typedChineseCount >= chineseCharIndices.length) {
+        // 当输入所有汉字后显示提示
+        if (typedChineseCount >= displayedChars.length) {
             const totalTyped = correctChars + incorrectChars;
             const accuracy = totalTyped > 0 ? Math.round((correctChars / totalTyped) * 100) : 100;
             
@@ -191,8 +201,9 @@ $(document).ready(function() {
         // 重置所有字符的样式
         $(".char-to-type").removeClass("correct-char error-char current-char");
         
-        // 重置进度条 - 使用中文字符总数
-        updateProgressBar(0, chineseCharIndices.length);
+        // 重置进度条 - 使用汉字数量
+        const totalChineseChars = $(".hanzi-group .hanzi").length;
+        updateProgressBar(0, totalChineseChars);
         
         // 移除完成提示
         $("#completion-alert").remove();

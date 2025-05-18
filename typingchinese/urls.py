@@ -10,4 +10,5 @@ urlpatterns = [
     path('practice/', views.practice, name='practice'),
     path('process-pinyin/', views.process_pinyin, name='process_pinyin'),
     path('topic-suggestions/', views.generate_topic_suggestions, name='topic_suggestions'),
+    path('translate/', views.translate_text, name='translate_text'),
 ] 

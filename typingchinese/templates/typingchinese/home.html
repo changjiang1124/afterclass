@@ -3,6 +3,22 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/typingchinese.css' %}">
+<style>
+/* 处理中按钮样式 */
+.btn-translating, 
+.btn-generating {
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    background-color: rgba(254, 77, 1, 0.1) !important;
+    pointer-events: none;
+}
+
+.btn-translating .spinner-border,
+.btn-generating .spinner-border {
+    border-color: var(--primary-color);
+    border-right-color: transparent;
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -27,14 +43,31 @@
                     <textarea id="chinese-text" class="form-control" rows="8" placeholder="Enter Chinese text here, or click the button below to generate random text..."></textarea>
                 </div>
                 
+                <div class="translation-container mt-3" style="display: none;">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-language mr-2"></i>English Translation</span>
+                            <button type="button" class="btn btn-sm btn-light" id="close-translation-btn">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="translation-content" class="p-2 bg-light rounded"></div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="buttons-container d-flex justify-content-between mt-3">
                     <div>
-                        <button id="generate-btn" class="btn btn-primary generate-btn">
+                        <button id="generate-btn" class="btn btn-outline-primary generate-btn">
                             <i class="fas fa-robot mr-1"></i> AI Generate Text
+                        </button>
+                        <button id="translate-btn" class="btn btn-outline-primary" style="display: none;">
+                            <i class="fas fa-language mr-1"></i> Translate
                         </button>
                     </div>
                     <div id="start-practice-container" style="display: none;">
-                        <button id="start-practice-btn" class="btn btn-success start-btn">Start Practice</button>
+                        <button id="start-practice-btn" class="btn btn-primary start-btn">Start Practice</button>
                     </div>
                 </div>
             </div>
@@ -44,7 +77,7 @@
 
 <!-- Generate Text Modal -->
 <div class="modal fade" id="generateModal" tabindex="-1" role="dialog" aria-labelledby="generateModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header ai-modal-header">
                 <h5 class="modal-title" id="generateModalLabel">
@@ -70,7 +103,7 @@
                 <div class="form-group mt-2">
                     <div class="d-flex align-items-center mb-2">
                         <label class="mb-0 mr-auto"><i class="fas fa-tags mr-1"></i> Quick Topics</label>
-                        <button id="refresh-topics-btn" class="btn btn-sm btn-outline-secondary" title="Refresh topics">
+                        <button id="refresh-topics-btn" class="btn btn-sm btn-outline-primary" title="Refresh topics">
                             <i class="fas fa-sync-alt"></i>
                         </button>
                     </div>
@@ -107,7 +140,7 @@
             </div>
             <div class="modal-footer ai-modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary ai-generate-btn" id="confirm-generate-btn">
+                <button type="button" class="btn btn-outline-primary ai-generate-btn" id="confirm-generate-btn">
                     <i class="fas fa-wand-magic-sparkles mr-1"></i> Generate
                 </button>
             </div>
@@ -141,7 +174,9 @@
                             // 显示生成中状态
                             $(this).addClass('active-topic');
                             $(".topic-item").prop('disabled', true);
-                            $("#confirm-generate-btn").prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...');
+                            $("#confirm-generate-btn").prop('disabled', true)
+                                                     .addClass('btn-generating')
+                                                     .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...');
                             
                             // 获取当前选中的文本长度
                             const length = $("input[name='textLength']:checked").val();
@@ -180,7 +215,9 @@
                             .finally(() => {
                                 $(".topic-item").removeClass('active-topic');
                                 $(".topic-item").prop('disabled', false);
-                                $("#confirm-generate-btn").prop('disabled', false).html('<i class="fas fa-wand-magic-sparkles mr-1"></i> Generate');
+                                $("#confirm-generate-btn").prop('disabled', false)
+                                                         .removeClass('btn-generating')
+                                                         .html('<i class="fas fa-wand-magic-sparkles mr-1"></i> Generate');
                             });
                         });
                     } else {
@@ -203,18 +240,71 @@
             loadTopicSuggestions();
         });
         
-        // Check if textarea has content, decide whether to show "Start Practice" button
+        // Check if textarea has content, decide whether to show "Start Practice" and "Translate" buttons
         function checkTextareaContent() {
             if ($("#chinese-text").val().trim().length > 0) {
                 $("#start-practice-container").show();
+                $("#translate-btn").show();
             } else {
                 $("#start-practice-container").hide();
+                $("#translate-btn").hide();
+                $(".translation-container").hide();
             }
         }
         
         // Listen for text input changes
         $("#chinese-text").on('input', function() {
             checkTextareaContent();
+            // 当用户手动修改文本内容时，重置generatedTextId
+            generatedTextId = null;
+        });
+        
+        // Translate button click event
+        $("#translate-btn").click(function() {
+            const text = $("#chinese-text").val().trim();
+            
+            if (text.length > 0) {
+                // Show loading state
+                $(this).prop('disabled', true)
+                       .addClass('btn-translating')
+                       .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Translating...');
+                $("#translation-content").html('<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div><p class="mt-2 text-muted">Translating...</p></div>');
+                $(".translation-container").show();
+                
+                // Send AJAX request to translate text
+                fetch('{% url "typingchinese:translate_text" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        $("#translation-content").html(data.translation);
+                    } else {
+                        // Show error message
+                        $("#translation-content").html(`<div class="alert alert-danger">${data.error}</div>`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    $("#translation-content").html('<div class="alert alert-danger">Translation process failed, please try again</div>');
+                })
+                .finally(() => {
+                    $("#translate-btn").prop('disabled', false)
+                                      .removeClass('btn-translating')
+                                      .html('<i class="fas fa-language mr-1"></i> Translate');
+                });
+            }
+        });
+        
+        // Close translation button click event
+        $("#close-translation-btn").click(function() {
+            $(".translation-container").hide();
         });
         
         // Open generate text modal
@@ -240,7 +330,9 @@
             }
             
             // Show loading state
-            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...');
+            $(this).prop('disabled', true)
+                   .addClass('btn-generating')
+                   .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...');
             $("#instruction-feedback").hide().html('');
             
             // Send AJAX request to generate text
@@ -275,7 +367,9 @@
                     .show();
             })
             .finally(() => {
-                $("#confirm-generate-btn").prop('disabled', false).html('<i class="fas fa-wand-magic-sparkles mr-1"></i> Generate');
+                $("#confirm-generate-btn").prop('disabled', false)
+                                         .removeClass('btn-generating')
+                                         .html('<i class="fas fa-wand-magic-sparkles mr-1"></i> Generate');
             });
         });
         

@@ -1,8 +1,20 @@
+/* 确保与主题一致的颜色变量 */
+:root {
+  --primary-color: #FE4D01;
+  --secondary-color: #FFD966;
+  --accent-color-1: #FE4D01;
+  --accent-color-2: #FFD966;
+  --text-color: #151515;
+  --text-color-secondary: #333333;
+  --light-text-color: #ffffff;
+}
+
 /* 首页样式 */
 .chinese-input-container {
     max-width: 800px;
     margin: 0 auto;
     padding: 2rem;
+    margin-bottom: 2rem;
 }
 
 .buttons-container {
@@ -11,6 +23,13 @@
 
 .textarea-container {
     position: relative;
+    margin-bottom: 1rem;
+}
+
+/* 增加模态框宽度 */
+#generateModal .modal-dialog {
+    max-width: 650px;
+    width: 90%;
 }
 
 .modal-body .form-group {
@@ -428,23 +447,29 @@
 .topic-suggestions-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.8rem;
+    padding: 0.5rem 0;
 }
 
 .topic-item {
     background-color: #fff;
     border: 1px solid #e0e0e0;
     border-radius: var(--border-radius);
-    padding: 0.4rem 0.8rem;
-    font-size: 0.9rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
     cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    flex: 0 0 auto;
+    min-width: 120px;
+    text-align: center;
 }
 
 .topic-item:hover {
     background-color: #f8f9fa;
     border-color: var(--primary-color);
     transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
 }
 
 .topic-item:active,
@@ -452,4 +477,60 @@
     background-color: var(--primary-color);
     color: var(--light-text-color);
     border-color: var(--primary-color);
+    transform: translateY(1px);
+}
+
+#chinese-text {
+    min-height: 180px;
+    font-size: 16px;
+    line-height: 1.8;
+}
+
+.translation-container .card {
+    transition: all 0.3s;
+}
+
+.translation-container .card-header {
+    background-color: var(--primary-color) !important;
+}
+
+.translation-container #translation-content {
+    min-height: 100px;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+/* 确保翻译结果区域良好的行高和间距 */
+#translation-content p {
+    margin-bottom: 0.8rem;
+}
+
+#translation-content:last-child {
+    margin-bottom: 0;
+}
+
+/* 确保按钮使用主题颜色 */
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: var(--accent-color-1);
+    border-color: var(--accent-color-1);
 } 

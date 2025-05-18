@@ -43,7 +43,7 @@ def generate_topic_suggestions(request):
         Only return the list of topics, no explanation or additional text. One topic per line.
         """
         
-        user_prompt = "Please provide 5 short topic suggestions for Chinese typing practice in Australian English, covering life, culture, technology, education, etc."
+        user_prompt = "Please provide 4 short topic suggestions for Chinese typing practice in Australian English, covering life, culture, technology, education, etc. The topics should be diverse and interesting, and able to inspire users to generate meaningful Chinese content for typing practice."
         
         payload = {
             "model": "gpt-4.1",
@@ -51,7 +51,7 @@ def generate_topic_suggestions(request):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            "temperature": 0.7,
+            "temperature": 0.9,
             "max_tokens": 200
         }
         
@@ -250,6 +250,64 @@ def process_pinyin(request):
                 'success': True,
                 'html': result_html
             })
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+# 处理文本翻译 - AJAX
+@csrf_exempt
+@login_required
+def translate_text(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        text = data.get('text', '')
+        
+        if text:
+            # 调用OpenAI API进行翻译
+            try:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {OPENAI_API_KEY}"
+                }
+                
+                system_prompt = """
+                You are a professional translator. Translate the Chinese text provided by the user into English.
+                Provide only the translated text without any additional explanation or comments.
+                """
+                
+                payload = {
+                    "model": "gpt-4o-mini",
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": f"Translate this Chinese text to English: {text}"}
+                    ],
+                    "temperature": 0.3,
+                    "max_tokens": 1000
+                }
+                
+                response = requests.post(OPENAI_API_URL, headers=headers, json=payload)
+                response_data = response.json()
+                
+                if response.status_code == 200 and "choices" in response_data:
+                    translated_text = response_data["choices"][0]["message"]["content"].strip()
+                    
+                    return JsonResponse({
+                        'success': True,
+                        'translation': translated_text
+                    })
+                else:
+                    error_message = response_data.get("error", {}).get("message", "Translation failed, please try again")
+                    return JsonResponse({
+                        'success': False,
+                        'error': error_message
+                    })
+                    
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': f"API调用失败: {str(e)}"
+                })
+        
+        return JsonResponse({'success': False, 'error': 'No text provided'})
     
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
