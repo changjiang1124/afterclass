@@ -106,7 +106,6 @@ a:hover {
 .btn-primary:hover {
   background-color: var(--secondary-color);
   border-color: var(--secondary-color);
-  color: var(--text-color);
   transform: translateY(-3px);
   box-shadow: var(--box-shadow);
 }
@@ -208,6 +207,10 @@ a:hover {
 
 .text-primary {
   color: var(--primary-color) !important;
+}
+
+.badge {
+  background-color: var(--primary-color);
 }
 
 

@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import GeneratedText
+from .models import GeneratedText, TypingRecord
 import json
 import random
 from pinyinit.views import PinyinMarker
@@ -322,12 +322,132 @@ def practice(request):
         try:
             text_obj = GeneratedText.objects.get(id=text_id)
             text_content = text_obj.content
+            
+            # 计算汉字数量
+            chinese_char_count = sum(1 for char in text_content if '\u4e00' <= char <= '\u9fff')
+            
+            # 确保至少有1个字符
+            total_chars = max(chinese_char_count, 1)
+            
+            # 创建打字记录
+            typing_record = TypingRecord.objects.create(
+                user=request.user,
+                source_text=text_content,
+                total_chars=total_chars,
+                generated_text=text_obj
+            )
+            record_id = typing_record.id
         except GeneratedText.DoesNotExist:
             text_content = ""
-    
+            record_id = None
     # 如果没有text_id但有text参数，直接使用传入的文本
+    elif text_content:
+        # 计算汉字数量
+        chinese_char_count = sum(1 for char in text_content if '\u4e00' <= char <= '\u9fff')
+        
+        # 确保至少有1个字符
+        total_chars = max(chinese_char_count, 1)
+        
+        # 创建打字记录
+        typing_record = TypingRecord.objects.create(
+            user=request.user,
+            source_text=text_content,
+            total_chars=total_chars
+        )
+        record_id = typing_record.id
+    else:
+        record_id = None
+    
     context = {
-        'text': text_content
+        'text': text_content,
+        'record_id': record_id
     }
     
     return render(request, 'typingchinese/practice.html', context)
+
+# 保存打字进度 - AJAX
+@csrf_exempt
+@login_required
+def save_typing_progress(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        record_id = data.get('record_id')
+        current_input = data.get('current_input', '')
+        correct_chars = data.get('correct_chars', 0)
+        is_completed = data.get('is_completed', False)
+        
+        if record_id:
+            try:
+                record = TypingRecord.objects.get(id=record_id, user=request.user)
+                record.current_input = current_input
+                record.correct_chars = correct_chars
+                record.is_completed = is_completed
+                record.save()
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Progress saved successfully'
+                })
+            except TypingRecord.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Record not found'
+                })
+        
+        return JsonResponse({'success': False, 'error': 'No record ID provided'})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+# 获取打字历史记录 - AJAX
+@login_required
+def get_typing_history(request):
+    # 获取用户的所有打字记录，按更新时间倒序排列
+    records = TypingRecord.objects.filter(user=request.user).order_by('-updated_at')[:10]  # 只获取最近的10条记录
+    
+    history_data = []
+    for record in records:
+        # 截取源文本前30个字符作为预览
+        preview = record.source_text[:30] + "..." if len(record.source_text) > 30 else record.source_text
+        
+        # 重新计算完成百分比
+        completion = record.completion_percentage()
+
+        # 确保记录有正确的值
+        print(f"Record ID: {record.id}, Correct: {record.correct_chars}, Total: {record.total_chars}, Completion: {completion}%")
+
+        # 如果百分比为0但实际已完成，确保正确显示
+        if record.is_completed and completion == 0:
+            completion = 100
+        
+        # 使用ISO格式的时间，更容易被JavaScript处理
+        updated_at_iso = record.updated_at.isoformat()
+        
+        history_data.append({
+            'id': record.id,
+            'preview': preview,
+            'completion': completion,
+            'is_completed': record.is_completed,
+            'updated_at': record.updated_at.strftime('%d/%m/%Y %H:%M'),
+            'updated_at_iso': updated_at_iso
+        })
+    
+    return JsonResponse({
+        'success': True,
+        'history': history_data
+    })
+
+# 继续未完成的练习
+@login_required
+def continue_practice(request, record_id):
+    try:
+        record = TypingRecord.objects.get(id=record_id, user=request.user)
+        
+        context = {
+            'text': record.source_text,
+            'record_id': record.id,
+            'current_input': record.current_input
+        }
+        
+        return render(request, 'typingchinese/practice.html', context)
+    except TypingRecord.DoesNotExist:
+        return redirect('typingchinese:home')

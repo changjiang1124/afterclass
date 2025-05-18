@@ -11,4 +11,7 @@ urlpatterns = [
     path('process-pinyin/', views.process_pinyin, name='process_pinyin'),
     path('topic-suggestions/', views.generate_topic_suggestions, name='topic_suggestions'),
     path('translate/', views.translate_text, name='translate_text'),
+    path('save-progress/', views.save_typing_progress, name='save_progress'),
+    path('typing-history/', views.get_typing_history, name='typing_history'),
+    path('continue/<int:record_id>/', views.continue_practice, name='continue_practice'),
 ] 

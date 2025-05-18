@@ -6,6 +6,86 @@ $(document).ready(function() {
     let currentPosition = 0;
     let chineseCharIndices = []; // 存储中文字符的索引位置
     let displayedCharsMap = {}; // 存储显示的字符与原始文本索引的映射
+    let isCompleted = false; // 是否完成练习
+    let saveTimeout = null; // 保存进度的计时器
+    const recordId = $("#record-id").val(); // 获取记录ID
+    
+    // 显示自动保存状态
+    function showSaveStatus() {
+        $(".autosave-status").fadeIn(300);
+        setTimeout(() => {
+            $(".autosave-status").fadeOut(500);
+        }, 2000);
+    }
+    
+    // 自动保存进度
+    function saveProgress() {
+        // 如果没有记录ID，则不保存
+        if (!recordId) return;
+        
+        // 清除之前的计时器
+        if (saveTimeout) {
+            clearTimeout(saveTimeout);
+        }
+        
+        // 设置新的计时器 (3秒后保存)
+        saveTimeout = setTimeout(() => {
+            const currentInput = $("#typing-input").val();
+            
+            // 获取显示的汉字总数
+            const totalChineseChars = $(".hanzi-group .hanzi").filter(function() {
+                return isChinese($(this).text().trim());
+            }).length;
+            
+            // 确保正确字符不超过总字符数
+            const safeCorrectChars = Math.min(correctChars, totalChineseChars);
+            
+            console.log(`Saving progress: correct=${safeCorrectChars}, total=${totalChineseChars}, completed=${isCompleted}`);
+            
+            fetch(saveProgressUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    record_id: recordId,
+                    current_input: currentInput,
+                    correct_chars: safeCorrectChars,
+                    is_completed: isCompleted
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSaveStatus();
+                }
+            })
+            .catch(error => {
+                console.error('保存进度错误:', error);
+            });
+        }, 3000);
+    }
+    
+    // 保存在页面离开时
+    $(window).on('beforeunload', function() {
+        // 如果有记录ID并且输入框不为空，则立即保存
+        if (recordId && $("#typing-input").val().trim().length > 0) {
+            // 获取显示的汉字总数
+            const totalChineseChars = $(".hanzi-group .hanzi").filter(function() {
+                return isChinese($(this).text().trim());
+            }).length;
+            
+            // 确保正确字符不超过总字符数
+            const safeCorrectChars = Math.min(correctChars, totalChineseChars);
+            
+            navigator.sendBeacon(saveProgressUrl, JSON.stringify({
+                record_id: recordId,
+                current_input: $("#typing-input").val(),
+                correct_chars: safeCorrectChars,
+                is_completed: isCompleted
+            }));
+        }
+    });
     
     // 检查字符是否为汉字（只检测汉字，忽略所有标点）
     function isChinese(char) {
@@ -68,6 +148,14 @@ $(document).ready(function() {
                     // 设置拼音显示状态
                     const showPinyin = $("#show-pinyin").is(":checked");
                     togglePinyinDisplay(showPinyin);
+                    
+                    // 如果有保存的输入内容，则恢复
+                    const savedInput = $("#saved-input").val();
+                    if (savedInput && savedInput.length > 0) {
+                        $("#typing-input").val(savedInput);
+                        // 触发input事件以更新UI
+                        $("#typing-input").trigger('input');
+                    }
                 } else {
                     $("#pinyin-content-container").html('<div class="alert alert-danger">处理拼音时出错，请重试。</div>');
                 }
@@ -172,6 +260,7 @@ $(document).ready(function() {
         if (typedChineseCount >= displayedChars.length) {
             const totalTyped = correctChars + incorrectChars;
             const accuracy = totalTyped > 0 ? Math.round((correctChars / totalTyped) * 100) : 100;
+            isCompleted = true; // 标记为已完成
             
             // 如果尚未显示成功提示，则显示
             if (!$("#completion-alert").length) {
@@ -188,7 +277,11 @@ $(document).ready(function() {
         } else {
             // 如果还在输入中，移除已有的成功提示
             $("#completion-alert").remove();
+            isCompleted = false; // 标记为未完成
         }
+        
+        // 触发自动保存
+        saveProgress();
     });
     
     // 重置按钮
@@ -197,6 +290,7 @@ $(document).ready(function() {
         correctChars = 0;
         incorrectChars = 0;
         currentPosition = 0;
+        isCompleted = false;
         
         // 重置所有字符的样式
         $(".char-to-type").removeClass("correct-char error-char current-char");
@@ -207,5 +301,8 @@ $(document).ready(function() {
         
         // 移除完成提示
         $("#completion-alert").remove();
+        
+        // 保存重置状态
+        saveProgress();
     });
 }); 

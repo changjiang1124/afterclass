@@ -23,6 +23,13 @@
                         <input type="checkbox" class="custom-control-input" id="show-pinyin" checked>
                         <label class="custom-control-label" for="show-pinyin">Show Pinyin</label>
                     </div>
+                    
+                    <!-- 添加自动保存状态提示 -->
+                    <div class="ml-3 autosave-status" style="display: none;">
+                        <span class="badge badge-success">
+                            <i class="fas fa-check-circle mr-1"></i> Progress saved
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -45,6 +52,10 @@
                 
                 <!-- Original text, used for reference and processing, but not displayed -->
                 <div id="source-text" class="chinese-text d-none">{{ text }}</div>
+                
+                <!-- 隐藏的记录ID和当前输入 -->
+                <input type="hidden" id="record-id" value="{{ record_id|default:'' }}">
+                <input type="hidden" id="saved-input" value="{{ current_input|default:'' }}">
             </div>
         </div>
         
@@ -71,6 +82,7 @@
 <script>
     // Define pinyin processing URL for external JS file use
     const processPinyinUrl = "{% url 'typingchinese:process_pinyin' %}";
+    const saveProgressUrl = "{% url 'typingchinese:save_progress' %}";
 </script>
 <script src="{% static 'js/typingchinese.js' %}"></script>
 {% endblock %} 

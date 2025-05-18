@@ -18,56 +18,143 @@
     border-color: var(--primary-color);
     border-right-color: transparent;
 }
+
+/* 响应式布局调整 */
+@media (max-width: 767.98px) {
+    .history-container {
+        margin-top: 2rem !important;
+    }
+}
+
+/* 修复容器宽度问题 */
+.page-container {
+    width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+    max-width: none;
+}
+
+.content-wrapper {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.main-heading {
+    margin-bottom: 1.5rem;
+}
+
+/* 历史记录样式 */
+.history-container {
+    height: 100%;
+}
+
+.history-content-wrapper {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+/* 调整边距 */
+.text-input-container {
+    border-radius: 0.25rem;
+    box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+    background-color: white;
+    height: 100%;
+}
+
+.btn-generate {
+    background-color: white;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    margin-top: 1rem;
+}
+
+.btn-generate:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row mb-3">
-        <div class="col-md-12">
-            <nav aria-label="breadcrumb" class="dashboard-nav">
-                <ol class="breadcrumb bg-light py-2 px-3 rounded shadow-sm">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard:dashboard' %}" class="dashboard-link"><i class="fas fa-home mr-1"></i> Dashboard</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Chinese Typing Practice</li>
-                </ol>
-            </nav>
+<div class="container-fluid page-container mt-5">
+    <div class="content-wrapper">
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <nav aria-label="breadcrumb" class="dashboard-nav">
+                    <ol class="breadcrumb bg-light py-2 px-3 rounded shadow-sm">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard:dashboard' %}" class="dashboard-link"><i class="fas fa-home mr-1"></i> Dashboard</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Chinese Typing Practice</li>
+                    </ol>
+                </nav>
+            </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <div class="chinese-input-container shadow-sm rounded bg-white">
-                <h2 class="text-center mb-4">Chinese Typing Practice</h2>
-                <p class="text-center text-muted mb-4">Enter or generate Chinese text for typing practice</p>
-                
-                <div class="textarea-container">
-                    <textarea id="chinese-text" class="form-control" rows="8" placeholder="Enter Chinese text here, or click the button below to generate random text..."></textarea>
-                </div>
-                
-                <div class="translation-container mt-3" style="display: none;">
-                    <div class="card">
-                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-language mr-2"></i>English Translation</span>
-                            <button type="button" class="btn btn-sm btn-light" id="close-translation-btn">
-                                <i class="fas fa-times"></i>
+    
+        <h2 class="text-center main-heading">Chinese Typing Practice</h2>
+        <p class="text-center text-muted mb-4">Enter or generate Chinese text for typing practice</p>
+    
+        <div class="row">
+            <!-- 左侧输入区域 -->
+            <div class="col-lg-8 mb-4 mb-lg-0">
+                <div class="text-input-container p-3">
+                    <div class="textarea-container">
+                        <textarea id="chinese-text" class="form-control" rows="8" placeholder="Enter Chinese text here, or click the button below to generate random text..."></textarea>
+                    </div>
+                    
+                    <div class="translation-container mt-3" style="display: none;">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-language mr-2"></i>English Translation</span>
+                                <button type="button" class="btn btn-sm btn-light" id="close-translation-btn">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div id="translation-content" class="p-2 bg-light rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="buttons-container d-flex justify-content-between mt-3">
+                        <div>
+                            <button id="generate-btn" class="btn btn-outline-primary generate-btn">
+                                <i class="fas fa-robot mr-1"></i> AI Generate Text
+                            </button>
+                            <button id="translate-btn" class="btn btn-outline-primary" style="display: none;">
+                                <i class="fas fa-language mr-1"></i> Translate
                             </button>
                         </div>
-                        <div class="card-body">
-                            <div id="translation-content" class="p-2 bg-light rounded"></div>
+                        <div id="start-practice-container" style="display: none;">
+                            <button id="start-practice-btn" class="btn btn-primary start-btn">Start Practice</button>
                         </div>
                     </div>
                 </div>
-                
-                <div class="buttons-container d-flex justify-content-between mt-3">
-                    <div>
-                        <button id="generate-btn" class="btn btn-outline-primary generate-btn">
-                            <i class="fas fa-robot mr-1"></i> AI Generate Text
-                        </button>
-                        <button id="translate-btn" class="btn btn-outline-primary" style="display: none;">
-                            <i class="fas fa-language mr-1"></i> Translate
+            </div>
+            
+            <!-- 右侧历史记录 -->
+            <div class="col-lg-4">
+                <div class="history-container p-3 bg-white rounded shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="m-0"><i class="fas fa-history mr-2"></i>Recent History</h5>
+                        <button id="refresh-history-btn" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-sync-alt"></i> Refresh
                         </button>
                     </div>
-                    <div id="start-practice-container" style="display: none;">
-                        <button id="start-practice-btn" class="btn btn-primary start-btn">Start Practice</button>
+                    
+                    <div class="history-content-wrapper">
+                        <div id="history-content">
+                            <div class="text-center py-3">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Loading history...</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 无历史记录时显示 -->
+                        <div id="no-history-message" class="alert alert-info" style="display: none;">
+                            <i class="fas fa-info-circle mr-2"></i> You don't have any practice records yet. Start practicing to see your history here.
+                        </div>
                     </div>
                 </div>
             </div>
@@ -153,6 +240,85 @@
 <script>
     $(document).ready(function() {
         let generatedTextId = null;
+        
+        // 格式化日期时间到本地时区
+        function formatDateTime(isoDateTimeStr) {
+            const date = new Date(isoDateTimeStr);
+            return date.toLocaleDateString('en-AU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+        }
+        
+        // 加载历史记录
+        function loadTypingHistory() {
+            $("#history-content").html('<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary" role="status"><span class="sr-only">Loading...</span></div><p class="mt-2 text-muted">Loading history...</p></div>');
+            
+            fetch('{% url "typingchinese:typing_history" %}')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.history.length > 0) {
+                        let historyHtml = '<div class="list-group">';
+                        
+                        data.history.forEach(record => {
+                            // 设置徽章颜色
+                            let badgeClass = 'badge-secondary';
+                            if (record.is_completed) {
+                                badgeClass = 'badge-success';
+                            } else if (record.completion > 0) {
+                                badgeClass = 'badge-primary';
+                            }
+                            
+                            // 创建继续链接URL
+                            const continueUrl = "{% url 'typingchinese:continue_practice' 0 %}".replace('0', record.id);
+                            
+                            // 格式化时间为本地时区
+                            const localTime = formatDateTime(record.updated_at_iso);
+                            
+                            historyHtml += `
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                        <h6 class="mb-1 text-truncate" style="max-width: 70%;">${record.preview}</h6>
+                                        <div>
+                                            <span class="badge ${badgeClass}">${record.completion}%</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">${localTime}</small>
+                                        <a href="${continueUrl}" class="btn btn-sm btn-outline-primary">
+                                            ${record.is_completed ? '<i class="fas fa-redo mr-1"></i>Practice Again' : '<i class="fas fa-play mr-1"></i>Continue'}
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        historyHtml += '</div>';
+                        $("#history-content").html(historyHtml);
+                        $("#no-history-message").hide();
+                    } else {
+                        // 显示无历史记录消息
+                        $("#history-content").html('');
+                        $("#no-history-message").show();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    $("#history-content").html('<div class="alert alert-danger">Failed to load history, please try again.</div>');
+                });
+        }
+        
+        // 页面加载时加载历史记录
+        loadTypingHistory();
+        
+        // 刷新历史记录按钮点击事件
+        $("#refresh-history-btn").click(function() {
+            loadTypingHistory();
+        });
         
         // 加载主题建议
         function loadTopicSuggestions() {

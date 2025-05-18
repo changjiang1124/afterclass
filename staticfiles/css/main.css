@@ -106,7 +106,6 @@ a:hover {
 .btn-primary:hover {
   background-color: var(--secondary-color);
   border-color: var(--secondary-color);
-  color: var(--text-color);
   transform: translateY(-3px);
   box-shadow: var(--box-shadow);
 }
@@ -210,11 +209,10 @@ a:hover {
   color: var(--primary-color) !important;
 }
 
-/* make checkbox on status colour as theme colour */
-.form-check-input:checked {
-  background-color: var(--primary-color) !important;
-  border-color: var(--primary-color) !important;
+.badge {
+  background-color: var(--primary-color);
 }
+
 
 /* 响应式调整 */
 @media (max-width: 768px) {
