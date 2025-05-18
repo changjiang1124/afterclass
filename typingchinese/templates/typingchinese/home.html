@@ -52,6 +52,10 @@
 .history-content-wrapper {
     max-height: 500px;
     overflow-y: auto;
+    min-height: 200px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 /* 调整边距 */
@@ -73,12 +77,169 @@
     background-color: var(--primary-color);
     color: white;
 }
+
+/* 删除图标样式 */
+.history-item {
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.history-item:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.delete-record {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    color: #dc3545;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    z-index: 5;
+}
+
+.delete-record:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+.history-item:hover .delete-record {
+    opacity: 1;
+}
+
+/* 修复删除图标覆盖百分比的问题 */
+.badge-container {
+    position: relative;
+    z-index: 6; /* 确保徽章在删除按钮之上 */
+}
+
+/* 徽章样式调整 */
+.history-item .badge {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.5rem;
+}
+
+/* 进度条样式 */
+.history-item .progress {
+    height: 4px;
+    margin-top: 4px;
+    background-color: #e9ecef;
+    border-radius: 0.25rem;
+    overflow: hidden;
+}
+
+.history-item .progress-bar {
+    height: 100%;
+    border-radius: 0.25rem;
+}
+
+#history-content {
+    flex-grow: 1;
+}
+
+#status-message {
+    display: none;
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+#status-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+#status-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+
+
+#global-toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1050;
+    min-width: 300px;
+    max-width: 350px;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    display: none;
+    font-size: 14px;
+}
+
+#global-toast.visible {
+    transform: translateY(0);
+    opacity: 1;
+    display: block;
+}
+
+#global-toast.success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+#global-toast.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+#global-toast.warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border-left: 4px solid #ffc107;
+}
+
+#global-toast-content {
+    display: flex;
+    align-items: center;
+    padding-right: 15px;
+}
+
+#global-toast-content i {
+    margin-right: 10px;
+    font-size: 1.25rem;
+}
+
+#global-toast-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    color: currentColor;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+#global-toast-close:hover {
+    opacity: 1;
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid page-container mt-5">
     <div class="content-wrapper">
+        {% csrf_token %}
         <div class="row mb-3">
             <div class="col-md-12">
                 <nav aria-label="breadcrumb" class="dashboard-nav">
@@ -136,7 +297,7 @@
                 <div class="history-container p-3 bg-white rounded shadow-sm">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="m-0"><i class="fas fa-history mr-2"></i>Recent History</h5>
-                        <button id="refresh-history-btn" class="btn btn-sm btn-outline-secondary">
+                        <button id="refresh-history-btn" class="btn btn-sm btn-outline-primary">
                             <i class="fas fa-sync-alt"></i> Refresh
                         </button>
                     </div>
@@ -152,8 +313,9 @@
                         </div>
                         
                         <!-- 无历史记录时显示 -->
-                        <div id="no-history-message" class="alert alert-info" style="display: none;">
-                            <i class="fas fa-info-circle mr-2"></i> You don't have any practice records yet. Start practicing to see your history here.
+                        <div id="no-history-message" style="display: none;" class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <span>You don't have any practice records yet. Start practicing to see your history here.</span>
                         </div>
                     </div>
                 </div>
@@ -234,12 +396,198 @@
         </div>
     </div>
 </div>
+
+<!-- 全局通知元素 -->
+<div id="global-toast">
+    <div id="global-toast-content"></div>
+    <div id="global-toast-close"><i class="fas fa-times"></i></div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     $(document).ready(function() {
         let generatedTextId = null;
+        const toastDuration = 3000; // 通知显示时间（毫秒）
+        
+        // 显示全局通知消息
+        function showToast(message, type) {
+            const toast = document.getElementById('global-toast');
+            const toastContent = document.getElementById('global-toast-content');
+            
+            // 移除所有类型
+            toast.classList.remove('success', 'error', 'warning');
+            // 添加新类型
+            toast.classList.add(type);
+            
+            // 添加适当的图标
+            let icon = 'info-circle';
+            if (type === 'success') icon = 'check-circle';
+            if (type === 'error') icon = 'exclamation-circle';
+            if (type === 'warning') icon = 'exclamation-triangle';
+            
+            // 设置内容
+            toastContent.innerHTML = `<i class="fas fa-${icon}"></i> <span>${message}</span>`;
+            
+            // 显示通知
+            toast.classList.add('visible');
+            
+            // 自动隐藏
+            setTimeout(function() {
+                toast.classList.remove('visible');
+            }, toastDuration);
+        }
+        
+        // 关闭通知按钮点击事件
+        document.getElementById('global-toast-close').addEventListener('click', function() {
+            document.getElementById('global-toast').classList.remove('visible');
+        });
+        
+        // 删除记录
+        function deleteRecord(recordId, element) {
+            if (!confirm('Are you sure you want to delete this record?')) {
+                return;
+            }
+            
+            console.log('Deleting record:', recordId);
+            
+            // 获取需要操作的元素
+            const deleteIcon = element.querySelector('.delete-record');
+            
+            // 显示删除中状态
+            deleteIcon.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            deleteIcon.style.opacity = 1;
+            
+            // 获取CSRF令牌
+            const csrfToken = getCsrfToken();
+            if (!csrfToken) {
+                console.error('CSRF token not found, aborting delete operation');
+                showToast('Security token not found. Please refresh the page and try again.', 'error');
+                deleteIcon.innerHTML = '<i class="fas fa-times"></i>';
+                return;
+            }
+            
+            // 使用原生fetch API而不是jQuery的ajax
+            fetch('{% url "typingchinese:delete_record" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ record_id: recordId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success response:', data);
+                if (data && data.success) {
+                    // 成功删除，使用原生DOM操作移除元素
+                    console.log('Removing element from DOM');
+                    
+                    // 淡出效果
+                    element.style.transition = 'opacity 0.3s ease';
+                    element.style.opacity = '0';
+                    
+                    setTimeout(function() {
+                        // 移除元素
+                        if (element.parentNode) {
+                            element.parentNode.removeChild(element);
+                        }
+                        
+                        // 检查是否还有记录
+                        const remainingItems = document.querySelectorAll("#history-content .history-item").length;
+                        console.log('Remaining items:', remainingItems);
+                        if (remainingItems === 0) {
+                            document.getElementById("no-history-message").style.display = "block";
+                            // make history-content display none
+                            document.getElementById("history-content").style.display = "none";
+                        }
+                        
+                        // 显示成功消息
+                        showToast('Record deleted successfully', 'success');
+                    }, 300);
+                } else {
+                    // 删除失败，显示错误消息
+                    console.error('Delete failed:', data ? data.error : 'Unknown error');
+                    showToast(data && data.error ? data.error : 'Failed to delete record', 'error');
+                    // 恢复删除图标
+                    deleteIcon.innerHTML = '<i class="fas fa-times"></i>';
+                }
+            })
+            .catch(error => {
+                console.error('Error details:', error);
+                
+                // 显示错误消息
+                showToast('Error deleting record. Please try again later.', 'error');
+                
+                // 恢复删除图标
+                deleteIcon.innerHTML = '<i class="fas fa-times"></i>';
+            });
+        }
+        
+        // 获取CSRF令牌
+        function getCsrfToken() {
+            console.log('Getting CSRF token');
+            
+            // 首先尝试从隐藏字段获取
+            const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+            if (csrfInput) {
+                console.log('CSRF token found in form input');
+                return csrfInput.value;
+            }
+            
+            // 尝试从cookie获取
+            const cookieValue = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+            
+            if (cookieValue) {
+                console.log('CSRF token found in cookie');
+                return cookieValue;
+            }
+            
+            // 如果cookie中没有，尝试从meta标签获取
+            const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
+            if (csrfTokenElement) {
+                console.log('CSRF token found in meta tag');
+                return csrfTokenElement.getAttribute('content');
+            }
+            
+            console.warn('CSRF token not found!');
+            return '';
+        }
+        
+        // 使用事件委托，为所有删除按钮添加点击事件处理程序
+        document.addEventListener('click', function(e) {
+            // 检查点击的是否是删除按钮
+            if (e.target && (e.target.closest('.delete-record') || e.target.classList.contains('delete-record'))) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // 找到删除按钮元素
+                const deleteButton = e.target.closest('.delete-record') || e.target;
+                const recordId = deleteButton.getAttribute('data-id');
+                console.log('Delete button clicked for record ID:', recordId);
+                
+                // 找到最近的历史记录项
+                const historyItem = deleteButton.closest('.history-item');
+                if (!historyItem) {
+                    console.error('Cannot find parent .history-item element');
+                    return;
+                }
+                
+                // 调用删除函数
+                deleteRecord(recordId, historyItem);
+            } 
+            // 历史记录项点击事件
+            else if (e.target && e.target.closest('.history-item') && !e.target.closest('.delete-record')) {
+                const historyItem = e.target.closest('.history-item');
+                const url = historyItem.getAttribute('data-url');
+                if (url) {
+                    window.location.href = url;
+                }
+            }
+        });
         
         // 格式化日期时间到本地时区
         function formatDateTime(isoDateTimeStr) {
@@ -256,21 +604,32 @@
         
         // 加载历史记录
         function loadTypingHistory() {
-            $("#history-content").html('<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary" role="status"><span class="sr-only">Loading...</span></div><p class="mt-2 text-muted">Loading history...</p></div>');
+            console.log('Loading typing history...');
+            document.getElementById('history-content').innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary" role="status"><span class="sr-only">Loading...</span></div><p class="mt-2 text-muted">Loading history...</p></div>';
             
             fetch('{% url "typingchinese:typing_history" %}')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Network response was not ok: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    if (data.success && data.history.length > 0) {
+                    console.log('History data received:', data);
+                    if (data.success && data.history && data.history.length > 0) {
                         let historyHtml = '<div class="list-group">';
                         
                         data.history.forEach(record => {
-                            // 设置徽章颜色
+                            // 设置徽章颜色和进度条颜色
                             let badgeClass = 'badge-secondary';
+                            let progressClass = 'bg-secondary';
+                            
                             if (record.is_completed) {
                                 badgeClass = 'badge-success';
+                                progressClass = 'bg-success';
                             } else if (record.completion > 0) {
                                 badgeClass = 'badge-primary';
+                                progressClass = 'bg-primary';
                             }
                             
                             // 创建继续链接URL
@@ -280,45 +639,53 @@
                             const localTime = formatDateTime(record.updated_at_iso);
                             
                             historyHtml += `
-                                <div class="list-group-item">
+                                <div class="list-group-item history-item" data-url="${continueUrl}">
                                     <div class="d-flex w-100 justify-content-between align-items-center">
                                         <h6 class="mb-1 text-truncate" style="max-width: 70%;">${record.preview}</h6>
-                                        <div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <small class="text-muted">${localTime}</small>
+                                        <div class="badge-container">
                                             <span class="badge ${badgeClass}">${record.completion}%</span>
                                         </div>
                                     </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">${localTime}</small>
-                                        <a href="${continueUrl}" class="btn btn-sm btn-outline-primary">
-                                            ${record.is_completed ? '<i class="fas fa-redo mr-1"></i>Practice Again' : '<i class="fas fa-play mr-1"></i>Continue'}
-                                        </a>
+                                    <div class="progress">
+                                        <div class="progress-bar ${progressClass}" role="progressbar" style="width: ${record.completion}%" 
+                                             aria-valuenow="${record.completion}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <div class="delete-record" data-id="${record.id}" title="Delete record">
+                                        <i class="fas fa-times"></i>
                                     </div>
                                 </div>
                             `;
                         });
                         
                         historyHtml += '</div>';
-                        $("#history-content").html(historyHtml);
-                        $("#no-history-message").hide();
+                        document.getElementById('history-content').innerHTML = historyHtml;
+                        console.log('History loaded, items count:', data.history.length);
+                        document.getElementById('no-history-message').style.display = 'none';
                     } else {
                         // 显示无历史记录消息
-                        $("#history-content").html('');
-                        $("#no-history-message").show();
+                        console.log('No history records found');
+                        document.getElementById('history-content').innerHTML = '';
+                        document.getElementById('no-history-message').style.display = 'block';
+                        document.getElementById('history-content').style.display = 'none';
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
-                    $("#history-content").html('<div class="alert alert-danger">Failed to load history, please try again.</div>');
+                    console.error('Error loading history:', error);
+                    document.getElementById('history-content').innerHTML = '<div class="text-center text-muted py-3"><i class="fas fa-exclamation-circle"></i><p>Could not load history</p></div>';
+                    showToast('Failed to load history records. Please try again.', 'error');
                 });
         }
         
-        // 页面加载时加载历史记录
-        loadTypingHistory();
-        
         // 刷新历史记录按钮点击事件
-        $("#refresh-history-btn").click(function() {
+        document.getElementById('refresh-history-btn').addEventListener('click', function() {
             loadTypingHistory();
         });
+        
+        // 页面加载时加载历史记录
+        loadTypingHistory();
         
         // 加载主题建议
         function loadTopicSuggestions() {

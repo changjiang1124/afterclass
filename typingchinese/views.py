@@ -451,3 +451,58 @@ def continue_practice(request, record_id):
         return render(request, 'typingchinese/practice.html', context)
     except TypingRecord.DoesNotExist:
         return redirect('typingchinese:home')
+
+# 删除打字记录
+@csrf_exempt  # 允许跨站请求，但会在函数内部手动验证CSRF
+@login_required
+def delete_typing_record(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+        
+    try:
+        # 检查请求体内容
+        print(f"Request body: {request.body.decode('utf-8')}")
+        
+        # 解析JSON数据
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {str(e)}")
+            return JsonResponse({'success': False, 'error': f'Invalid JSON data: {str(e)}'}, status=400)
+        
+        record_id = data.get('record_id')
+        print(f"Attempting to delete record ID: {record_id}")
+        
+        if not record_id:
+            return JsonResponse({'success': False, 'error': 'No record ID provided'}, status=400)
+            
+        try:
+            # 验证用户是否有权限删除此记录
+            try:
+                record = TypingRecord.objects.get(id=record_id)
+            except TypingRecord.DoesNotExist:
+                print(f"Record not found: {record_id}")
+                return JsonResponse({'success': False, 'error': 'Record not found'}, status=404)
+            
+            if record.user != request.user:
+                print(f"Permission denied: User {request.user.id} trying to delete record {record_id} owned by {record.user.id}")
+                return JsonResponse(
+                    {'success': False, 'error': 'You do not have permission to delete this record'}, 
+                    status=403
+                )
+                
+            # 删除记录
+            print(f"Deleting record {record_id}")
+            record.delete()
+            print(f"Record {record_id} deleted successfully")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Record deleted successfully'
+            })
+        except Exception as e:
+            print(f"Error deleting record {record_id}: {str(e)}")
+            return JsonResponse({'success': False, 'error': f'Error deleting record: {str(e)}'}, status=500)
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+        return JsonResponse({'success': False, 'error': f'Server error: {str(e)}'}, status=500)

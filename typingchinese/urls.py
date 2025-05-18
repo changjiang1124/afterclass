@@ -14,4 +14,5 @@ urlpatterns = [
     path('save-progress/', views.save_typing_progress, name='save_progress'),
     path('typing-history/', views.get_typing_history, name='typing_history'),
     path('continue/<int:record_id>/', views.continue_practice, name='continue_practice'),
+    path('delete-record/', views.delete_typing_record, name='delete_record'),
 ] 

@@ -5,9 +5,10 @@ The system is for learnchineseperth, a chinese school in Perth. in the system, w
 - [x] change dns afterclass.learnchineseperth.com.au to 170.64.162.255
 - [x] a .sh file to restart django project with gunicorn. be sure collect statics, make migrations, migrate, restart gunicorn. understand the codebase then come up the script.
 - [] pinyinit, add print button to print the pinyin file;
+- [] add user profile / description which could be used as the reference for AI to generate more suitable content. 
 
 ## Typing Chinese
-- [] add auto save feature to the typing page. when users leave the page, the text will be saved to the database. and history will be shown in the home page of typingChinese app, just below the textarea input panel. 
+- [] add text read feature. 
 
 
 ## UI 

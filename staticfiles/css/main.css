@@ -213,6 +213,12 @@ a:hover {
   background-color: var(--primary-color);
 }
 
+.alert-info {
+  background-color: rgba(254, 77, 1, 0.1);
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  border-radius: var(--border-radius);
+}
 
 /* 响应式调整 */
 @media (max-width: 768px) {

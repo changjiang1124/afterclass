@@ -533,4 +533,25 @@
 .btn-primary:active {
     background-color: var(--accent-color-1);
     border-color: var(--accent-color-1);
+}
+
+/* 修复删除图标覆盖百分比的问题 */
+.badge-container {
+    position: relative;
+    z-index: 6; /* 确保徽章在删除按钮之上 */
+}
+
+/* 徽章样式调整 */
+.history-item .badge {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.5rem;
+}
+
+/* 进度条样式 */
+.history-item .progress {
+    height: 4px;
+    margin-top: 0;
+    background-color: #e9ecef;
+    border-radius: 0.25rem;
+    overflow: hidden;
 } 
