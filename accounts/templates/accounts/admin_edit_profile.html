@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/accounts.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="profile-card">
+                <div class="card-header">
+                    <h3>Edit Profile for {{ profile.user.username }}</h3>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form method="post" class="profile-form">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-half">
+                                <h4 class="section-title">Basic Information</h4>
+                                
+                                <div class="form-group">
+                                    <label for="username">Username</label>
+                                    <input type="text" class="form-control" id="username" value="{{ profile.user.username }}" readonly>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" value="{{ profile.user.email }}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="first_name">First Name</label>
+                                    <input type="text" class="form-control" id="first_name" name="first_name" value="{{ profile.user.first_name }}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="last_name">Last Name</label>
+                                    <input type="text" class="form-control" id="last_name" name="last_name" value="{{ profile.user.last_name }}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="date_of_birth">Date of Birth <span class="text-muted">(optional)</span></label>
+                                    <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="{{ profile.date_of_birth|date:'Y-m-d' }}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="chinese_name">Chinese Name</label>
+                                    <input type="text" class="form-control" id="chinese_name" name="chinese_name" value="{{ profile.chinese_name|default:'' }}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="preferred_name">Preferred Name / Nickname</label>
+                                    <input type="text" class="form-control" id="preferred_name" name="preferred_name" value="{{ profile.preferred_name|default:'' }}">
+                                </div>
+                            </div>
+                            
+                            <div class="col-half">
+                                <h4 class="section-title">Learning Information</h4>
+                                
+                                <div class="form-group">
+                                    <label for="chinese_level">Chinese Level</label>
+                                    <select class="form-control" id="chinese_level" name="chinese_level">
+                                        <option value="beginner" {% if profile.chinese_level == 'beginner' %}selected{% endif %}>Beginner</option>
+                                        <option value="intermediate" {% if profile.chinese_level == 'intermediate' %}selected{% endif %}>Intermediate</option>
+                                        <option value="advanced" {% if profile.chinese_level == 'advanced' %}selected{% endif %}>Advanced</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="preferred_learning_style">Preferred Learning Style</label>
+                                    <select class="form-control" id="preferred_learning_style" name="preferred_learning_style">
+                                        <option value="" {% if not profile.preferred_learning_style %}selected{% endif %}>-- Please Select --</option>
+                                        <option value="visual" {% if profile.preferred_learning_style == 'visual' %}selected{% endif %}>Visual</option>
+                                        <option value="auditory" {% if profile.preferred_learning_style == 'auditory' %}selected{% endif %}>Auditory</option>
+                                        <option value="reading_writing" {% if profile.preferred_learning_style == 'reading_writing' %}selected{% endif %}>Reading/Writing</option>
+                                        <option value="kinesthetic" {% if profile.preferred_learning_style == 'kinesthetic' %}selected{% endif %}>Kinesthetic</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="learning_goals">Learning Goals</label>
+                                    <textarea class="form-control" id="learning_goals" name="learning_goals" rows="3">{{ profile.learning_goals|default:'' }}</textarea>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="interests">Interests</label>
+                                    <textarea class="form-control" id="interests" name="interests" rows="3">{{ profile.interests|default:'' }}</textarea>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="personalized_prompts">Personalized AI Prompts</label>
+                                    <textarea class="form-control" id="personalized_prompts" name="personalized_prompts" rows="5">{{ profile.personalized_prompts|default:'' }}</textarea>
+                                    <small class="form-help">Custom AI prompts for this user, used for personalized learning experience</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="btn-container">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <a href="{% url 'admin:auth_user_change' profile.user.id %}" class="btn btn-secondary">Back to Admin</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

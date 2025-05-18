@@ -82,3 +82,162 @@
     height: 100%;
     object-fit: contain;
 }
+
+/* 学生个人资料管理样式 */
+.profile-card {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    background-color: #fff;
+}
+
+.profile-card .card-header {
+    background-color: #f8f9fa;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #ddd;
+}
+
+.profile-card .card-body {
+    padding: 1.5rem;
+}
+
+.profile-card h3 {
+    margin-top: 0;
+    color: #FE4D01;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.profile-card .section-title {
+    color: #333;
+    margin-bottom: 1.2rem;
+    font-weight: 600;
+    font-size: 1.2rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f1f1f1;
+}
+
+.profile-card:hover {
+    /* no moving when hover */
+    transform: none;
+}
+
+.profile-form .form-group {
+    margin-bottom: 1.25rem;
+}
+
+.profile-form label {
+    font-weight: 500;
+    color: #444;
+    margin-bottom: 0.35rem;
+}
+
+.profile-form .text-muted {
+    font-weight: normal;
+    font-size: 0.85rem;
+}
+
+.profile-form .form-control {
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+}
+
+.profile-form .form-control:focus {
+    border-color: #FE4D01;
+    box-shadow: 0 0 0 0.2rem rgba(254, 77, 1, 0.15);
+}
+
+/* 添加select字段的特定样式 */
+.profile-form select.form-control {
+    padding-right: 30px; /* 为下拉箭头留出足够空间 */
+    appearance: none; /* 移除浏览器默认样式 */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 8.5L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+    height: auto;
+}
+
+.profile-form select.form-control option {
+    padding: 8px;
+    font-size: 0.95rem;
+}
+
+.profile-form .btn-container {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.profile-form .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    margin-left: 10px;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    transition: all 0.2s ease;
+}
+
+.profile-form .btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.profile-form .btn-primary {
+    width: auto;
+    padding: 0.75rem 2rem;
+    transition: all 0.2s ease;
+}
+
+.profile-form .row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -15px;
+}
+
+.profile-form .col-half {
+    flex: 0 0 50%;
+    max-width: 50%;
+    padding: 0 15px;
+}
+
+.profile-form .form-help {
+    display: block;
+    margin-top: 5px;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+/* Alert messages styling */
+.alert {
+    border-radius: var(--border-radius);
+    margin-bottom: 1.5rem;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
+}
+
+@media (max-width: 768px) {
+    .profile-form .col-half {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    .profile-form .btn-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .profile-form .btn-secondary {
+        margin-left: 0;
+        margin-top: 0.75rem;
+    }
+}
