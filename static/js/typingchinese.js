@@ -4,10 +4,34 @@ $(document).ready(function() {
     let correctChars = 0;
     let incorrectChars = 0;
     let currentPosition = 0;
+    let chineseCharIndices = []; // 存储中文字符的索引位置
+    
+    // 检查字符是否为中文（包括汉字和中文标点）
+    function isChinese(char) {
+        // \u4e00-\u9fa5: 基本汉字
+        // \u3000-\u303F: 中文标点符号（部分）
+        // \uFF00-\uFFEF: 全角字符（包括中文标点）
+        // \u2018-\u201F, \u2026, \u3001-\u3002: 引号，省略号，顿号和句号
+        return /[\u4e00-\u9fa5\u3000-\u303F\uFF00-\uFFEF\u2018-\u201F\u2026\u3001-\u3002]/.test(char);
+    }
+    
+    // 提取文本中的中文字符及其索引
+    function extractChineseIndices(text) {
+        const indices = [];
+        for (let i = 0; i < text.length; i++) {
+            if (isChinese(text[i])) {
+                indices.push(i);
+            }
+        }
+        return indices;
+    }
     
     // 处理拼音显示
     function processPinyinText() {
         if (sourceText.length > 0) {
+            // 获取中文字符索引
+            chineseCharIndices = extractChineseIndices(sourceText);
+            
             // 发送AJAX请求处理拼音
             fetch(processPinyinUrl, {
                 method: 'POST',
@@ -64,9 +88,9 @@ $(document).ready(function() {
     // 初始化拼音
     processPinyinText();
     
-    // 更新进度条
-    function updateProgressBar(current, total) {
-        const percentage = Math.min(100, Math.round((current / total) * 100));
+    // 更新进度条 - 只计算中文字符的进度
+    function updateProgressBar(typedChineseCount, totalChineseChars) {
+        const percentage = Math.min(100, Math.round((typedChineseCount / totalChineseChars) * 100));
         $("#typing-progress").css("width", percentage + "%");
         $("#typing-progress").attr("aria-valuenow", percentage);
         $("#typing-progress").text(percentage + "%");
@@ -92,32 +116,50 @@ $(document).ready(function() {
         
         correctChars = 0;
         incorrectChars = 0;
+        let typedChineseCount = 0;
         
-        // 更新字符状态
+        // 更新字符状态 - 只追踪中文字符
         for (let i = 0; i < normalizedInput.length; i++) {
             if (i < normalizedSourceText.length) {
-                const $char = $(`.hanzi-group .hanzi[data-index="${i}"]`);
-                if (normalizedInput[i] === normalizedSourceText[i]) {
-                    $char.addClass("correct-char");
-                    correctChars++;
-                } else {
-                    $char.addClass("error-char");
-                    incorrectChars++;
+                // 只有当当前字符是中文时才计入进度
+                if (isChinese(normalizedSourceText[i])) {
+                    typedChineseCount++;
+                    const hanziIndex = chineseCharIndices.indexOf(i);
+                    if (hanziIndex !== -1) {
+                        const $char = $(`.hanzi-group .hanzi[data-index="${hanziIndex}"]`);
+                        if (normalizedInput[i] === normalizedSourceText[i]) {
+                            $char.addClass("correct-char");
+                            correctChars++;
+                        } else {
+                            $char.addClass("error-char");
+                            incorrectChars++;
+                        }
+                    }
                 }
             }
         }
         
         // 当前打字位置
         currentPosition = normalizedInput.length;
-        if (currentPosition < normalizedSourceText.length) {
-            $(`.hanzi-group .hanzi[data-index="${currentPosition}"]`).addClass("current-char");
+        
+        // 找到下一个要输入的中文字符位置
+        let nextChineseCharIndex = -1;
+        for (let i = 0; i < chineseCharIndices.length; i++) {
+            if (chineseCharIndices[i] >= currentPosition) {
+                nextChineseCharIndex = i;
+                break;
+            }
         }
         
-        // 更新进度条
-        updateProgressBar(currentPosition, normalizedSourceText.length);
+        if (nextChineseCharIndex !== -1) {
+            $(`.hanzi-group .hanzi[data-index="${nextChineseCharIndex}"]`).addClass("current-char");
+        }
         
-        // 当输入结束时显示提示
-        if (normalizedInput.length >= normalizedSourceText.length) {
+        // 更新进度条 - 只计算中文字符
+        updateProgressBar(typedChineseCount, chineseCharIndices.length);
+        
+        // 当输入所有中文字符后显示提示
+        if (typedChineseCount >= chineseCharIndices.length) {
             const totalTyped = correctChars + incorrectChars;
             const accuracy = totalTyped > 0 ? Math.round((correctChars / totalTyped) * 100) : 100;
             
@@ -149,8 +191,8 @@ $(document).ready(function() {
         // 重置所有字符的样式
         $(".char-to-type").removeClass("correct-char error-char current-char");
         
-        // 重置进度条
-        updateProgressBar(0, sourceText.length);
+        // 重置进度条 - 使用中文字符总数
+        updateProgressBar(0, chineseCharIndices.length);
         
         // 移除完成提示
         $("#completion-alert").remove();
