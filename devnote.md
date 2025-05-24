@@ -5,18 +5,26 @@ The system is for learnchineseperth, a chinese school in Perth. in the system, w
 - [x] change dns afterclass.learnchineseperth.com.au to 170.64.162.255
 - [x] a .sh file to restart django project with gunicorn. be sure collect statics, make migrations, migrate, restart gunicorn. understand the codebase then come up the script.
 - [] pinyinit, add print button to print the pinyin file;
-- [] add user profile / description which could be used as the reference for AI to generate more suitable content. 
+- [x] add user profile / description which could be used as the reference for AI to generate more suitable content. 
+
 
 ## Typing Chinese
 - [] add text read feature. 
+- [] add personal instruction in the content generation. 
 
 
 ## UI 
 theme colour:
-#FE4D01
-#FFD966
-#ffffff
+primary: #FE4D01
+secondary: #FFD966
+background: #ffffff
 
 text colour:
-#151515
-#333333
+primary: #151515
+secondary: #333333
+
+
+
+
+
+

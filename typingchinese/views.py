@@ -7,9 +7,11 @@ import random
 from pinyinit.views import PinyinMarker
 import requests
 import os
+from datetime import datetime
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
+from accounts.models import StudentProfile
 
 # 创建PinyinMarker实例
 pinyin_marker = PinyinMarker()
@@ -31,19 +33,33 @@ def home(request):
 @require_http_methods(["GET"])
 def generate_topic_suggestions(request):
     try:
+        # 获取用户的个性化提示
+        personalised_prompt = ""
+        try:
+            profile = StudentProfile.objects.get(user=request.user)
+            if profile.personalised_prompts:
+                personalised_prompt = f"\n\nPersonalised requirements：{profile.personalised_prompts}"
+        except StudentProfile.DoesNotExist:
+            pass
+        
         # 调用OpenAI API生成主题建议
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {OPENAI_API_KEY}"
         }
         
-        system_prompt = """
-        You are a helpful assistant for Chinese learners. Please provide 5 short topic suggestions for Chinese typing practice, each with 1-3 words in Australian English.
+        # 获取当前日期
+        today = datetime.now().strftime("%d/%m/%Y")
+        
+        system_prompt = f"""
+        Today is {today}. You are a helpful assistant for Chinese learners. Please provide short topic suggestions for Chinese typing practice, each with 1-3 words in Australian English.
         These topics should be diverse and interesting, and able to inspire users to generate meaningful Chinese content for typing practice.
         Only return the list of topics, no explanation or additional text. One topic per line.
+        
+        Take the user's profile into account: {personalised_prompt}
         """
         
-        user_prompt = "Please provide 4 short topic suggestions for Chinese typing practice in Australian English, covering life, culture, technology, education, etc. The topics should be diverse and interesting, and able to inspire users to generate meaningful Chinese content for typing practice."
+        user_prompt = "Please provide 5 short topic suggestions for Chinese typing practice in Australian English, covering life, culture, technology, education, etc. The topics should be diverse and interesting, and able to inspire users to generate meaningful Chinese content for typing practice, and half of them should be related to Chinese culture, phrases and history."
         
         payload = {
             "model": "gpt-4.1",
@@ -93,6 +109,15 @@ def generate_ai_text(request):
         instruction = data.get('instruction', '')
         length = data.get('length', 'medium')
         
+        # 获取用户的个性化提示
+        personalised_prompt = ""
+        try:
+            profile = StudentProfile.objects.get(user=request.user)
+            if profile.personalised_prompts:
+                personalised_prompt = f"\n\nPersonalised requirements：{profile.personalised_prompts}"
+        except StudentProfile.DoesNotExist:
+            pass
+        
         # 根据长度设置参数
         length_map = {
             'short': "短文本（50-100字）",
@@ -101,17 +126,21 @@ def generate_ai_text(request):
         }
         length_desc = length_map.get(length, "中等长度文本（100-200字）")
         
+        # 获取当前日期
+        today = datetime.now().strftime("%d/%m/%Y")
+        
         # 系统提示词 - 确保生成的是适合中文练习的内容
-        system_prompt = """
-        你是一个专业的中文内容生成助手，用于帮助用户生成适合中文打字练习的文本。
+        system_prompt = f"""
+        今天是{today}。你是一个专业的中文内容生成助手，用于帮助用户生成适合中文打字练习的文本。
         
         规则：
         1. 总是尝试用中文去生成回复（虽然输入可能会是任何语言），除非用户明确要求使用其他语言。只有当用户的指令可以用于生成适合中文练习的内容时才生成文本
         3. 生成的文本应该是纯中文的，可以包含标点符号，但不要包含英文、数字等非中文字符
         4. 不要在回复中加入任何前缀、标题或者解释，直接返回生成的文本内容
         5. 确保内容长度符合要求
+        6. 根据以下用户个性化需求调整生成内容：{personalised_prompt}
         
-        你的回复将直接用于中文打字练习，所以必须是纯文本格式。
+        你的回复将直接用于中文打字练习，所以必须是中文的纯文本格式。
         """
         
         # 用户指令转换为提示词

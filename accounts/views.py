@@ -79,7 +79,7 @@ def admin_edit_profile(request, user_id):
         profile.learning_goals = request.POST.get('learning_goals', '')
         profile.interests = request.POST.get('interests', '')
         profile.preferred_learning_style = request.POST.get('preferred_learning_style', '')
-        profile.personalized_prompts = request.POST.get('personalized_prompts', '')
+        profile.personalised_prompts = request.POST.get('personalised_prompts', '')
         
         # Handle date of birth field
         dob = request.POST.get('date_of_birth', '')
