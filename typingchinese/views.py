@@ -535,3 +535,70 @@ def delete_typing_record(request):
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
         return JsonResponse({'success': False, 'error': f'Server error: {str(e)}'}, status=500)
+
+# 文本转语音 - AJAX
+@csrf_exempt
+@login_required
+def text_to_speech(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        text = data.get('text', '')
+        
+        if text:
+            # 调用OpenAI TTS API
+            try:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {OPENAI_API_KEY}"
+                }
+                
+                # 使用适合中文的TTS配置
+                payload = {
+                    "model": "gpt-4o-mini-tts",
+                    "input": text,
+                    "voice": "coral",  # coral 是一个不错的通用语音
+                    "response_format": "mp3",
+                    "instructions": "Speak clearly in Chinese, with proper pronunciation and natural intonation."
+                }
+                
+                response = requests.post(
+                    "https://api.openai.com/v1/audio/speech", 
+                    headers=headers, 
+                    json=payload
+                )
+                
+                if response.status_code == 200:
+                    # 获取音频数据
+                    audio_data = response.content
+                    
+                    # 将音频数据转换为base64以便在前端使用
+                    import base64
+                    audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+                    
+                    return JsonResponse({
+                        'success': True,
+                        'audio_data': audio_base64,
+                        'content_type': 'audio/mpeg'
+                    })
+                else:
+                    error_message = "TTS API call failed"
+                    try:
+                        error_data = response.json()
+                        error_message = error_data.get("error", {}).get("message", error_message)
+                    except:
+                        pass
+                    
+                    return JsonResponse({
+                        'success': False,
+                        'error': error_message
+                    })
+                    
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': f"TTS API call failed: {str(e)}"
+                })
+        
+        return JsonResponse({'success': False, 'error': 'No text provided'})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request'})

@@ -320,6 +320,8 @@ $(document).ready(function() {
                             if (data.success) {
                                 $("#chinese-text").val(data.text);
                                 generatedTextId = data.id;
+                                // Clear translation when new text is generated
+                                $(".translation-container").hide();
                                 checkTextareaContent();
                                 $("#generateModal").modal('hide');
                             } else {
@@ -474,6 +476,8 @@ $(document).ready(function() {
             if (data.success) {
                 $("#chinese-text").val(data.text);
                 generatedTextId = data.id;
+                // Clear translation when new text is generated
+                $(".translation-container").hide();
                 checkTextareaContent();
                 $("#generateModal").modal('hide');
             } else {

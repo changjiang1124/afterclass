@@ -24,10 +24,22 @@
                         <label class="custom-control-label" for="show-pinyin">Show Pinyin</label>
                     </div>
                     
+                    <!-- Text-to-Speech按钮 -->
+                    <button id="tts-btn" class="btn btn-outline-primary btn-sm ml-3" title="Listen to text">
+                        <i class="fas fa-volume-up mr-1"></i> Listen
+                    </button>
+                    
                     <!-- 添加自动保存状态提示 -->
                     <div class="ml-3 autosave-status" style="display: none;">
                         <span class="badge badge-success">
                             <i class="fas fa-check-circle mr-1"></i> Progress saved
+                        </span>
+                    </div>
+                    
+                    <!-- TTS loading状态提示 -->
+                    <div class="ml-2 tts-status" style="display: none;">
+                        <span class="badge badge-info">
+                            <i class="fas fa-spinner fa-spin mr-1"></i> Generating audio...
                         </span>
                     </div>
                 </div>
@@ -80,9 +92,10 @@
 
 {% block extra_js %}
 <script>
-    // Define pinyin processing URL for external JS file use
+    // Define URLs for external JS file use
     const processPinyinUrl = "{% url 'typingchinese:process_pinyin' %}";
     const saveProgressUrl = "{% url 'typingchinese:save_progress' %}";
+    const textToSpeechUrl = "{% url 'typingchinese:text_to_speech' %}";
 </script>
 <script src="{% static 'js/typingchinese.js' %}"></script>
 {% endblock %} 

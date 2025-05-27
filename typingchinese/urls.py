@@ -15,4 +15,5 @@ urlpatterns = [
     path('typing-history/', views.get_typing_history, name='typing_history'),
     path('continue/<int:record_id>/', views.continue_practice, name='continue_practice'),
     path('delete-record/', views.delete_typing_record, name='delete_record'),
+    path('text-to-speech/', views.text_to_speech, name='text_to_speech'),
 ] 
