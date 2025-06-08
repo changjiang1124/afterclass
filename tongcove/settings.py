@@ -161,6 +161,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 
+# Authentication backends
+AUTHENTICATION_BACKENDS = [
+    'accounts.backends.CaseInsensitiveModelBackend',  # Custom case-insensitive backend
+    'django.contrib.auth.backends.ModelBackend',     # Default backend as fallback
+]
+
 CKEDITOR_UPLOAD_PATH = "uploads/"
 
 CKEDITOR_5_CONFIGS = {

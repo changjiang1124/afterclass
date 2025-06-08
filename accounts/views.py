@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
@@ -12,7 +12,7 @@ from datetime import datetime
 
 def login_view(request):
     if request.method == 'POST':
-        username = request.POST['username']
+        username = request.POST['username'].strip()  # Remove whitespace but keep original case
         password = request.POST['password']
         user = authenticate(request, username=username, password=password)
         if user is not None:
@@ -106,3 +106,43 @@ def admin_edit_profile(request, user_id):
         return redirect('admin:auth_user_change', user.id)
     
     return render(request, 'accounts/admin_edit_profile.html', {'profile': profile})
+
+@login_required
+def change_password_view(request):
+    """View for users to change their password"""
+    if request.method == 'POST':
+        current_password = request.POST.get('current_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        # Validate current password
+        if not request.user.check_password(current_password):
+            messages.error(request, 'Current password is incorrect.')
+            return render(request, 'accounts/change_password.html')
+        
+        # Validate new password
+        if len(new_password) < 8:
+            messages.error(request, 'New password must be at least 8 characters long.')
+            return render(request, 'accounts/change_password.html')
+        
+        # Check if new passwords match
+        if new_password != confirm_password:
+            messages.error(request, 'New passwords do not match.')
+            return render(request, 'accounts/change_password.html')
+        
+        # Check if new password is different from current
+        if request.user.check_password(new_password):
+            messages.error(request, 'New password must be different from current password.')
+            return render(request, 'accounts/change_password.html')
+        
+        # Update password
+        request.user.set_password(new_password)
+        request.user.save()
+        
+        # Keep user logged in after password change
+        update_session_auth_hash(request, request.user)
+        
+        messages.success(request, 'Password changed successfully!')
+        return redirect(reverse('accounts:profile'))
+    
+    return render(request, 'accounts/change_password.html')

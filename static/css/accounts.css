@@ -241,3 +241,84 @@
         margin-top: 0.75rem;
     }
 }
+
+/* Password change form specific styles */
+.password-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.password-form label {
+    font-weight: 500;
+    color: #444;
+    margin-bottom: 0.5rem;
+}
+
+.password-form .form-control {
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+}
+
+.password-form .form-control:focus {
+    border-color: #FE4D01;
+    box-shadow: 0 0 0 0.2rem rgba(254, 77, 1, 0.15);
+}
+
+.password-form .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.password-form .btn-secondary:hover {
+    background-color: #5a6268;
+    color: white;
+    text-decoration: none;
+}
+
+.password-form .btn-primary {
+    padding: 0.75rem 1.5rem;
+    transition: all 0.2s ease;
+}
+
+/* Specific styling for change password button */
+.change-password-btn {
+    width: auto !important;
+    min-width: 180px;
+    max-width: 250px;
+    padding: 0.75rem 2rem !important;
+    display: inline-block !important;
+}
+
+/* Security section in profile */
+.profile-card .section-title {
+    color: #333;
+    margin-bottom: 1.2rem;
+    font-weight: 600;
+    font-size: 1.2rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f1f1f1;
+}
+
+.btn-outline-secondary {
+    color: #6c757d;
+    border: 1px solid #6c757d;
+    background-color: transparent;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+    text-decoration: none;
+}
+
+.btn-outline-secondary i {
+    margin-right: 0.5rem;
+}
