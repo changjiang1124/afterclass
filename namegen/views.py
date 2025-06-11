@@ -7,6 +7,10 @@ import json
 import requests
 import base64
 from datetime import datetime
+from PIL import Image, ImageDraw, ImageFont
+import qrcode
+import io
+import os
 
 # OpenAI API 配置
 OPENAI_API_KEY = settings.OPENAI_API_KEY
@@ -351,3 +355,276 @@ def text_to_speech(request):
             })
     
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@csrf_exempt
+def generate_name_card(request):
+    """生成名片图片"""
+    if request.method == 'POST':
+        try:
+            # 解析请求数据
+            data = json.loads(request.body)
+            chinese_name = data.get('chinese_name', '')
+            pinyin = data.get('pinyin', '')
+            characters = data.get('characters', [])
+            meaning = data.get('meaning', '')
+            
+            if not chinese_name:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Chinese name is required'
+                })
+            
+            # 创建名片图片
+            image_data = create_name_card_image(chinese_name, pinyin, characters, meaning, request)
+            
+            return JsonResponse({
+                'success': True,
+                'image_data': image_data
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Failed to generate name card: {str(e)}'
+            })
+    else:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid request method'
+        })
+
+def create_name_card_image(chinese_name, pinyin, characters, meaning, request):
+    """创建水墨风格的名片图片"""
+    
+    # 名片尺寸 (适合移动端分享，3:4比例)
+    width, height = 800, 1200
+    
+    # 尝试加载背景图片
+    bg_path = os.path.join(settings.BASE_DIR, 'static', 'namegen', 'images', 'namecardbg.png')
+    if os.path.exists(bg_path):
+        try:
+            img = Image.open(bg_path)
+            # 调整背景图片尺寸
+            img = img.resize((width, height), Image.Resampling.LANCZOS)
+            # 确保是RGB模式
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+        except:
+            # 如果背景图片加载失败，使用纯色背景
+            img = Image.new('RGB', (width, height), '#f5f5f5')
+    else:
+        # 创建默认背景
+        img = Image.new('RGB', (width, height), '#f5f5f5')
+    
+    draw = ImageDraw.Draw(img)
+    
+    try:
+        # 按顺序尝试字体，确保路径正确
+        chinese_font_large = None
+        chinese_font_medium = None
+        chinese_font_small = None
+        english_font = None
+        
+        # 字体加载
+        font_paths = [
+            '/usr/share/fonts/truetype/arphic/ukai.ttc',  # 楷书字体
+            '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc',  # 文泉驿字体
+            '/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc',
+            '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
+        ]
+        
+        for font_path in font_paths:
+            if os.path.exists(font_path):
+                try:
+                    # 使用更大的字体尺寸确保可见性
+                    chinese_font_large = ImageFont.truetype(font_path, 200)  # 更大的字体
+                    chinese_font_medium = ImageFont.truetype(font_path, 100)
+                    chinese_font_small = ImageFont.truetype(font_path, 60)
+                    break
+                except Exception:
+                    continue
+        
+        # 英文字体
+        english_font_paths = [
+            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+            '/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf',
+        ]
+        
+        for font_path in english_font_paths:
+            if os.path.exists(font_path):
+                try:
+                    english_font = ImageFont.truetype(font_path, 50)
+                    break
+                except:
+                    continue
+        
+        # 备用字体
+        if not chinese_font_large:
+            try:
+                # 尝试加载默认字体
+                chinese_font_large = ImageFont.load_default()
+                chinese_font_medium = ImageFont.load_default()
+                chinese_font_small = ImageFont.load_default()
+            except:
+                # 如果连默认字体都失败，创建简单版本
+                return create_simple_name_card(chinese_name, pinyin, request)
+        
+        if not english_font:
+            english_font = chinese_font_small
+        
+        # 绘制中文名字（垂直排列，传统书写方式）
+        char_list = list(chinese_name)
+        char_height = 200  # 更大的字符间距
+        total_height = len(char_list) * char_height
+        start_y = max(100, (height - total_height) // 2)  # 确保不会超出边界
+        name_x = width // 2 - 100  # 居中偏左
+        
+        # 绘制每个汉字（垂直排列）
+        for i, char in enumerate(char_list):
+            char_y = start_y + i * char_height
+            if char_y + 200 < height:  # 确保字符不会超出画布
+                draw.text((name_x, char_y), char, font=chinese_font_large, fill='#000000')
+        
+        # 在名字右侧绘制拼音（垂直排列）
+        if pinyin:
+            pinyin_parts = pinyin.split(' ')
+            if len(pinyin_parts) == len(char_list):
+                pinyin_x = name_x + 220  # 在汉字右侧
+                for i, pinyin_part in enumerate(pinyin_parts):
+                    pinyin_y = start_y + i * char_height + 50
+                    if pinyin_y + 50 < height:
+                        draw.text((pinyin_x, pinyin_y), pinyin_part, font=english_font, fill='#333333')
+        
+        # 在名字左侧绘制字符含义（垂直排列）
+        if characters and len(characters) > 0:
+            meaning_x = max(20, name_x - 300)  # 在汉字左侧，确保不超出边界
+            for i, char_info in enumerate(characters[:len(char_list)]):
+                char = char_info.get('char', '')
+                char_meaning = char_info.get('meaning', '')
+                
+                if char and char_meaning and i < len(char_list):
+                    meaning_y = start_y + i * char_height + 50
+                    if meaning_y + 60 < height and meaning_x > 0:
+                        draw.text((meaning_x, meaning_y), char_meaning, font=chinese_font_small, fill='#444444')
+        
+        # 生成QR码
+        qr_data = request.build_absolute_uri('/namegen/')
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=6,
+            border=2,
+        )
+        qr.add_data(qr_data)
+        qr.make(fit=True)
+        
+        # 创建QR码图片
+        qr_img = qr.make_image(fill_color='#000000', back_color='#ffffff')
+        qr_img = qr_img.resize((120, 120))
+        
+        # 将QR码放在左下角
+        qr_x = 50
+        qr_y = height - 180
+        # 为QR码创建白色背景
+        qr_bg = Image.new('RGB', (140, 140), (255, 255, 255))
+        img.paste(qr_bg, (qr_x - 10, qr_y - 10))
+        img.paste(qr_img, (qr_x, qr_y))
+        
+        # 绘制QR码说明文字
+        qr_text = "Scan to generate yours"
+        draw.text((qr_x, qr_y + 130), qr_text, font=english_font, fill='#000000')
+        
+        # 绘制版权信息在右下角
+        copyright_text = "© 2025 Learn Chinese Perth"
+        copyright_y = height - 30
+        copyright_x = width - 300  # 固定位置，避免计算错误
+        draw.text((copyright_x, copyright_y), copyright_text, font=chinese_font_small, fill='#666666')
+        
+        # 保存为base64
+        buffer = io.BytesIO()
+        img.save(buffer, format='PNG', quality=95)
+        img_data = buffer.getvalue()
+        buffer.close()
+        
+        return base64.b64encode(img_data).decode()
+        
+    except Exception as e:
+        # 如果出现错误，创建简单版本
+        return create_simple_name_card(chinese_name, pinyin, request)
+
+def create_simple_name_card(chinese_name, pinyin, request):
+    """创建简单版本的名片（当复杂版本失败时）"""
+    width, height = 800, 1200
+    
+    # 尝试加载背景图片
+    bg_path = os.path.join(settings.BASE_DIR, 'static', 'namegen', 'images', 'namecardbg.png')
+    if os.path.exists(bg_path):
+        try:
+            img = Image.open(bg_path)
+            img = img.resize((width, height), Image.Resampling.LANCZOS)
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+        except:
+            img = Image.new('RGB', (width, height), '#fdfdfb')
+    else:
+        img = Image.new('RGB', (width, height), '#fdfdfb')
+    
+    draw = ImageDraw.Draw(img)
+    
+    # 使用默认字体
+    font = ImageFont.load_default()
+    
+    # 垂直绘制中文名字
+    char_list = list(chinese_name)
+    char_height = 100
+    total_height = len(char_list) * char_height
+    start_y = (height - total_height) // 2
+    name_x = width // 2 - 30
+    
+    for i, char in enumerate(char_list):
+        char_y = start_y + i * char_height
+        draw.text((name_x, char_y), char, font=font, fill='#000000')
+    
+    # 绘制拼音（垂直）
+    if pinyin:
+        pinyin_parts = pinyin.split(' ')
+        if len(pinyin_parts) == len(char_list):
+            pinyin_x = name_x + 60
+            for i, pinyin_part in enumerate(pinyin_parts):
+                pinyin_y = start_y + i * char_height + 20
+                draw.text((pinyin_x, pinyin_y), pinyin_part, font=font, fill='#666666')
+    
+    # 生成QR码
+    try:
+        qr_data = request.build_absolute_uri('/namegen/')
+        qr = qrcode.QRCode(version=1, box_size=6, border=2)
+        qr.add_data(qr_data)
+        qr.make(fit=True)
+        qr_img = qr.make_image(fill_color='#000000', back_color='#ffffff')
+        qr_img = qr_img.resize((120, 120))
+        
+        qr_x = 50
+        qr_y = height - 180
+        img.paste(qr_img, (qr_x, qr_y))
+        
+        # QR码说明
+        draw.text((qr_x, qr_y + 130), "Scan to generate yours", font=font, fill='#333333')
+    except:
+        # 如果QR码失败，绘制占位框
+        qr_x, qr_y = 50, height - 180
+        draw.rectangle([qr_x, qr_y, qr_x + 120, qr_y + 120], outline='#000000', width=2)
+        draw.text((qr_x + 30, qr_y + 50), "QR Code", font=font, fill='#000000')
+    
+    # 版权信息
+    copyright_text = "© 2025 Learn Chinese Perth"
+    copyright_x = width - 250
+    copyright_y = height - 30
+    draw.text((copyright_x, copyright_y), copyright_text, font=font, fill='#666666')
+    
+    # 保存为base64
+    buffer = io.BytesIO()
+    img.save(buffer, format='PNG')
+    img_data = buffer.getvalue()
+    buffer.close()
+    
+    return base64.b64encode(img_data).decode()
