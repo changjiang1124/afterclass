@@ -140,3 +140,5 @@ cython_debug/
 # End Generation Here
 
 pre-release.py
+
+deploy.sh

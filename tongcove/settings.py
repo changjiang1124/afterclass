@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'stories',
     'pinyinit',
     'typingchinese',
+    'namegen',
     # 'ckeditor',
     'ckeditor_uploader',
     'django_ckeditor_5',

@@ -34,4 +34,5 @@ urlpatterns = [
     path('ckeditor5/', include('django_ckeditor_5.urls')),
     path('pinyin/', include('pinyinit.urls')),
     path('typing/', include('typingchinese.urls')),
+    path('namegen/', include('namegen.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

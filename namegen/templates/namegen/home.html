@@ -1,0 +1,410 @@
+{% extends 'namegen/base.html' %}
+
+{% block title %}Generate Your Chinese Name - Learn Chinese Perth{% endblock %}
+
+{% block banner %}
+<div class="hero-section">
+    <div class="container text-center">
+        <h1 class="hero-title">Discover Your Perfect Chinese Name</h1>
+        <p class="hero-subtitle">Generate a beautiful Chinese name that reflects your personality and style</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Form Section -->
+            <div class="form-section">
+                <h3>Tell Us About Yourself</h3>
+                <form id="nameGenForm">
+                    {% csrf_token %}
+                    
+                    <!-- Basic Information -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="first_name">First Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="surname">Surname (Optional)</label>
+                                <input type="text" class="form-control" id="surname" name="surname">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Gender -->
+                    <div class="form-group">
+                        <label>Gender <span class="text-danger">*</span></label>
+                        <div class="row mt-2">
+                            <div class="col-md-4">
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" id="male" name="gender" value="male" class="custom-control-input" required>
+                                    <label class="custom-control-label" for="male">Male</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" id="female" name="gender" value="female" class="custom-control-input" required>
+                                    <label class="custom-control-label" for="female">Female</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" id="not_specified" name="gender" value="not_specified" class="custom-control-input" required>
+                                    <label class="custom-control-label" for="not_specified">Rather not to specify</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Date of Birth -->
+                    <div class="form-group">
+                        <label for="date_of_birth">Date of Birth (Optional)</label>
+                        <input type="date" class="form-control" id="date_of_birth" name="date_of_birth">
+                        <small class="form-text text-muted">
+                            Used for Chinese zodiac and seasonal considerations
+                        </small>
+                    </div>
+                    
+                    <!-- Personality Trait -->
+                    <div class="form-group">
+                        <label for="personality_trait">Personality Trait <span class="text-danger">*</span></label>
+                        <select class="form-control" id="personality_trait" name="personality_trait" required>
+                            <option value="">Choose your dominant trait...</option>
+                            <option value="brave">Brave (勇敢)</option>
+                            <option value="kind">Kind (善良)</option>
+                            <option value="artistic">Artistic (文艺)</option>
+                            <option value="calm">Calm (平静)</option>
+                            <option value="cheerful">Cheerful (开朗)</option>
+                            <option value="wise">Wise (智慧)</option>
+                            <option value="gentle">Gentle (温和)</option>
+                            <option value="strong">Strong (坚强)</option>
+                            <option value="creative">Creative (创意)</option>
+                            <option value="loyal">Loyal (忠诚)</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Preferred Style -->
+                    <div class="form-group">
+                        <label for="preferred_style">Preferred Name Style <span class="text-danger">*</span></label>
+                        <select class="form-control" id="preferred_style" name="preferred_style" required>
+                            <option value="">Choose your preferred style...</option>
+                            <option value="traditional">Traditional/Classical (e.g. 明德、文君)</option>
+                            <option value="artistic">Artistic/Poetic (e.g. 子墨、清风)</option>
+                            <option value="modern">Modern/Cool (e.g. 凯文、天宇)</option>
+                            <option value="professional">Professional/Formal (e.g. 嘉明、思远)</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg" id="generateBtn">
+                            Generate My Chinese Name
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Loading Section -->
+            <div class="loading-spinner" id="loadingSection" style="display: none;">
+                <div class="spinner-border" role="status">
+                    <span class="sr-only">Generating your name...</span>
+                </div>
+                <p class="mt-3 text-muted">
+                    Creating your perfect Chinese name...
+                </p>
+            </div>
+            
+            <!-- Result Section -->
+            <div id="resultSection" style="display: none;">
+                <div class="text-center mb-4">
+                    <h3 style="color: var(--ink-black); font-family: 'Noto Serif SC', serif; font-weight: 400;">Your Chinese Names</h3>
+                </div>
+                
+                <!-- 名片轮播容器 -->
+                <div class="name-carousel-container" id="nameCarousel">
+                    <!-- 名片会通过JavaScript动态生成 -->
+                </div>
+                
+                <!-- 轮播导航点 -->
+                <div class="carousel-nav" id="carouselNav">
+                    <!-- 导航点会通过JavaScript动态生成 -->
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="text-center mt-4">
+                    <button class="btn btn-outline-primary mr-3" onclick="generateAnotherName()">
+                        Generate Another Name
+                    </button>
+                    <button class="btn btn-primary" onclick="shareResult()">
+                        Share My Name
+                    </button>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#nameGenForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Show loading
+        $('#resultSection').hide();
+        $('#loadingSection').show();
+        $('#generateBtn').prop('disabled', true).html('Generating...');
+        
+        // Get form data
+        const formData = new FormData(this);
+        
+        // Submit request
+        $.ajax({
+            url: '{% url "namegen:generate_name" %}',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                $('#loadingSection').hide();
+                $('#generateBtn').prop('disabled', false).html('Generate My Chinese Name');
+                
+                if (response.success) {
+                    // Display results with carousel
+                    displayNameCarousel(response.names);
+                    
+                    $('#resultSection').show();
+                    
+                    // Scroll to result
+                    $('html, body').animate({
+                        scrollTop: $('#resultSection').offset().top - 100
+                    }, 800);
+                } else {
+                    alert('Error: ' + response.error);
+                }
+            },
+            error: function() {
+                $('#loadingSection').hide();
+                $('#generateBtn').prop('disabled', false).html('Generate My Chinese Name');
+                alert('Service temporarily unavailable. Please try again later.');
+            }
+        });
+    });
+
+});
+
+let currentNameIndex = 0;
+let namesData = [];
+
+function displayNameCarousel(names) {
+    namesData = names;
+    const carousel = $('#nameCarousel');
+    const nav = $('#carouselNav');
+    
+    // Clear existing content
+    carousel.empty();
+    nav.empty();
+    
+    // Create name cards
+    names.forEach((name, index) => {
+        const card = createNameCard(name, index);
+        carousel.append(card);
+    });
+    
+    // Create navigation dots
+    names.forEach((_, index) => {
+        const dot = $(`<span class="carousel-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>`);
+        nav.append(dot);
+    });
+    
+    // Set initial active card
+    currentNameIndex = 0;
+    updateActiveCard();
+    
+    // Add click handlers
+    $('.name-card').on('click', function() {
+        const index = $(this).data('index');
+        setActiveCard(index);
+    });
+    
+    $('.carousel-dot').on('click', function() {
+        const index = $(this).data('index');
+        setActiveCard(index);
+    });
+}
+
+function createNameCard(nameData, index) {
+    // 创建带声调的汉字拼音组合
+    const nameWithPinyin = createChineseWithPinyin(nameData.chinese_name, nameData.pinyin);
+    
+    const charactersHtml = nameData.characters.map(char => 
+        `<div class="character-item">
+            <span class="character-char">${char.char}</span>
+            <span class="character-meaning">${char.meaning}</span>
+        </div>`
+    ).join('');
+    
+    return $(`
+        <div class="name-card ${index === 0 ? 'active' : ''}" data-index="${index}">
+            <div class="name-card-content">
+                <button class="audio-button" onclick="playAudio('${nameData.chinese_name}')" title="Hear pronunciation">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                
+                <div class="name-with-pinyin">
+                    ${nameWithPinyin}
+                </div>
+                
+                <div class="characters-meaning">
+                    ${charactersHtml}
+                </div>
+            </div>
+        </div>
+    `);
+}
+
+function createChineseWithPinyin(chineseName, pinyin) {
+    // 分离汉字和拼音
+    const chars = chineseName.split('');
+    const pinyinParts = pinyin.split(' ');
+    
+    let result = '<div class="chinese-name-with-pinyin">';
+    chars.forEach((char, index) => {
+        const pinyinPart = pinyinParts[index] || '';
+        result += `
+            <div class="char-pinyin-pair">
+                <div class="pinyin-top">${pinyinPart}</div>
+                <div class="chinese-char">${char}</div>
+            </div>
+        `;
+    });
+    result += '</div>';
+    
+    return result;
+}
+
+function setActiveCard(index) {
+    currentNameIndex = index;
+    updateActiveCard();
+}
+
+function updateActiveCard() {
+    // Update cards
+    $('.name-card').removeClass('active');
+    $(`.name-card[data-index="${currentNameIndex}"]`).addClass('active');
+    
+    // Update navigation dots
+    $('.carousel-dot').removeClass('active');
+    $(`.carousel-dot[data-index="${currentNameIndex}"]`).addClass('active');
+}
+
+function playAudio(name) {
+    const button = event.currentTarget;
+    const originalIcon = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    button.disabled = true;
+    
+    $.ajax({
+        url: '{% url "namegen:text_to_speech" %}',
+        type: 'POST',
+        data: JSON.stringify({text: name}),
+        contentType: 'application/json',
+        success: function(response) {
+            if (response.success) {
+                // Play audio
+                const audio = new Audio('data:' + response.content_type + ';base64,' + response.audio_data);
+                audio.play();
+            } else {
+                alert('Audio playback failed: ' + response.error);
+            }
+            button.innerHTML = originalIcon;
+            button.disabled = false;
+        },
+        error: function() {
+            alert('Audio service unavailable');
+            button.innerHTML = originalIcon;
+            button.disabled = false;
+        }
+    });
+}
+
+function generateAnotherName() {
+    // Hide the result section first
+    $('#resultSection').hide();
+    $('#loadingSection').show();
+    $('#generateBtn').prop('disabled', true).html('Generating...');
+    
+    // Get the current form data
+    const formData = new FormData($('#nameGenForm')[0]);
+    
+    // Submit request for new names
+    $.ajax({
+        url: '{% url "namegen:generate_name" %}',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            $('#loadingSection').hide();
+            $('#generateBtn').prop('disabled', false).html('Generate My Chinese Name');
+            
+            if (response.success) {
+                // Display new results with carousel
+                displayNameCarousel(response.names);
+                $('#resultSection').show();
+                
+                // Scroll to result
+                $('html, body').animate({
+                    scrollTop: $('#resultSection').offset().top - 100
+                }, 800);
+            } else {
+                alert('Error: ' + response.error);
+                // Scroll back to form on error
+                $('html, body').animate({
+                    scrollTop: $('#nameGenForm').offset().top - 100
+                }, 800);
+            }
+        },
+        error: function() {
+            $('#loadingSection').hide();
+            $('#generateBtn').prop('disabled', false).html('Generate My Chinese Name');
+            alert('Service temporarily unavailable. Please try again later.');
+            // Scroll back to form on error
+            $('html, body').animate({
+                scrollTop: $('#nameGenForm').offset().top - 100
+            }, 800);
+        }
+    });
+}
+
+function shareResult() {
+    if (namesData.length === 0) return;
+    
+    const currentName = namesData[currentNameIndex];
+    const name = currentName.chinese_name;
+    const pinyin = currentName.pinyin;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'My Chinese Name',
+            text: `My Chinese name is ${name} (${pinyin})`,
+            url: window.location.href
+        });
+    } else {
+        // Fallback: copy to clipboard
+        const text = `My Chinese name is ${name} (${pinyin})`;
+        navigator.clipboard.writeText(text).then(function() {
+            alert('Copied to clipboard!');
+        });
+    }
+}
+</script>
+{% endblock %} 

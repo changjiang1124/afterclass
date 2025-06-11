@@ -1,0 +1,206 @@
+{% extends 'namegen/base.html' %}
+
+{% block title %}Your Chinese Name: {{ name_request.generated_chinese_name }} - Learn Chinese Perth{% endblock %}
+
+{% block banner %}
+<div class="hero-section">
+    <div class="container text-center">
+        <h1 class="hero-title">🎉 Your Chinese Name is Ready!</h1>
+        <p class="hero-subtitle">{{ name_request.first_name }}'s personalized Chinese name</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Name Display Section -->
+            <div class="form-section text-center">
+                <h3>Your Chinese Name</h3>
+                <div class="chinese-name-display">{{ name_request.generated_chinese_name }}</div>
+                <div class="pinyin-display">{{ name_request.name_pinyin }}</div>
+                
+                <!-- Audio Button -->
+                <button class="audio-button" id="audioBtn" title="Hear pronunciation" data-name="{{ name_request.generated_chinese_name }}">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                
+                <!-- Name Meaning -->
+                {% if name_request.name_meaning %}
+                <div class="name-meaning">
+                    <h5>Name Meaning & Significance</h5>
+                    <div>{{ name_request.name_meaning|linebreaks }}</div>
+                </div>
+                {% endif %}
+                
+                <!-- User Info Summary -->
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">Your Profile</h6>
+                                <p class="card-text small">
+                                    <strong>Name:</strong> {{ name_request.first_name }}{% if name_request.surname %} {{ name_request.surname }}{% endif %}<br>
+                                    <strong>Gender:</strong> {{ name_request.get_gender_display }}<br>
+                                    <strong>Trait:</strong> {{ name_request.get_personality_trait_display }}<br>
+                                    {% if name_request.date_of_birth %}
+                                    <strong>Zodiac:</strong> {{ name_request.get_chinese_zodiac }}<br>
+                                    <strong>Season:</strong> {{ name_request.get_season }}<br>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">Style Choice</h6>
+                                <p class="card-text small">
+                                    {{ name_request.get_preferred_style_display }}
+                                </p>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        Generated on {{ name_request.created_at|date:"j M Y, g:i A" }}
+                                    </small>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="mt-4">
+                    <a href="{% url 'namegen:home' %}" class="btn btn-outline-primary mr-3">
+                        Generate Another Name
+                    </a>
+                    <button class="btn btn-primary" onclick="shareResult()">
+                        Share My Name
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Why This Name Section -->
+            <div class="form-section">
+                <h3>Cultural Insights</h3>
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3">
+                        <i class="fas fa-yin-yang fa-2x text-primary mb-2"></i>
+                        <h6>Meaningful Characters</h6>
+                        <p class="small text-muted">Each character was chosen for its cultural significance and beautiful meaning</p>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <i class="fas fa-heart fa-2x text-primary mb-2"></i>
+                        <h6>Personal Match</h6>
+                        <p class="small text-muted">Reflects your personality traits and preferred style</p>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <i class="fas fa-music fa-2x text-primary mb-2"></i>
+                        <h6>Harmonious Sound</h6>
+                        <p class="small text-muted">Chosen for pleasant pronunciation and flow</p>
+                    </div>
+                </div>
+                
+                {% if name_request.get_chinese_zodiac %}
+                <div class="alert alert-info">
+                    <strong>Special Touch:</strong> 
+                    Your name also considers your Chinese zodiac sign ({{ name_request.get_chinese_zodiac }}) 
+                    {% if name_request.get_season %}and birth season ({{ name_request.get_season }}){% endif %} 
+                    for additional cultural authenticity.
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Next Steps Section -->
+            <div class="form-section">
+                <h3>What's Next?</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-graduation-cap text-primary mr-2"></i>
+                                    Learn Chinese
+                                </h5>
+                                <p class="card-text">Ready to learn more? Join our Chinese language courses and discover the rich culture behind your name.</p>
+                                <a href="/dashboard/" class="btn btn-primary btn-sm">
+                                    Explore Courses
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-pen-fancy text-primary mr-2"></i>
+                                    Practice Writing
+                                </h5>
+                                <p class="card-text">Learn how to write your Chinese name with our interactive writing practice tools.</p>
+                                <a href="/typing/" class="btn btn-primary btn-sm">
+                                    Start Writing
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Audio button handler
+    $('#audioBtn').on('click', function() {
+        const name = $(this).data('name');
+        if (!name) return;
+        
+        const originalIcon = $(this).html();
+        $(this).html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+        
+        $.ajax({
+            url: '{% url "namegen:text_to_speech" %}',
+            type: 'POST',
+            data: JSON.stringify({text: name}),
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.success) {
+                    // Play audio
+                    const audio = new Audio('data:' + response.content_type + ';base64,' + response.audio_data);
+                    audio.play();
+                } else {
+                    alert('Audio playback failed: ' + response.error);
+                }
+                $('#audioBtn').html(originalIcon).prop('disabled', false);
+            },
+            error: function() {
+                alert('Audio service unavailable');
+                $('#audioBtn').html(originalIcon).prop('disabled', false);
+            }
+        });
+    });
+});
+
+function shareResult() {
+    const name = '{{ name_request.generated_chinese_name }}';
+    const pinyin = '{{ name_request.name_pinyin }}';
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'My Chinese Name',
+            text: `My Chinese name is ${name} (${pinyin}) - Generated by Learn Chinese Perth`,
+            url: window.location.href
+        });
+    } else {
+        // Fallback: copy to clipboard
+        const text = `My Chinese name is ${name} (${pinyin}) - Generated by Learn Chinese Perth`;
+        navigator.clipboard.writeText(text).then(function() {
+            alert('Copied to clipboard!');
+        });
+    }
+}
+</script>
+{% endblock %} 
