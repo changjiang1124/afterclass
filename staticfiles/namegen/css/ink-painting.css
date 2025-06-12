@@ -241,8 +241,9 @@ main {
   height: auto;
 }
 
-/* 为下拉框添加额外的右侧内边距，为箭头图标留出更多空间 */
-select.form-control {
+/* 为表单中的下拉框添加额外的右侧内边距，为箭头图标留出更多空间 */
+.form-section select.form-control,
+#nameGenForm select.form-control {
   padding-right: 2.5rem;
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23808080' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 1rem center;
@@ -994,6 +995,20 @@ body::after {
     font-size: 0.95rem;
     border-radius: 0.5rem;
   }
+  
+  /* 超小屏幕名片模板 */
+  .name-card-template {
+    width: 280px !important;
+    height: 420px !important;
+    min-width: 280px !important;
+    min-height: 420px !important;
+    max-width: 280px !important;
+    max-height: 420px !important;
+  }
+  
+  #nameCardModal .modal-body {
+    padding: 0.5rem 0.25rem;
+  }
 }
 
 /* 名片分享按钮 */
@@ -1095,16 +1110,34 @@ body::after {
   }
 }
 
-/* 名片模板样式 */
+/* 名片模板样式 - 添加更强的隔离保护 */
 .name-card-template {
-  width: 400px;
-  height: 600px;
-  position: relative;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  margin: 0 auto;
-  overflow: hidden;
+  width: 400px !important;
+  height: 600px !important;
+  min-width: 400px !important;
+  min-height: 600px !important;
+  max-width: 400px !important;
+  max-height: 600px !important;
+  position: relative !important;
+  background: #ffffff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
+  margin: 0 auto !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  border: none !important;
+  outline: none !important;
+  transform: none !important;
+  /* 重置可能影响的CSS属性 */
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+}
+
+/* 确保名片模板内的所有子元素不受外部样式影响 */
+.name-card-template * {
+  box-sizing: border-box !important;
 }
 
 .card-background {
@@ -1281,17 +1314,41 @@ body::after {
 /* 模态框样式调整 */
 #nameCardModal .modal-dialog {
   max-width: 600px;
+  width: 95%;
+  margin: 1rem auto;
 }
 
 #nameCardModal .modal-body {
   padding: 2rem;
+  overflow-x: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+    /* 移动端模态框优化 */
+    #nameCardModal .modal-dialog {
+        width: 98%;
+        max-width: none;
+        margin: 0.5rem auto;
+    }
+    
+    #nameCardModal .modal-body {
+        padding: 1rem 0.5rem;
+    }
+    
+    /* 移动端名片模板保持固定比例缩放 */
     .name-card-template {
-        width: 320px;
-        height: 480px;
+        width: 320px !important;
+        height: 480px !important;
+        min-width: 320px !important;
+        min-height: 480px !important;
+        max-width: 320px !important;
+        max-height: 480px !important;
+        margin: 0 auto !important;
+        transform: none !important;
     }
     
     .card-content {

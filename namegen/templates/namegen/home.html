@@ -839,53 +839,136 @@ async function exportNameCardAsImage(nameCardElement) {
         transform: nameCardElement.style.transform,
         position: nameCardElement.style.position,
         top: nameCardElement.style.top,
-        left: nameCardElement.style.left
+        left: nameCardElement.style.left,
+        margin: nameCardElement.style.margin,
+        padding: nameCardElement.style.padding,
+        boxSizing: nameCardElement.style.boxSizing,
+        overflow: nameCardElement.style.overflow,
+        webkitFontSmoothing: nameCardElement.style.webkitFontSmoothing,
+        mozOsxFontSmoothing: nameCardElement.style.mozOsxFontSmoothing,
+        textRendering: nameCardElement.style.textRendering
     };
     
+    // 声明文字样式变量
+    let meaningTexts = [];
+    let originalMeaningStyles = [];
+    
     try {
-        // 临时强制设定为标准尺寸，确保所有设备统一输出
-        nameCardElement.style.width = '400px !important';
-        nameCardElement.style.height = '600px !important';
-        nameCardElement.style.transform = 'none';
-        nameCardElement.style.position = 'relative';
-        nameCardElement.style.top = 'auto';
-        nameCardElement.style.left = 'auto';
+        // 强制所有设备使用统一的导出尺寸以保证一致的高质量输出
+        // 显示尺寸可以响应式，但导出始终使用标准尺寸
+        const exportWidth = 400;  // 始终使用桌面端标准尺寸
+        const exportHeight = 600; // 始终使用桌面端标准尺寸
+        
+        // 临时强制设定为标准尺寸和完整的布局属性，确保所有设备统一输出
+        nameCardElement.style.setProperty('width', `${exportWidth}px`, 'important');
+        nameCardElement.style.setProperty('height', `${exportHeight}px`, 'important');
+        nameCardElement.style.setProperty('min-width', `${exportWidth}px`, 'important');
+        nameCardElement.style.setProperty('min-height', `${exportHeight}px`, 'important');
+        nameCardElement.style.setProperty('max-width', `${exportWidth}px`, 'important');
+        nameCardElement.style.setProperty('max-height', `${exportHeight}px`, 'important');
+        nameCardElement.style.setProperty('transform', 'none', 'important');
+        nameCardElement.style.setProperty('position', 'relative', 'important');
+        nameCardElement.style.setProperty('top', 'auto', 'important');
+        nameCardElement.style.setProperty('left', 'auto', 'important');
+        nameCardElement.style.setProperty('margin', '0', 'important');
+        nameCardElement.style.setProperty('padding', '0', 'important');
+        nameCardElement.style.setProperty('box-sizing', 'border-box', 'important');
+        nameCardElement.style.setProperty('overflow', 'hidden', 'important');
+        
+        // 临时提升字体渲染质量
+        nameCardElement.style.setProperty('-webkit-font-smoothing', 'antialiased', 'important');
+        nameCardElement.style.setProperty('-moz-osx-font-smoothing', 'grayscale', 'important');
+        nameCardElement.style.setProperty('text-rendering', 'optimizeLegibility', 'important');
+        
+        // 临时修复导出图片中的文字换行问题
+        meaningTexts = nameCardElement.querySelectorAll('.meaning-text');
+        originalMeaningStyles = [];
+        
+        meaningTexts.forEach((element, index) => {
+            // 保存原始样式
+            originalMeaningStyles[index] = {
+                wordWrap: element.style.wordWrap,
+                whiteSpace: element.style.whiteSpace,
+                overflowWrap: element.style.overflowWrap,
+                hyphens: element.style.hyphens,
+                wordBreak: element.style.wordBreak
+            };
+            
+            // 设置导出专用的文字换行样式
+            element.style.setProperty('word-wrap', 'normal', 'important');
+            element.style.setProperty('white-space', 'nowrap', 'important');
+            element.style.setProperty('overflow-wrap', 'normal', 'important');
+            element.style.setProperty('hyphens', 'none', 'important');
+            element.style.setProperty('word-break', 'keep-all', 'important');
+        });
         
         // 等待样式应用和DOM重排
         await new Promise(resolve => {
             requestAnimationFrame(() => {
-                setTimeout(resolve, 150);
+                setTimeout(resolve, 200);
             });
         });
         
-        // 使用html2canvas - 所有设备统一输出1200x1800px
+        // 获取最终计算的尺寸进行验证
+        const computedStyles = window.getComputedStyle(nameCardElement);
+        const finalWidth = parseInt(computedStyles.width);
+        const finalHeight = parseInt(computedStyles.height);
+        
+        console.log('Export dimensions:', finalWidth, 'x', finalHeight);
+        
+        // 使用html2canvas - 所有设备统一输出高清图片
         const canvas = await html2canvas(nameCardElement, {
             useCORS: true,
             allowTaint: false,
-            scale: 3, // 400×3=1200, 600×3=1800 高分辨率
+            scale: 4, // 提升到4倍缩放以获得更清晰的文字
             backgroundColor: '#ffffff',
-            width: 400, // DOM元素标准尺寸
-            height: 600, // DOM元素标准尺寸
+            width: finalWidth,
+            height: finalHeight,
             scrollX: 0,
             scrollY: 0,
             foreignObjectRendering: false,
-            logging: false,
-            pixelRatio: 1, // 固定为1，避免设备差异
+            logging: false, // 关闭调试日志
+            pixelRatio: window.devicePixelRatio || 2, // 使用设备像素比提升清晰度
+            windowWidth: finalWidth,
+            windowHeight: finalHeight,
+            // 优化文字渲染
+            letterRendering: true,
+            imageTimeout: 15000,
             ignoreElements: function(element) {
-                // 忽略可能影响布局的元素
-                return element.classList && element.classList.contains('modal-backdrop');
+                return element.classList && (
+                    element.classList.contains('modal-backdrop') ||
+                    element.tagName === 'SELECT'
+                );
             }
         });
+        
+        console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
         
         return canvas;
         
     } finally {
         // 恢复原始样式
         Object.keys(originalStyles).forEach(key => {
+            const cssKey = key.replace(/[A-Z]/g, m => "-" + m.toLowerCase());
             if (originalStyles[key]) {
-                nameCardElement.style[key] = originalStyles[key];
+                nameCardElement.style.setProperty(cssKey, originalStyles[key]);
             } else {
-                nameCardElement.style.removeProperty(key.replace(/[A-Z]/g, m => "-" + m.toLowerCase()));
+                nameCardElement.style.removeProperty(cssKey);
+            }
+        });
+        
+        // 恢复文字样式
+        meaningTexts.forEach((element, index) => {
+            if (originalMeaningStyles[index]) {
+                const styles = originalMeaningStyles[index];
+                Object.keys(styles).forEach(styleKey => {
+                    const cssKey = styleKey.replace(/[A-Z]/g, m => "-" + m.toLowerCase());
+                    if (styles[styleKey]) {
+                        element.style.setProperty(cssKey, styles[styleKey]);
+                    } else {
+                        element.style.removeProperty(cssKey);
+                    }
+                });
             }
         });
     }
