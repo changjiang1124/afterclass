@@ -107,8 +107,8 @@ def generate_name(request):
 {"- 出生季节：" + season if season else ""}
 
 要求：
-1. 生成3个不同的2-3字中文名字（不包括姓氏）
-2. 每个名字都要符合用户的性格特征和风格偏好
+1. 生成3个不同的2字中文名字（不包括姓氏）
+2. 每个名字适当考虑符合用户的性格特征和风格偏好, 且尽量在发音上与用户的英文名相似
 3. 如果有生肖和季节信息，适当考虑这些因素
 4. 名字要有美好的寓意，读音悦耳，且风格有所变化，且不要让中国人觉得奇怪
 5. 拼音必须使用标准声调符号（如：yì xuán，不要用数字yi4 xuan2）
@@ -310,17 +310,20 @@ def text_to_speech(request):
                 "Authorization": f"Bearer {OPENAI_API_KEY}"
             }
             
+            # 为中文优化的配置
             payload = {
-                "model": "tts-1",
-                "input": text,
-                "voice": "nova",  # nova 对中文发音比较好
-                "response_format": "mp3"
+                "model": "tts-1-hd",  # 使用高质量模型，对中文发音更好
+                "input": f"请清楚地朗读：{text}",  # 添加中文指导词，提高发音质量
+                "voice": "alloy",  # alloy 对中文发音相对较好
+                "response_format": "mp3",
+                "speed": 0.8  # 降低语速，让发音更清楚
             }
             
             response = requests.post(
                 "https://api.openai.com/v1/audio/speech", 
                 headers=headers, 
-                json=payload
+                json=payload,
+                timeout=30  # 添加超时设置
             )
             
             if response.status_code == 200:
@@ -352,6 +355,94 @@ def text_to_speech(request):
             return JsonResponse({
                 'success': False,
                 'error': f"TTS service error: {str(e)}"
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@csrf_exempt
+def text_to_speech_advanced(request):
+    """高级中文名字语音播放功能 - 可自定义语速和音色"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            text = data.get('text', '').strip()
+            speed = data.get('speed', 0.8)  # 默认0.8倍速，更清楚
+            voice = data.get('voice', 'alloy')  # 默认使用alloy
+            use_chinese_prompt = data.get('use_chinese_prompt', False)  # 是否添加中文指导
+            
+            if not text:
+                return JsonResponse({'success': False, 'error': 'No text provided'})
+            
+            # 验证参数
+            if not (0.25 <= speed <= 4.0):
+                speed = 0.8
+            
+            valid_voices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
+            if voice not in valid_voices:
+                voice = 'alloy'
+            
+            # 调用OpenAI TTS API
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {OPENAI_API_KEY}"
+            }
+            
+            # 准备输入文本
+            input_text = text
+            if use_chinese_prompt:
+                # 根据语速添加不同的指导词
+                input_text = f"{text}"
+            
+            # API配置
+            payload = {
+                "model": "tts-1-hd",  # 使用高质量模型
+                "input": input_text,
+                "voice": voice,
+                "response_format": "mp3",
+                "speed": speed
+            }
+            
+            response = requests.post(
+                "https://api.openai.com/v1/audio/speech", 
+                headers=headers, 
+                json=payload,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                # 获取音频数据
+                audio_data = response.content
+                
+                # 将音频数据转换为base64
+                audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+                
+                return JsonResponse({
+                    'success': True,
+                    'audio_data': audio_base64,
+                    'content_type': 'audio/mpeg',
+                    'settings': {
+                        'voice': voice,
+                        'speed': speed,
+                        'model': 'tts-1-hd'
+                    }
+                })
+            else:
+                error_message = "TTS service unavailable"
+                try:
+                    error_data = response.json()
+                    error_message = error_data.get("error", {}).get("message", error_message)
+                except:
+                    pass
+                
+                return JsonResponse({
+                    'success': False,
+                    'error': error_message
+                })
+                
+        except Exception as e:
+            return JsonResponse({
+                'success': False, 
+                'error': f"Advanced TTS service error: {str(e)}"
             })
     
     return JsonResponse({'success': False, 'error': 'Invalid request method'})

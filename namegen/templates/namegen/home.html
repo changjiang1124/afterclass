@@ -141,9 +141,6 @@
                     <button class="btn btn-outline-primary mr-3" onclick="generateAnotherName()">
                         Generate Another Name
                     </button>
-                    <button class="btn btn-primary" onclick="shareResult()">
-                        Share My Name
-                    </button>
                 </div>
             </div>
             
@@ -201,7 +198,7 @@
                 <button type="button" class="btn btn-primary" id="shareNameCardBtn">
                     <i class="fas fa-share-alt"></i> Share
                 </button>
-                <button type="button" class="btn btn-outline-secondary" id="downloadNameCardBtn">
+                <button type="button" class="btn btn-outline-primary" id="downloadNameCardBtn">
                     <i class="fas fa-download"></i> Download
                 </button>
             </div>
@@ -223,7 +220,7 @@ $(document).ready(function() {
         // Show loading
         $('#resultSection').hide();
         $('#loadingSection').show();
-        $('#generateBtn').prop('disabled', true).html('Generating...');
+        $('#generateBtn').prop('disabled', true).addClass('generating').html('Generating...');
         
         // Get form data
         const formData = new FormData(this);
@@ -237,7 +234,7 @@ $(document).ready(function() {
             contentType: false,
             success: function(response) {
                 $('#loadingSection').hide();
-                $('#generateBtn').prop('disabled', false).html('Generate My Chinese Name');
+                $('#generateBtn').prop('disabled', false).removeClass('generating').html('Generate My Chinese Name');
                 
                 if (response.success) {
                     // Display results with carousel
@@ -255,7 +252,7 @@ $(document).ready(function() {
             },
             error: function() {
                 $('#loadingSection').hide();
-                $('#generateBtn').prop('disabled', false).html('Generate My Chinese Name');
+                $('#generateBtn').prop('disabled', false).removeClass('generating').html('Generate My Chinese Name');
                 alert('Service temporarily unavailable. Please try again later.');
             }
         });
@@ -320,9 +317,11 @@ function createNameCard(nameData, index) {
                 <button class="share-button" onclick="shareNameCard(${index})" title="分享名片">
                 </button>
                 
-                <button class="audio-button" onclick="playAudio('${nameData.chinese_name}')" title="Hear pronunciation">
-                    <i class="fas fa-volume-up"></i>
-                </button>
+                <div class="audio-controls">
+                    <button class="audio-button" onclick="playAudio('${nameData.chinese_name}')" title="Hear pronunciation">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                </div>
                 
                 <div class="name-with-pinyin">
                     ${nameWithPinyin}
@@ -377,16 +376,36 @@ function playAudio(name) {
     button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     button.disabled = true;
     
+    // 从本地存储获取用户偏好设置，或使用默认值
+    const settings = {
+        speed: parseFloat(localStorage.getItem('tts_speed') || '0.7'), // 默认较慢速度
+        voice: localStorage.getItem('tts_voice') || 'alloy',
+        use_chinese_prompt: localStorage.getItem('tts_use_chinese_prompt') !== 'false'
+    };
+    
     $.ajax({
-        url: '{% url "namegen:text_to_speech" %}',
+        url: '{% url "namegen:text_to_speech_advanced" %}',
         type: 'POST',
-        data: JSON.stringify({text: name}),
+        data: JSON.stringify({
+            text: name,
+            speed: settings.speed,
+            voice: settings.voice,
+            use_chinese_prompt: settings.use_chinese_prompt
+        }),
         contentType: 'application/json',
         success: function(response) {
             if (response.success) {
                 // Play audio
                 const audio = new Audio('data:' + response.content_type + ';base64,' + response.audio_data);
-                audio.play();
+                audio.play().catch(error => {
+                    console.error('Audio play failed:', error);
+                    alert('Audio playback failed. Please check your browser settings.');
+                });
+                
+                // 显示当前设置信息
+                if (response.settings) {
+                    console.log('TTS Settings:', response.settings);
+                }
             } else {
                 alert('Audio playback failed: ' + response.error);
             }
@@ -401,11 +420,136 @@ function playAudio(name) {
     });
 }
 
+// 添加TTS设置面板功能
+function showTTSSettings() {
+    const currentSpeed = parseFloat(localStorage.getItem('tts_speed') || '0.7');
+    const currentVoice = localStorage.getItem('tts_voice') || 'alloy';
+    const useChinesePrompt = localStorage.getItem('tts_use_chinese_prompt') !== 'false';
+    
+    const settingsHtml = `
+        <div class="tts-settings-panel" id="ttsSettingsPanel">
+            <div class="settings-header">
+                <h5>Audio Settings</h5>
+                <button class="close-settings" onclick="closeTTSSettings()">×</button>
+            </div>
+            <div class="settings-content">
+                <div class="setting-group">
+                    <label for="speedSlider">Speech Speed: <span id="speedValue">${currentSpeed}</span></label>
+                    <input type="range" id="speedSlider" min="0.25" max="2.0" step="0.05" value="${currentSpeed}">
+                    <small class="text-muted">Slower speeds improve Chinese pronunciation</small>
+                </div>
+                
+                <div class="setting-group">
+                    <label for="voiceSelect">Voice:</label>
+                    <select id="voiceSelect" class="form-control">
+                        <option value="alloy" ${currentVoice === 'alloy' ? 'selected' : ''}>Alloy (Recommended for Chinese)</option>
+                        <option value="echo" ${currentVoice === 'echo' ? 'selected' : ''}>Echo</option>
+                        <option value="fable" ${currentVoice === 'fable' ? 'selected' : ''}>Fable</option>
+                        <option value="onyx" ${currentVoice === 'onyx' ? 'selected' : ''}>Onyx</option>
+                        <option value="nova" ${currentVoice === 'nova' ? 'selected' : ''}>Nova</option>
+                        <option value="shimmer" ${currentVoice === 'shimmer' ? 'selected' : ''}>Shimmer</option>
+                    </select>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="chinesePromptCheck" ${useChinesePrompt ? 'checked' : ''}>
+                        <label class="form-check-label" for="chinesePromptCheck">
+                            Enhanced Chinese pronunciation
+                        </label>
+                        <small class="text-muted d-block">Adds guidance for clearer Chinese pronunciation</small>
+                    </div>
+                </div>
+                
+                <div class="settings-actions">
+                    <button class="btn btn-sm btn-outline-primary" onclick="testAudio()">Test Audio</button>
+                    <button class="btn btn-sm btn-primary" onclick="saveTTSSettings()">Save Settings</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 移除现有面板（如果存在）
+    $('#ttsSettingsPanel').remove();
+    
+    // 添加到页面
+    $('body').append(settingsHtml);
+    
+    // 绑定事件
+    $('#speedSlider').on('input', function() {
+        $('#speedValue').text($(this).val());
+    });
+}
+
+function closeTTSSettings() {
+    $('#ttsSettingsPanel').remove();
+}
+
+function saveTTSSettings() {
+    const speed = $('#speedSlider').val();
+    const voice = $('#voiceSelect').val();
+    const useChinesePrompt = $('#chinesePromptCheck').is(':checked');
+    
+    localStorage.setItem('tts_speed', speed);
+    localStorage.setItem('tts_voice', voice);
+    localStorage.setItem('tts_use_chinese_prompt', useChinesePrompt);
+    
+    // 显示保存成功提示
+    const $saveBtn = $('.settings-actions .btn-primary');
+    const originalText = $saveBtn.text();
+    $saveBtn.text('Saved!').addClass('btn-success').removeClass('btn-primary');
+    
+    setTimeout(() => {
+        $saveBtn.text(originalText).removeClass('btn-success').addClass('btn-primary');
+        closeTTSSettings();
+    }, 1000);
+}
+
+function testAudio() {
+    // 使用当前面板设置进行测试
+    const speed = parseFloat($('#speedSlider').val());
+    const voice = $('#voiceSelect').val();
+    const useChinesePrompt = $('#chinesePromptCheck').is(':checked');
+    const testText = namesData.length > 0 ? namesData[currentNameIndex].chinese_name : '测试';
+    
+    const $testBtn = $('.settings-actions .btn-outline-primary');
+    const originalText = $testBtn.text();
+    $testBtn.text('Testing...').prop('disabled', true);
+    
+    $.ajax({
+        url: '{% url "namegen:text_to_speech_advanced" %}',
+        type: 'POST',
+        data: JSON.stringify({
+            text: testText,
+            speed: speed,
+            voice: voice,
+            use_chinese_prompt: useChinesePrompt
+        }),
+        contentType: 'application/json',
+        success: function(response) {
+            if (response.success) {
+                const audio = new Audio('data:' + response.content_type + ';base64,' + response.audio_data);
+                audio.play().catch(error => {
+                    console.error('Audio play failed:', error);
+                    alert('Audio playback failed. Please check your browser settings.');
+                });
+            } else {
+                alert('Test audio failed: ' + response.error);
+            }
+            $testBtn.text(originalText).prop('disabled', false);
+        },
+        error: function() {
+            alert('Audio service unavailable');
+            $testBtn.text(originalText).prop('disabled', false);
+        }
+    });
+}
+
 function generateAnotherName() {
     // Hide the result section first
     $('#resultSection').hide();
     $('#loadingSection').show();
-    $('#generateBtn').prop('disabled', true).html('Generating...');
+    $('#generateBtn').prop('disabled', true).addClass('generating').html('Generating...');
     
     // Get the current form data
     const formData = new FormData($('#nameGenForm')[0]);
@@ -419,7 +563,7 @@ function generateAnotherName() {
         contentType: false,
         success: function(response) {
             $('#loadingSection').hide();
-            $('#generateBtn').prop('disabled', false).html('Generate My Chinese Name');
+            $('#generateBtn').prop('disabled', false).removeClass('generating').html('Generate My Chinese Name');
             
             if (response.success) {
                 // Display new results with carousel
@@ -440,7 +584,7 @@ function generateAnotherName() {
         },
         error: function() {
             $('#loadingSection').hide();
-            $('#generateBtn').prop('disabled', false).html('Generate My Chinese Name');
+            $('#generateBtn').prop('disabled', false).removeClass('generating').html('Generate My Chinese Name');
             alert('Service temporarily unavailable. Please try again later.');
             // Scroll back to form on error
             $('html, body').animate({
@@ -615,20 +759,8 @@ $(document).on('click', '#shareNameCardBtn', function() {
     $btn.html('<i class="fas fa-spinner fa-spin"></i> Preparing...');
     $btn.prop('disabled', true);
     
-    // 使用html2canvas转换DOM为图片
-    html2canvas(nameCardElement, {
-        useCORS: true,
-        allowTaint: false,
-        scale: 4, // 超高分辨率
-        backgroundColor: '#ffffff',
-        width: 400,
-        height: 600,
-        scrollX: 0,
-        scrollY: 0,
-        foreignObjectRendering: false,
-        logging: false,
-        pixelRatio: window.devicePixelRatio || 1
-    }).then(canvas => {
+    // 使用统一的高质量导出函数 - 所有设备输出1200x1800px
+    exportNameCardAsImage(nameCardElement).then(canvas => {
         // 转换为blob
         canvas.toBlob(function(blob) {
             // 恢复按钮状态
@@ -698,6 +830,67 @@ $(document).on('click', '#shareNameCardBtn', function() {
     });
 });
 
+// 统一的高质量名片导出函数
+async function exportNameCardAsImage(nameCardElement) {
+    // 保存原始样式
+    const originalStyles = {
+        width: nameCardElement.style.width,
+        height: nameCardElement.style.height,
+        transform: nameCardElement.style.transform,
+        position: nameCardElement.style.position,
+        top: nameCardElement.style.top,
+        left: nameCardElement.style.left
+    };
+    
+    try {
+        // 临时强制设定为标准尺寸，确保所有设备统一输出
+        nameCardElement.style.width = '400px !important';
+        nameCardElement.style.height = '600px !important';
+        nameCardElement.style.transform = 'none';
+        nameCardElement.style.position = 'relative';
+        nameCardElement.style.top = 'auto';
+        nameCardElement.style.left = 'auto';
+        
+        // 等待样式应用和DOM重排
+        await new Promise(resolve => {
+            requestAnimationFrame(() => {
+                setTimeout(resolve, 150);
+            });
+        });
+        
+        // 使用html2canvas - 所有设备统一输出1200x1800px
+        const canvas = await html2canvas(nameCardElement, {
+            useCORS: true,
+            allowTaint: false,
+            scale: 3, // 400×3=1200, 600×3=1800 高分辨率
+            backgroundColor: '#ffffff',
+            width: 400, // DOM元素标准尺寸
+            height: 600, // DOM元素标准尺寸
+            scrollX: 0,
+            scrollY: 0,
+            foreignObjectRendering: false,
+            logging: false,
+            pixelRatio: 1, // 固定为1，避免设备差异
+            ignoreElements: function(element) {
+                // 忽略可能影响布局的元素
+                return element.classList && element.classList.contains('modal-backdrop');
+            }
+        });
+        
+        return canvas;
+        
+    } finally {
+        // 恢复原始样式
+        Object.keys(originalStyles).forEach(key => {
+            if (originalStyles[key]) {
+                nameCardElement.style[key] = originalStyles[key];
+            } else {
+                nameCardElement.style.removeProperty(key.replace(/[A-Z]/g, m => "-" + m.toLowerCase()));
+            }
+        });
+    }
+}
+
 // 辅助函数：下载图片blob
 function downloadImageBlob(blob, chineseText) {
     const url = window.URL.createObjectURL(blob);
@@ -725,20 +918,8 @@ $(document).on('click', '#downloadNameCardBtn', function() {
     $btn.html('<i class="fas fa-spinner fa-spin"></i> Generating...');
     $btn.prop('disabled', true);
     
-    // 使用html2canvas转换DOM为图片
-    html2canvas(nameCardElement, {
-        useCORS: true,
-        allowTaint: false,
-        scale: 4, // 超高分辨率
-        backgroundColor: '#ffffff',
-        width: 400,
-        height: 600,
-        scrollX: 0,
-        scrollY: 0,
-        foreignObjectRendering: false,
-        logging: false,
-        pixelRatio: window.devicePixelRatio || 1
-    }).then(canvas => {
+    // 使用统一的高质量导出函数 - 所有设备输出1200x1800px
+    exportNameCardAsImage(nameCardElement).then(canvas => {
         // 转换为blob并下载
         canvas.toBlob(function(blob) {
             // 恢复按钮状态
