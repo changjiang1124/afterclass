@@ -1054,92 +1054,120 @@ body::after {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  font-family: 'AR PL UKai CN', 'Ma Shan Zheng', 'Long Cang', 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
-  font-size: 4rem;
-  font-weight: 400;
-  color: #000000;
-  letter-spacing: 0.5rem;
-  line-height: 1.2;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   z-index: 10;
 }
 
-/* 拼音垂直排列 */
-.pinyin-vertical {
+.chinese-name-vertical .char-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 3.5rem;
+  width: 100%;
+}
+
+.chinese-name-vertical .chinese-char {
+  font-family: 'AR PL UKai CN', 'Ma Shan Zheng', 'Long Cang', 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+  font-size: 4.8rem;
+  font-weight: 400;
+  color: #000000;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  text-align: center;
+  min-width: 5rem;
+}
+
+.chinese-name-vertical .meaning-text {
   position: absolute;
+  right: calc(100% + 2rem);
   top: 50%;
-  left: calc(50% + 120px);
-  transform: translate(-50%, -50%);
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
+  transform: translateY(-50%);
+  font-family: 'Times New Roman', serif;
+  font-size: 1rem;
+  color: #d32f2f;
+  line-height: 1.2;
+  font-style: italic;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.chinese-name-vertical .pinyin-text {
+  position: absolute;
+  left: calc(100% + 2rem);
+  top: 50%;
+  transform: translateY(-50%);
   font-family: 'Times New Roman', serif;
   font-size: 1.2rem;
   color: #333333;
   font-style: italic;
-  letter-spacing: 0.2rem;
-  line-height: 1.5;
-  z-index: 10;
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
 }
 
-.pinyin-vertical .pinyin-char {
-  display: block;
-  margin-bottom: 2rem;
-  text-align: center;
-}
-
-/* 字符含义垂直排列 */
+/* 隐藏原来的拼音和含义容器 */
+.pinyin-vertical,
 .meanings-vertical {
-  position: absolute;
-  top: 50%;
-  left: calc(50% - 150px);
-  transform: translate(-50%, -50%);
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  font-family: 'Times New Roman', serif;
-  font-size: 1rem;
-  color: #444444;
-  letter-spacing: 0.1rem;
-  line-height: 1.4;
-  z-index: 10;
-}
-
-.meanings-vertical .meaning-item {
-  display: block;
-  margin-bottom: 2.5rem;
-  text-align: center;
-  font-size: 0.9rem;
+  display: none;
 }
 
 /* QR码区域 */
 .qr-section {
   position: absolute;
-  bottom: 40px;
+  bottom: 15px;
   left: 30px;
   z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 #qrCodeContainer {
-  width: 80px;
-  height: 80px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 4px;
-  padding: 4px;
+  width: 90px;
+  height: 90px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  padding: 6px;
   margin-bottom: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-#qrCodeContainer canvas {
+#qrCodeContainer canvas,
+#qrCodeContainer img {
   width: 100% !important;
   height: 100% !important;
+  border-radius: 4px;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+}
+
+#qrCodeContainer > div {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: #f8f9fa;
+  border: 1px dashed #ccc;
 }
 
 .qr-text {
   font-family: 'Times New Roman', serif;
-  font-size: 0.7rem;
-  color: #000000;
+  font-size: 0.65rem;
+  color: #333333;
   text-align: center;
   font-weight: 500;
+  line-height: 1.2;
+  max-width: 90px;
 }
 
 /* 版权信息 */
@@ -1151,6 +1179,7 @@ body::after {
   font-size: 0.6rem;
   color: #666666;
   z-index: 10;
+  line-height: 1.2;
 }
 
 /* 模态框样式调整 */
@@ -1170,33 +1199,34 @@ body::after {
     height: 480px;
   }
   
-  .chinese-name-vertical {
-    font-size: 3rem;
-    letter-spacing: 0.3rem;
+  .chinese-name-vertical .char-group {
+    margin-bottom: 2.5rem;
   }
   
-  .pinyin-vertical {
+  .chinese-name-vertical .chinese-char {
+    font-size: 3.5rem;
+    min-width: 4rem;
+  }
+  
+  .chinese-name-vertical .meaning-text {
+    font-size: 0.8rem;
+    right: calc(100% + 1rem);
+  }
+  
+  .chinese-name-vertical .pinyin-text {
     font-size: 1rem;
-    left: calc(50% + 100px);
-  }
-  
-  .meanings-vertical {
-    font-size: 0.8rem;
-    left: calc(50% - 120px);
-  }
-  
-  .meanings-vertical .meaning-item {
-    margin-bottom: 2rem;
-    font-size: 0.8rem;
+    left: calc(100% + 1rem);
   }
   
   #qrCodeContainer {
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
+    padding: 5px;
   }
   
   .qr-text {
-    font-size: 0.6rem;
+    font-size: 0.55rem;
+    max-width: 70px;
   }
   
   .copyright-text {

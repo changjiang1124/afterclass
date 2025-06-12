@@ -162,6 +162,11 @@
                 </button>
             </div>
             <div class="modal-body text-center">
+                <!-- 个人化介绍句 -->
+                <div class="name-card-intro" id="nameCardIntro">
+                    <!-- 这里将通过JavaScript填充 -->
+                </div>
+                
                 <!-- 名片容器 -->
                 <div id="nameCardPreview" class="name-card-template">
                     <!-- 背景图片 -->
@@ -190,9 +195,11 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">取消</button>
-                <button type="button" class="btn btn-primary" id="downloadNameCardBtn">
-                    <i class="fas fa-download"></i> 下载名片
+                <button type="button" class="btn btn-primary" id="shareNameCardBtn">
+                    <i class="fas fa-share-alt"></i> Share
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="downloadNameCardBtn">
+                    <i class="fas fa-download"></i> Download
                 </button>
             </div>
         </div>
@@ -473,8 +480,11 @@ function shareNameCard(index) {
         const pinyinArray = nameData.pinyin.split(' ');
         const meaningArray = nameData.characters.map(char => char.meaning);
 
-        // 填充名片预览数据
-        populateNameCardPreview(chineseText, pinyinArray, meaningArray);
+        // 获取英文姓名（从表单或数据中）
+        const englishName = $('input[name="english_name"]').val() || nameData.english_name || 'Your';
+        
+        // 填充名片预览数据，包括介绍句
+        populateNameCardPreview(chineseText, pinyinArray, meaningArray, englishName);
         
         // 显示模态框
         $('#nameCardModal').modal('show');
@@ -484,22 +494,51 @@ function shareNameCard(index) {
     }
 }
 
-function populateNameCardPreview(chineseText, pinyinArray, meaningArray) {
-    // 填充中文字符
+function populateNameCardPreview(chineseText, pinyinArray, meaningArray, englishName) {
+    // 填充个人化介绍句
+    const introElement = document.getElementById('nameCardIntro');
+    const literaryIntros = [
+        `Behold, <span class="highlight-name">${englishName}'s</span> essence captured in ancient characters—a name that bridges worlds and carries dreams.`,
+        `In the art of Chinese calligraphy, <span class="highlight-name">${englishName}</span> finds their true spirit embodied in these timeless symbols.`,
+        `Here lies <span class="highlight-name">${englishName}'s</span> soul translated into the poetry of Chinese characters—each stroke a brushstroke of destiny.`,
+        `Within these ancient forms, <span class="highlight-name">${englishName}</span> discovers their Chinese identity, painted in ink and meaning.`,
+        `<span class="highlight-name">${englishName}'s</span> journey into Chinese culture begins with these characters—a name that echoes through centuries of wisdom.`
+    ];
+    const randomIntro = literaryIntros[Math.floor(Math.random() * literaryIntros.length)];
+    introElement.innerHTML = randomIntro;
+    
+    // 清空并重建中文字符容器
     const chineseContainer = document.getElementById('chineseNameVertical');
-    chineseContainer.textContent = chineseText;
+    chineseContainer.innerHTML = '';
     
-    // 填充拼音
-    const pinyinContainer = document.getElementById('pinyinVertical');
-    pinyinContainer.innerHTML = pinyinArray.map(pinyin => 
-        `<span class="pinyin-char">${pinyin}</span>`
-    ).join('');
+    // 为每个字符创建字符组
+    const chars = chineseText.split('');
+    chars.forEach((char, index) => {
+        const charGroup = document.createElement('div');
+        charGroup.className = 'char-group';
+        
+        const chineseChar = document.createElement('div');
+        chineseChar.className = 'chinese-char';
+        chineseChar.textContent = char;
+        
+        const meaningText = document.createElement('div');
+        meaningText.className = 'meaning-text';
+        meaningText.textContent = meaningArray[index] || '';
+        
+        const pinyinText = document.createElement('div');
+        pinyinText.className = 'pinyin-text';
+        pinyinText.textContent = pinyinArray[index] || '';
+        
+        // 添加元素到字符组
+        charGroup.appendChild(meaningText);
+        charGroup.appendChild(chineseChar);
+        charGroup.appendChild(pinyinText);
+        chineseContainer.appendChild(charGroup);
+    });
     
-    // 填充含义
-    const meaningsContainer = document.getElementById('meaningsVertical');
-    meaningsContainer.innerHTML = meaningArray.map(meaning => 
-        `<div class="meaning-item">${meaning}</div>`
-    ).join('');
+    // 清空旧容器（现在已隐藏）
+    document.getElementById('pinyinVertical').innerHTML = '';
+    document.getElementById('meaningsVertical').innerHTML = '';
     
     // 生成QR码
     generateQRCode();
@@ -521,14 +560,18 @@ function generateQRCode() {
             qr.make();
             
             // 创建QR码HTML
-            const qrHTML = qr.createImgTag(2, 4); // 2px cell size, 4px margin
+            const qrHTML = qr.createImgTag(3, 0); // 3px cell size, 0px margin
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = qrHTML;
             const qrImg = tempDiv.querySelector('img');
             
             if (qrImg) {
-                qrImg.style.width = '72px';
-                qrImg.style.height = '72px';
+                qrImg.style.width = '78px';
+                qrImg.style.height = '78px';
+                qrImg.style.borderRadius = '4px';
+                qrImg.style.imageRendering = 'pixelated';
+                qrImg.style.imageRendering = '-moz-crisp-edges';
+                qrImg.style.imageRendering = 'crisp-edges';
                 qrContainer.appendChild(qrImg);
             } else {
                 throw new Error('QR码HTML生成失败');
@@ -537,11 +580,14 @@ function generateQRCode() {
             // Fallback：使用在线QR码服务
             const encodedUrl = encodeURIComponent(siteUrl);
             const qrImg = document.createElement('img');
-            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodedUrl}`;
-            qrImg.style.width = '72px';
-            qrImg.style.height = '72px';
-            qrImg.style.borderRadius = '2px';
+            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=${encodedUrl}&format=png&ecc=M`;
+            qrImg.style.width = '78px';
+            qrImg.style.height = '78px';
+            qrImg.style.borderRadius = '4px';
             qrImg.alt = 'QR Code';
+            qrImg.style.imageRendering = 'pixelated';
+            qrImg.style.imageRendering = '-moz-crisp-edges';
+            qrImg.style.imageRendering = 'crisp-edges';
             qrContainer.appendChild(qrImg);
         }
     } catch (error) {
@@ -549,6 +595,116 @@ function generateQRCode() {
         // 显示占位符
         qrContainer.innerHTML = '<div style="width:72px;height:72px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:10px;border-radius:4px;color:#666;border:1px solid #ddd;">QR<br/>Code</div>';
     }
+}
+
+// 分享名片功能
+$(document).on('click', '#shareNameCardBtn', function() {
+    const nameCardElement = document.getElementById('nameCardPreview');
+    const chineseText = document.getElementById('chineseNameVertical').textContent.trim();
+    
+    // 显示加载状态
+    const $btn = $(this);
+    const originalText = $btn.html();
+    $btn.html('<i class="fas fa-spinner fa-spin"></i> Preparing...');
+    $btn.prop('disabled', true);
+    
+    // 使用html2canvas转换DOM为图片
+    html2canvas(nameCardElement, {
+        useCORS: true,
+        allowTaint: false,
+        scale: 4, // 超高分辨率
+        backgroundColor: '#ffffff',
+        width: 400,
+        height: 600,
+        scrollX: 0,
+        scrollY: 0,
+        foreignObjectRendering: false,
+        logging: false,
+        pixelRatio: window.devicePixelRatio || 1
+    }).then(canvas => {
+        // 转换为blob
+        canvas.toBlob(function(blob) {
+            // 恢复按钮状态
+            $btn.html(originalText);
+            $btn.prop('disabled', false);
+            
+            // 尝试使用Web Share API
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'namecard.png', { type: 'image/png' })] })) {
+                const file = new File([blob], `chinese-name-card-${chineseText}.png`, { type: 'image/png' });
+                
+                navigator.share({
+                    title: 'My Chinese Name Card',
+                    text: `Check out my beautiful Chinese name card! Generated at Learn Chinese Perth.`,
+                    files: [file]
+                }).then(() => {
+                    // 关闭模态框
+                    $('#nameCardModal').modal('hide');
+                    
+                    Toastify({
+                        text: "Name card shared successfully!",
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "center",
+                        style: {
+                            background: "linear-gradient(to right, #00b09b, #96c93d)",
+                        }
+                    }).showToast();
+                }).catch(error => {
+                    console.log('分享取消或失败:', error);
+                    // 如果分享失败，回退到下载
+                    downloadImageBlob(blob, chineseText);
+                });
+            } else {
+                // 回退：直接下载文件
+                downloadImageBlob(blob, chineseText);
+                
+                Toastify({
+                    text: "Name card downloaded! Share feature not available on this device.",
+                    duration: 4000,
+                    close: true,
+                    gravity: "top",
+                    position: "center",
+                    style: {
+                        background: "linear-gradient(to right, #ffeaa3, #ffd700)",
+                    }
+                }).showToast();
+            }
+        }, 'image/png');
+    }).catch(error => {
+        console.error('生成名片图片失败:', error);
+        
+        // 恢复按钮状态
+        $btn.html(originalText);
+        $btn.prop('disabled', false);
+        
+        Toastify({
+            text: "Failed to generate name card, please try again later",
+            duration: 3000,
+            close: true,
+            gravity: "top",
+            position: "center",
+            style: {
+                background: "linear-gradient(to right, #ff5f6d, #ffc371)",
+            }
+        }).showToast();
+    });
+});
+
+// 辅助函数：下载图片blob
+function downloadImageBlob(blob, chineseText) {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = `chinese-name-card-${chineseText}.png`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
+    // 关闭模态框
+    $('#nameCardModal').modal('hide');
 }
 
 // 下载名片功能
@@ -559,44 +715,35 @@ $(document).on('click', '#downloadNameCardBtn', function() {
     // 显示加载状态
     const $btn = $(this);
     const originalText = $btn.html();
-    $btn.html('<i class="fas fa-spinner fa-spin"></i> 生成中...');
+    $btn.html('<i class="fas fa-spinner fa-spin"></i> Generating...');
     $btn.prop('disabled', true);
     
     // 使用html2canvas转换DOM为图片
     html2canvas(nameCardElement, {
         useCORS: true,
         allowTaint: false,
-        scale: 2, // 高分辨率
+        scale: 4, // 超高分辨率
         backgroundColor: '#ffffff',
         width: 400,
         height: 600,
         scrollX: 0,
         scrollY: 0,
         foreignObjectRendering: false,
-        logging: false
+        logging: false,
+        pixelRatio: window.devicePixelRatio || 1
     }).then(canvas => {
         // 转换为blob并下载
         canvas.toBlob(function(blob) {
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = `chinese-name-card-${chineseText}.png`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            
             // 恢复按钮状态
             $btn.html(originalText);
             $btn.prop('disabled', false);
             
-            // 关闭模态框
-            $('#nameCardModal').modal('hide');
+            // 下载图片
+            downloadImageBlob(blob, chineseText);
             
             // 显示成功提示
             Toastify({
-                text: "名片已下载！请查看您的下载文件夹",
+                text: "Name card has been downloaded! Please check your download folder",
                 duration: 3000,
                 close: true,
                 gravity: "top",
@@ -614,7 +761,7 @@ $(document).on('click', '#downloadNameCardBtn', function() {
         $btn.prop('disabled', false);
         
         Toastify({
-            text: "生成名片失败，请稍后重试",
+            text: "Failed to generate name card, please try again later",
             duration: 3000,
             close: true,
             gravity: "top",

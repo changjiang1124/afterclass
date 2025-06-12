@@ -1018,10 +1018,11 @@ body::after {
   width: 400px;
   height: 600px;
   position: relative;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   margin: 0 auto;
-  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .card-background {
@@ -1030,164 +1031,188 @@ body::after {
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url('/static/namegen/images/namecardbg.png');
+  background-image: url('../images/namecardbg.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  z-index: 1;
+  z-index: 0;
 }
 
 .card-content {
   position: relative;
   width: 100%;
   height: 100%;
-  z-index: 2;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  justify-content: space-between;
+  padding: 40px 30px 30px 30px;
 }
 
-/* 中文名字垂直排列 */
+/* 垂直中文名字容器 */
 .chinese-name-vertical {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: row;
+  gap: 40px;
   writing-mode: vertical-rl;
   text-orientation: upright;
-  font-family: 'AR PL UKai CN', 'Ma Shan Zheng', 'Long Cang', 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
-  font-size: 4rem;
-  font-weight: 400;
-  color: #000000;
-  letter-spacing: 0.5rem;
-  line-height: 1.2;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
   z-index: 10;
 }
 
-/* 拼音垂直排列 */
-.pinyin-vertical {
-  position: absolute;
-  top: 50%;
-  left: calc(50% + 120px);
-  transform: translate(-50%, -50%);
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
+.chinese-name-vertical .char-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: auto;
+}
+
+.chinese-name-vertical .chinese-char {
+  font-family: 'AR PL UKai CN', 'Microsoft YaHei', 'SimSun', serif;
+  font-size: 80px;
+  font-weight: 600;
+  color: #2c2c2c;
+  line-height: 1;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.chinese-name-vertical .meaning-text {
   font-family: 'Times New Roman', serif;
-  font-size: 1.2rem;
-  color: #333333;
+  font-size: 12px;
+  color: var(--accent-red);
   font-style: italic;
-  letter-spacing: 0.2rem;
-  line-height: 1.5;
-  z-index: 10;
-}
-
-.pinyin-vertical .pinyin-char {
-  display: block;
-  margin-bottom: 2rem;
-  text-align: center;
-}
-
-/* 字符含义垂直排列 */
-.meanings-vertical {
-  position: absolute;
-  top: 50%;
-  left: calc(50% - 150px);
-  transform: translate(-50%, -50%);
-  writing-mode: vertical-rl;
+  writing-mode: horizontal-tb;
   text-orientation: mixed;
-  font-family: 'Times New Roman', serif;
-  font-size: 1rem;
-  color: #444444;
-  letter-spacing: 0.1rem;
-  line-height: 1.4;
-  z-index: 10;
+  text-align: center;
+  line-height: 1.3;
+  max-width: 80px;
+  word-wrap: break-word;
+  white-space: normal;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
-.meanings-vertical .meaning-item {
-  display: block;
-  margin-bottom: 2.5rem;
+.chinese-name-vertical .pinyin-text {
+  font-family: 'Times New Roman', serif;
+  font-size: 14px;
+  color: #666;
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
   text-align: center;
-  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* 隐藏旧的垂直容器 */
+.pinyin-vertical,
+.meanings-vertical {
+  display: none;
 }
 
 /* QR码区域 */
 .qr-section {
   position: absolute;
-  bottom: 40px;
+  bottom: 80px;
   left: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   z-index: 10;
 }
 
 #qrCodeContainer {
-  width: 80px;
-  height: 80px;
+  width: 78px;
+  height: 78px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: rgba(255, 255, 255, 0.9);
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 4px;
-  margin-bottom: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-#qrCodeContainer canvas {
-  width: 100% !important;
-  height: 100% !important;
+#qrCodeContainer canvas,
+#qrCodeContainer img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 2px;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+#qrCodeContainer > div {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  color: #999;
+  text-align: center;
+  background: #f8f8f8;
+  border-radius: 2px;
 }
 
 .qr-text {
   font-family: 'Times New Roman', serif;
-  font-size: 0.7rem;
-  color: #000000;
+  font-size: 9px;
+  color: #666;
   text-align: center;
-  font-weight: 500;
+  line-height: 1.2;
+  max-width: 78px;
+  opacity: 0.8;
 }
 
 /* 版权信息 */
 .copyright-text {
   position: absolute;
-  bottom: 15px;
-  right: 20px;
+  bottom: 20px;
+  right: 30px;
   font-family: 'Times New Roman', serif;
-  font-size: 0.6rem;
-  color: #666666;
+  font-size: 8px;
+  color: #999;
+  opacity: 0.7;
   z-index: 10;
 }
 
 /* 模态框样式调整 */
 #nameCardModal .modal-dialog {
-  max-width: 500px;
+  max-width: 600px;
 }
 
 #nameCardModal .modal-body {
   padding: 2rem;
-  background: #f8f9fa;
 }
 
-/* 移动端响应式 */
+/* 响应式设计 */
 @media (max-width: 768px) {
   .name-card-template {
     width: 320px;
     height: 480px;
   }
   
-  .chinese-name-vertical {
-    font-size: 3rem;
-    letter-spacing: 0.3rem;
+  .chinese-name-vertical .char-group {
+    gap: 8px;
   }
   
-  .pinyin-vertical {
-    font-size: 1rem;
-    left: calc(50% + 100px);
+  .chinese-name-vertical .chinese-char {
+    font-size: 60px;
   }
   
-  .meanings-vertical {
-    font-size: 0.8rem;
-    left: calc(50% - 120px);
+  .chinese-name-vertical .meaning-text {
+    font-size: 10px;
+    max-width: 60px;
   }
   
-  .meanings-vertical .meaning-item {
-    margin-bottom: 2rem;
-    font-size: 0.8rem;
+  .chinese-name-vertical .pinyin-text {
+    font-size: 12px;
   }
   
   #qrCodeContainer {
@@ -1196,10 +1221,33 @@ body::after {
   }
   
   .qr-text {
-    font-size: 0.6rem;
+    font-size: 8px;
+    max-width: 60px;
   }
   
   .copyright-text {
-    font-size: 0.5rem;
+    font-size: 7px;
   }
+  
+  .name-card-intro {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+}
+
+/* 名片介绍句样式 */
+.name-card-intro {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  margin-bottom: 1.2rem;
+  font-style: italic;
+  opacity: 0.9;
+  line-height: 1.6;
+  font-family: 'Times New Roman', serif;
+}
+
+.name-card-intro .highlight-name {
+  color: var(--accent-red);
+  font-weight: 600;
+  font-style: normal;
 } 
