@@ -1018,10 +1018,11 @@ body::after {
   width: 400px;
   height: 600px;
   position: relative;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   margin: 0 auto;
-  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .card-background {
@@ -1030,206 +1031,244 @@ body::after {
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url('/static/namegen/images/namecardbg.png');
+  background-image: url('../images/namecardbg.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  z-index: 1;
+  z-index: 0;
 }
 
 .card-content {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 30px 30px 20px 30px;
 }
 
-/* 中文名字垂直排列 */
+/* 垂直中文名字容器 */
 .chinese-name-vertical {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 10;
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    z-index: 10;
+    justify-content: center;
+    align-items: center;
+    width: 80%;
 }
 
 .chinese-name-vertical .char-group {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 3.5rem;
-  width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    justify-content: center;
 }
 
 .chinese-name-vertical .chinese-char {
-  font-family: 'AR PL UKai CN', 'Ma Shan Zheng', 'Long Cang', 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
-  font-size: 4.8rem;
-  font-weight: 400;
-  color: #000000;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-  text-align: center;
-  min-width: 5rem;
+    font-family: 'AR PL UKai CN', 'Ma Shan Zheng', 'Long Cang', 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+    font-size: 90px;
+    font-weight: 400;
+    color: #000000;
+    line-height: 1;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 40%;
 }
 
 .chinese-name-vertical .meaning-text {
-  position: absolute;
-  right: calc(100% + 2rem);
-  top: 50%;
-  transform: translateY(-50%);
-  font-family: 'Times New Roman', serif;
-  font-size: 1rem;
-  color: #d32f2f;
-  line-height: 1.2;
-  font-style: italic;
-  text-align: right;
-  white-space: nowrap;
+    font-family: 'Times New Roman', serif;
+    font-size: 14px;
+    color: var(--accent-red);
+    font-style: italic;
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    text-align: center;
+    line-height: 1.3;
+    max-width: 90px;
+    word-wrap: break-word;
+    white-space: normal;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    width: 30%;
 }
 
 .chinese-name-vertical .pinyin-text {
-  position: absolute;
-  left: calc(100% + 2rem);
-  top: 50%;
-  transform: translateY(-50%);
-  font-family: 'Times New Roman', serif;
-  font-size: 1.2rem;
-  color: #333333;
-  font-style: italic;
-  font-weight: 500;
-  text-align: left;
-  white-space: nowrap;
+    font-family: 'Times New Roman', serif;
+    font-size: 20px;
+    color: #666;
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    text-align: center;
+    font-style: italic;
+    width:30%;
 }
 
-/* 隐藏原来的拼音和含义容器 */
+/* 隐藏旧的垂直容器 */
 .pinyin-vertical,
 .meanings-vertical {
   display: none;
 }
 
+/* 底部区域 */
+.card-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+    position: relative;
+    z-index: 10;
+}
+
 /* QR码区域 */
 .qr-section {
-  position: absolute;
-  bottom: 15px;
-  left: 30px;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
 }
 
 #qrCodeContainer {
-  width: 90px;
-  height: 90px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 8px;
-  padding: 6px;
-  margin-bottom: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  border: 2px solid rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    width: 78px;
+    height: 78px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 6px;
+    padding: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 #qrCodeContainer canvas,
 #qrCodeContainer img {
-  width: 100% !important;
-  height: 100% !important;
-  border-radius: 4px;
-  image-rendering: pixelated;
-  image-rendering: -moz-crisp-edges;
-  image-rendering: crisp-edges;
-  -ms-interpolation-mode: nearest-neighbor;
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 2px;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
 }
 
 #qrCodeContainer > div {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  background: #f8f9fa;
-  border: 1px dashed #ccc;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    color: #999;
+    text-align: center;
+    background: #f8f8f8;
+    border-radius: 2px;
 }
 
 .qr-text {
-  font-family: 'Times New Roman', serif;
-  font-size: 0.65rem;
-  color: #333333;
-  text-align: center;
-  font-weight: 500;
-  line-height: 1.2;
-  max-width: 90px;
+    font-family: 'Times New Roman', serif;
+    font-size: 9px;
+    color: #666;
+    text-align: center;
+    line-height: 1.2;
+    max-width: 78px;
+    opacity: 0.8;
 }
 
 /* 版权信息 */
 .copyright-text {
-  position: absolute;
-  bottom: 15px;
-  right: 20px;
-  font-family: 'Times New Roman', serif;
-  font-size: 0.6rem;
-  color: #666666;
-  z-index: 10;
-  line-height: 1.2;
+    font-family: 'Times New Roman', serif;
+    font-size: 8px;
+    color: #999;
+    opacity: 0.7;
+    text-align: right;
 }
 
 /* 模态框样式调整 */
 #nameCardModal .modal-dialog {
-  max-width: 500px;
+  max-width: 600px;
 }
 
 #nameCardModal .modal-body {
   padding: 2rem;
-  background: #f8f9fa;
 }
 
-/* 移动端响应式 */
+/* 响应式设计 */
 @media (max-width: 768px) {
-  .name-card-template {
-    width: 320px;
-    height: 480px;
-  }
-  
-  .chinese-name-vertical .char-group {
-    margin-bottom: 2.5rem;
-  }
-  
-  .chinese-name-vertical .chinese-char {
-    font-size: 3.5rem;
-    min-width: 4rem;
-  }
-  
-  .chinese-name-vertical .meaning-text {
-    font-size: 0.8rem;
-    right: calc(100% + 1rem);
-  }
-  
-  .chinese-name-vertical .pinyin-text {
-    font-size: 1rem;
-    left: calc(100% + 1rem);
-  }
-  
-  #qrCodeContainer {
-    width: 70px;
-    height: 70px;
-    padding: 5px;
-  }
-  
-  .qr-text {
-    font-size: 0.55rem;
-    max-width: 70px;
-  }
-  
-  .copyright-text {
-    font-size: 0.5rem;
-  }
+    .name-card-template {
+        width: 320px;
+        height: 480px;
+    }
+    
+    .card-content {
+        padding: 20px 20px 15px 20px;
+    }
+    
+    .name-card-intro {
+        font-size: 0.8rem;
+        margin-bottom: 20px;
+        padding: 0 15px;
+    }
+    
+    .chinese-name-vertical .char-group {
+        gap: 8px;
+        min-width: 100px;
+    }
+    
+    .chinese-name-vertical .chinese-char {
+        font-size: 70px;
+    }
+    
+    .chinese-name-vertical .meaning-text {
+        font-size: 13px;
+    }
+    
+    .chinese-name-vertical .pinyin-text {
+        font-size: 14px;
+    }
+    
+    #qrCodeContainer {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .qr-text {
+        font-size: 8px;
+        max-width: 60px;
+    }
+    
+    .copyright-text {
+        font-size: 7px;
+    }
+}
+
+/* 名片介绍句样式 (在名片内部) */
+.name-card-intro {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-style: normal;
+    opacity: 0.9;
+    line-height: 1.3;
+    font-family: 'Times New Roman', serif;
+    text-align: center;
+    margin-bottom: 25px;
+    padding: 0 20px;
+    position: relative;
+    z-index: 10;
+    font-weight: 500;
+}
+
+.name-card-intro .highlight-name {
+    color: var(--accent-red);
+    font-weight: 600;
+    font-style: normal;
 } 

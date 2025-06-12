@@ -162,11 +162,6 @@
                 </button>
             </div>
             <div class="modal-body text-center">
-                <!-- 个人化介绍句 -->
-                <div class="name-card-intro" id="nameCardIntro">
-                    <!-- 这里将通过JavaScript填充 -->
-                </div>
-                
                 <!-- 名片容器 -->
                 <div id="nameCardPreview" class="name-card-template">
                     <!-- 背景图片 -->
@@ -174,6 +169,11 @@
                     
                     <!-- 主要内容区域 -->
                     <div class="card-content">
+                        <!-- 个人化介绍句 (在名片内部顶部) -->
+                        <div class="name-card-intro" id="nameCardIntro">
+                            <!-- 这里将通过JavaScript填充 -->
+                        </div>
+                        
                         <!-- 中文名字 (垂直) -->
                         <div class="chinese-name-vertical" id="chineseNameVertical"></div>
                         
@@ -183,14 +183,17 @@
                         <!-- 字符含义 (垂直) -->
                         <div class="meanings-vertical" id="meaningsVertical"></div>
                         
-                        <!-- QR码区域 -->
-                        <div class="qr-section">
-                            <div id="qrCodeContainer"></div>
-                            <div class="qr-text">Scan to generate yours</div>
+                        <!-- 底部区域 -->
+                        <div class="card-bottom">
+                            <!-- QR码区域 -->
+                            <div class="qr-section">
+                                <div id="qrCodeContainer"></div>
+                                <div class="qr-text">Scan to generate yours</div>
+                            </div>
+                            
+                            <!-- 版权信息 -->
+                            <div class="copyright-text">© 2025 Learn Chinese Perth</div>
                         </div>
-                        
-                        <!-- 版权信息 -->
-                        <div class="copyright-text">© 2025 Learn Chinese Perth</div>
                     </div>
                 </div>
             </div>
@@ -481,7 +484,12 @@ function shareNameCard(index) {
         const meaningArray = nameData.characters.map(char => char.meaning);
 
         // 获取英文姓名（从表单或数据中）
-        const englishName = $('input[name="english_name"]').val() || nameData.english_name || 'Your';
+        const firstName = $('input[name="first_name"]').val() || '';
+        const surname = $('input[name="surname"]').val() || '';
+        const englishName = firstName || surname || nameData.english_name || 'Your';
+        console.log('First name from form:', firstName);
+        console.log('Surname from form:', surname);
+        console.log('Final english name used:', englishName);
         
         // 填充名片预览数据，包括介绍句
         populateNameCardPreview(chineseText, pinyinArray, meaningArray, englishName);
@@ -497,14 +505,13 @@ function shareNameCard(index) {
 function populateNameCardPreview(chineseText, pinyinArray, meaningArray, englishName) {
     // 填充个人化介绍句
     const introElement = document.getElementById('nameCardIntro');
-    const literaryIntros = [
-        `Behold, <span class="highlight-name">${englishName}'s</span> essence captured in ancient characters—a name that bridges worlds and carries dreams.`,
-        `In the art of Chinese calligraphy, <span class="highlight-name">${englishName}</span> finds their true spirit embodied in these timeless symbols.`,
-        `Here lies <span class="highlight-name">${englishName}'s</span> soul translated into the poetry of Chinese characters—each stroke a brushstroke of destiny.`,
-        `Within these ancient forms, <span class="highlight-name">${englishName}</span> discovers their Chinese identity, painted in ink and meaning.`,
-        `<span class="highlight-name">${englishName}'s</span> journey into Chinese culture begins with these characters—a name that echoes through centuries of wisdom.`
+    const simpleIntros = [
+        `<span class="highlight-name">${englishName}'s</span> Chinese name`,
+        `The Chinese name for <span class="highlight-name">${englishName}</span>`,
+        `<span class="highlight-name">${englishName}</span> in Chinese characters`,
+        `Chinese name: <span class="highlight-name">${englishName}</span>`
     ];
-    const randomIntro = literaryIntros[Math.floor(Math.random() * literaryIntros.length)];
+    const randomIntro = simpleIntros[Math.floor(Math.random() * simpleIntros.length)];
     introElement.innerHTML = randomIntro;
     
     // 清空并重建中文字符容器
