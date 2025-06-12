@@ -241,6 +241,18 @@ main {
   height: auto;
 }
 
+/* 为下拉框添加额外的右侧内边距，为箭头图标留出更多空间 */
+select.form-control {
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23808080' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 1rem center;
+  background-repeat: no-repeat;
+  background-size: 1rem;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
 .form-control:focus {
   border-color: var(--accent-red);
   box-shadow: 0 0 0 2px rgba(196, 30, 58, 0.1);

@@ -11,10 +11,88 @@ from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import io
 import os
+from google.cloud import texttospeech
 
-# OpenAI API 配置
+# OpenAI API 配置 (仅用于名字生成)
 OPENAI_API_KEY = settings.OPENAI_API_KEY
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
+
+def get_google_tts_client():
+    """初始化 Google Cloud TTS 客户端"""
+    try:
+        return texttospeech.TextToSpeechClient()
+    except Exception as e:
+        raise Exception(f"Failed to initialize Google TTS client: {str(e)}")
+
+def get_safe_voice_config(voice_name, gender='female'):
+    """获取安全的语音配置，包含回退选项"""
+    # 按优先级排序的语音选项 - 使用实际可用的语音名称
+    fallback_voices = [
+        # 首选：标准语音（最广泛可用）
+        {'female': 'cmn-CN-Standard-A', 'male': 'cmn-CN-Standard-B'},
+        # 备选：其他标准语音  
+        {'female': 'cmn-CN-Standard-D', 'male': 'cmn-CN-Standard-C'},
+        # 高质量选择：Wavenet 语音
+        {'female': 'cmn-CN-Wavenet-A', 'male': 'cmn-CN-Wavenet-B'},
+        # 最新技术：Chirp 语音
+        {'female': 'cmn-CN-Chirp3-HD-Achernar', 'male': 'cmn-CN-Chirp3-HD-Achird'},
+        # 最后选择：仅语言代码，让Google自动选择
+        {'female': None, 'male': None}
+    ]
+    
+    # Google Cloud TTS 中文语音选项映射 - 使用实际可用的语音名称
+    google_voices = {
+        # 标准声音 (更广泛可用，免费额度更多)
+        'cmn-CN-Standard-A': {'gender': 'female', 'name': 'cmn-CN-Standard-A'},
+        'cmn-CN-Standard-B': {'gender': 'male', 'name': 'cmn-CN-Standard-B'},
+        'cmn-CN-Standard-C': {'gender': 'male', 'name': 'cmn-CN-Standard-C'},
+        'cmn-CN-Standard-D': {'gender': 'female', 'name': 'cmn-CN-Standard-D'},
+        
+        # 高质量 Wavenet 声音
+        'cmn-CN-Wavenet-A': {'gender': 'female', 'name': 'cmn-CN-Wavenet-A'},
+        'cmn-CN-Wavenet-B': {'gender': 'male', 'name': 'cmn-CN-Wavenet-B'},
+        'cmn-CN-Wavenet-C': {'gender': 'male', 'name': 'cmn-CN-Wavenet-C'},
+        'cmn-CN-Wavenet-D': {'gender': 'female', 'name': 'cmn-CN-Wavenet-D'},
+        
+        # 最新 Chirp 语音 (高质量，推荐使用)
+        'cmn-CN-Chirp3-HD-Achernar': {'gender': 'female', 'name': 'cmn-CN-Chirp3-HD-Achernar'},
+        'cmn-CN-Chirp3-HD-Achird': {'gender': 'male', 'name': 'cmn-CN-Chirp3-HD-Achird'},
+        'cmn-CN-Chirp3-HD-Aoede': {'gender': 'female', 'name': 'cmn-CN-Chirp3-HD-Aoede'},
+        'cmn-CN-Chirp3-HD-Algenib': {'gender': 'male', 'name': 'cmn-CN-Chirp3-HD-Algenib'},
+        
+        # 兼容 OpenAI 语音名称的映射 - 使用实际可用的语音
+        'alloy': {'gender': 'female', 'name': 'cmn-CN-Standard-A'},
+        'echo': {'gender': 'male', 'name': 'cmn-CN-Standard-B'},
+        'fable': {'gender': 'female', 'name': 'cmn-CN-Standard-D'},
+        'onyx': {'gender': 'male', 'name': 'cmn-CN-Standard-C'},
+        'nova': {'gender': 'female', 'name': 'cmn-CN-Wavenet-A'},
+        'shimmer': {'gender': 'female', 'name': 'cmn-CN-Chirp3-HD-Achernar'},
+        
+        # 向后兼容：旧的 zh-CN 格式映射到新的 cmn-CN 格式
+        'zh-CN-Standard-A': {'gender': 'female', 'name': 'cmn-CN-Standard-A'},
+        'zh-CN-Standard-B': {'gender': 'male', 'name': 'cmn-CN-Standard-B'},
+        'zh-CN-Wavenet-A': {'gender': 'female', 'name': 'cmn-CN-Wavenet-A'},
+        'zh-CN-Wavenet-B': {'gender': 'male', 'name': 'cmn-CN-Wavenet-B'},
+    }
+    
+    # 如果指定的语音存在，直接使用
+    if voice_name in google_voices:
+        return google_voices[voice_name]
+    
+    # 否则按照回退顺序选择
+    for fallback in fallback_voices:
+        voice_choice = fallback.get(gender)
+        if voice_choice and voice_choice in google_voices:
+            return google_voices[voice_choice]
+        elif voice_choice is None:
+            # 最后回退：仅使用语言代码
+            return {
+                'gender': gender, 
+                'name': None  # None 表示让Google自动选择
+            }
+    
+    # 如果所有都失败，返回最基本的配置
+    return {'gender': gender, 'name': None}
 
 def get_client_ip(request):
     """获取客户端IP地址"""
@@ -295,7 +373,7 @@ def result(request, request_id):
 
 @csrf_exempt
 def text_to_speech(request):
-    """中文名字的语音播放功能"""
+    """中文名字的语音播放功能 - 使用 Google Cloud Text-to-Speech"""
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -304,145 +382,135 @@ def text_to_speech(request):
             if not text:
                 return JsonResponse({'success': False, 'error': 'No text provided'})
             
-            # 调用OpenAI TTS API
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {OPENAI_API_KEY}"
+            # 初始化 Google Cloud TTS 客户端
+            client = get_google_tts_client()
+            
+            # 配置语音合成输入
+            synthesis_input = texttospeech.SynthesisInput(text=text)
+            
+            # 获取安全的语音配置
+            voice_config = get_safe_voice_config('cmn-CN-Standard-A', 'female')
+            
+            # 配置语音参数
+            voice_params = {
+                'language_code': "zh-CN",
+                'ssml_gender': texttospeech.SsmlVoiceGender.FEMALE
             }
             
-            # 为中文优化的配置
-            payload = {
-                "model": "tts-1-hd",  # 使用高质量模型，对中文发音更好
-                "input": f"请清楚地朗读：{text}",  # 添加中文指导词，提高发音质量
-                "voice": "alloy",  # alloy 对中文发音相对较好
-                "response_format": "mp3",
-                "speed": 0.8  # 降低语速，让发音更清楚
-            }
+            # 只有在有具体语音名称时才添加 name 参数
+            if voice_config['name']:
+                voice_params['name'] = voice_config['name']
             
-            response = requests.post(
-                "https://api.openai.com/v1/audio/speech", 
-                headers=headers, 
-                json=payload,
-                timeout=30  # 添加超时设置
+            voice = texttospeech.VoiceSelectionParams(**voice_params)
+            
+            # 配置音频输出格式
+            audio_config = texttospeech.AudioConfig(
+                audio_encoding=texttospeech.AudioEncoding.MP3,
+                speaking_rate=0.8  # 降低语速，让发音更清楚
             )
             
-            if response.status_code == 200:
-                # 获取音频数据
-                audio_data = response.content
-                
-                # 将音频数据转换为base64
-                audio_base64 = base64.b64encode(audio_data).decode('utf-8')
-                
-                return JsonResponse({
-                    'success': True,
-                    'audio_data': audio_base64,
-                    'content_type': 'audio/mpeg'
-                })
-            else:
-                error_message = "TTS service unavailable"
-                try:
-                    error_data = response.json()
-                    error_message = error_data.get("error", {}).get("message", error_message)
-                except:
-                    pass
-                
-                return JsonResponse({
-                    'success': False,
-                    'error': error_message
-                })
+            # 执行文本转语音请求
+            response = client.synthesize_speech(
+                input=synthesis_input,
+                voice=voice,
+                audio_config=audio_config
+            )
+            
+            # 获取音频数据并转换为base64
+            audio_data = response.audio_content
+            audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+            
+            return JsonResponse({
+                'success': True,
+                'audio_data': audio_base64,
+                'content_type': 'audio/mpeg'
+            })
                 
         except Exception as e:
             return JsonResponse({
                 'success': False,
-                'error': f"TTS service error: {str(e)}"
+                'error': f"Google TTS service error: {str(e)}"
             })
     
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 @csrf_exempt
 def text_to_speech_advanced(request):
-    """高级中文名字语音播放功能 - 可自定义语速和音色"""
+    """高级中文名字语音播放功能 - 使用 Google Cloud TTS，可自定义语速和音色"""
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             text = data.get('text', '').strip()
             speed = data.get('speed', 0.8)  # 默认0.8倍速，更清楚
-            voice = data.get('voice', 'alloy')  # 默认使用alloy
-            use_chinese_prompt = data.get('use_chinese_prompt', False)  # 是否添加中文指导
+            voice_name = data.get('voice', 'cmn-CN-Standard-A')  # 默认使用标准女声
+            gender = data.get('gender', 'female')  # 性别选择
             
             if not text:
                 return JsonResponse({'success': False, 'error': 'No text provided'})
             
-            # 验证参数
+            # 验证语速参数
             if not (0.25 <= speed <= 4.0):
                 speed = 0.8
             
-            valid_voices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
-            if voice not in valid_voices:
-                voice = 'alloy'
+            # 获取安全的语音配置
+            voice_config = get_safe_voice_config(voice_name, gender)
             
-            # 调用OpenAI TTS API
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {OPENAI_API_KEY}"
+            # 初始化 Google Cloud TTS 客户端
+            client = get_google_tts_client()
+            
+            # 配置语音合成输入
+            synthesis_input = texttospeech.SynthesisInput(text=text)
+            
+            # 配置语音参数
+            voice_params = {
+                'language_code': "zh-CN",
+                'ssml_gender': (texttospeech.SsmlVoiceGender.MALE 
+                               if voice_config['gender'] == 'male' 
+                               else texttospeech.SsmlVoiceGender.FEMALE)
             }
             
-            # 准备输入文本
-            input_text = text
-            if use_chinese_prompt:
-                # 根据语速添加不同的指导词
-                input_text = f"{text}"
+            # 只有在有具体语音名称时才添加 name 参数
+            if voice_config['name']:
+                voice_params['name'] = voice_config['name']
             
-            # API配置
-            payload = {
-                "model": "tts-1-hd",  # 使用高质量模型
-                "input": input_text,
-                "voice": voice,
-                "response_format": "mp3",
-                "speed": speed
-            }
+            voice = texttospeech.VoiceSelectionParams(**voice_params)
             
-            response = requests.post(
-                "https://api.openai.com/v1/audio/speech", 
-                headers=headers, 
-                json=payload,
-                timeout=30
+            # 配置音频输出格式
+            audio_config = texttospeech.AudioConfig(
+                audio_encoding=texttospeech.AudioEncoding.MP3,
+                speaking_rate=speed,  # 语速控制
+                pitch=0.0,  # 音调 (可以在 -20.0 到 20.0 之间)
+                volume_gain_db=0.0  # 音量增益
             )
             
-            if response.status_code == 200:
-                # 获取音频数据
-                audio_data = response.content
-                
-                # 将音频数据转换为base64
-                audio_base64 = base64.b64encode(audio_data).decode('utf-8')
-                
-                return JsonResponse({
-                    'success': True,
-                    'audio_data': audio_base64,
-                    'content_type': 'audio/mpeg',
-                    'settings': {
-                        'voice': voice,
-                        'speed': speed,
-                        'model': 'tts-1-hd'
-                    }
-                })
-            else:
-                error_message = "TTS service unavailable"
-                try:
-                    error_data = response.json()
-                    error_message = error_data.get("error", {}).get("message", error_message)
-                except:
-                    pass
-                
-                return JsonResponse({
-                    'success': False,
-                    'error': error_message
-                })
+            # 执行文本转语音请求
+            response = client.synthesize_speech(
+                input=synthesis_input,
+                voice=voice,
+                audio_config=audio_config
+            )
+            
+            # 获取音频数据并转换为base64
+            audio_data = response.audio_content
+            audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+            
+            return JsonResponse({
+                'success': True,
+                'audio_data': audio_base64,
+                'content_type': 'audio/mpeg',
+                'settings': {
+                    'voice': voice_config['name'],
+                    'gender': voice_config['gender'],
+                    'speed': speed,
+                    'language': 'zh-CN',
+                    'model': 'Google Cloud TTS'
+                }
+            })
                 
         except Exception as e:
             return JsonResponse({
                 'success': False, 
-                'error': f"Advanced TTS service error: {str(e)}"
+                'error': f"Google Advanced TTS service error: {str(e)}"
             })
     
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
