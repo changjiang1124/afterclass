@@ -175,7 +175,7 @@
                         <div class="chinese-name-vertical" id="chineseNameVertical"></div>
                         
                         <!-- 拼音 (垂直) -->
-                        <div class="pinyin-vertical" id="pinyinVertical"></div>
+                        <div class="pinyin-vertical" style="font-size: 1.2rem;" id="pinyinVertical"></div>
                         
                         <!-- 字符含义 (垂直) -->
                         <div class="meanings-vertical" id="meaningsVertical"></div>
@@ -189,7 +189,7 @@
                             </div>
                             
                             <!-- 版权信息 -->
-                            <div class="copyright-text">© 2025 Learn Chinese Perth</div>
+                            <div class="copyright-text">© 2025 <span style="color: var(--accent-red);">Learn Chinese Perth</span></div>
                         </div>
                     </div>
                 </div>
@@ -373,7 +373,6 @@ function updateActiveCard() {
 function playAudio(name) {
     const button = event.currentTarget;
     const originalIcon = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     button.disabled = true;
     
     // 从本地存储获取用户偏好设置，或使用默认值
