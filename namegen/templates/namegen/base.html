@@ -6,6 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Chinese Name Generator - Learn Chinese Perth{% endblock %}</title>
     
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{% block meta_description %}Generate your perfect Chinese name with AI-powered cultural insights. Discover beautiful Chinese names with meanings, pronunciation, and traditional calligraphy. Free Chinese name generator by Learn Chinese Perth.{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}Chinese name generator, Chinese names, learn Chinese, Chinese culture, Chinese language Perth, Chinese calligraphy, Chinese name meaning, Mandarin names, traditional Chinese names, Chinese zodiac names{% endblock %}">
+    <meta name="author" content="Learn Chinese Perth">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="English">
+    <meta name="geo.region" content="AU-WA">
+    <meta name="geo.placename" content="Perth, Western Australia">
+    <meta name="geo.position" content="-31.9505;115.8605">
+    <meta name="ICBM" content="-31.9505, 115.8605">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}">
+    
     <!-- Open Graph Meta Tags for better sharing -->
     <meta property="og:title" content="{% block og_title %}Chinese Name Generator - Discover Your Perfect Chinese Name{% endblock %}">
     <meta property="og:description" content="{% block og_description %}Generate a beautiful Chinese name that reflects your personality and style. AI-powered cultural insights with traditional calligraphy and meanings.{% endblock %}">
@@ -22,6 +36,41 @@
     <meta name="twitter:title" content="{% block twitter_title %}Chinese Name Generator - Learn Chinese Perth{% endblock %}">
     <meta name="twitter:description" content="{% block twitter_description %}Generate beautiful Chinese names with cultural insights and traditional calligraphy{% endblock %}">
     <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'namegen/images/namecardbg.png' %}">
+    <meta name="twitter:site" content="@LearnChinesePerth">
+    <meta name="twitter:creator" content="@LearnChinesePerth">
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Chinese Name Generator",
+        "url": "{{ request.build_absolute_uri }}",
+        "description": "AI-powered Chinese name generator that creates personalised Chinese names with cultural meanings and pronunciation guides",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "AUD"
+        },
+        "provider": {
+            "@type": "Organization",
+            "name": "Learn Chinese Perth",
+            "url": "https://learnchineseperth.com.au",
+            "sameAs": [
+                "https://www.facebook.com/learnchineseperth",
+                "https://www.instagram.com/learnchineseperth"
+            ]
+        },
+        "audience": {
+            "@type": "Audience",
+            "audienceType": "People interested in Chinese culture and language learning"
+        },
+        "inLanguage": ["en-AU", "zh-CN"],
+        "keywords": "Chinese names, Chinese culture, learn Chinese, Mandarin language, Chinese characters"
+    }
+    </script>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
@@ -37,13 +86,18 @@
         <div class="container">
             <a class="navbar-brand" href="{% url 'namegen:home' %}">
                 <span class="brand-text">Chinese Name Generator</span>
-                <span class="brand-text-en">by <span style="color: var(--accent-red);">Learn Chinese Perth</span></span>
             </a>
+            <!-- SEO-friendly navigation links -->
+            <div class="navbar-nav ml-auto">
+                <a class="nav-link" href="https://learnchineseperth.com.au" target="_blank" rel="noopener noreferrer" style="color: var(--accent-red);">
+                    <i class="fas fa-graduation-cap"></i> Learn Chinese
+                </a>
+            </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main>
+    <main role="main">
         {% block banner %}
         {% endblock %}
         
@@ -58,7 +112,7 @@
             <p class="small text-muted">Discover your perfect Chinese name with AI-powered cultural insights</p>
             <p class="small">
                 <a href="https://learnchineseperth.com.au" target="_blank" rel="noopener noreferrer" class="text-decoration-none" style="color: var(--accent-red);">
-                    Interested in learning Chinese? Visit our main site →
+                    <strong>Ready to learn Chinese? Visit our main site →</strong>
                 </a>
             </p>
         </div>

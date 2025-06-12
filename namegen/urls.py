@@ -9,5 +9,9 @@ urlpatterns = [
     path('result/<int:request_id>/', views.result, name='result'),
     path('text-to-speech/', views.text_to_speech, name='text_to_speech'),
     path('text-to-speech-advanced/', views.text_to_speech_advanced, name='text_to_speech_advanced'),
-    path('generate-name-card/', views.generate_name_card, name='generate_name_card'),
+    path('namecard/', views.generate_name_card, name='generate_name_card'),
+    
+    # SEO-friendly URLs
+    path('sitemap.xml', views.sitemap, name='sitemap'),
+    path('robots.txt', views.robots_txt, name='robots_txt'),
 ] 
