@@ -5,6 +5,15 @@ from django.db import IntegrityError
 
 class Command(BaseCommand):
     help = '创建或更新用户密码并赋予管理员权限'
+    
+    '''
+    创建或更新用户密码并赋予管理员权限
+    
+    用法:
+    python manage.py createadmin <用户名> <密码> [<电子邮箱>]
+    
+    示例:
+    '''
 
     def add_arguments(self, parser):
         parser.add_argument('username', type=str, help='用户名')

@@ -90,3 +90,82 @@ class NameGenerationRequest(models.Model):
             return '夏'
         else:
             return '秋'
+
+class PageVisitStatistics(models.Model):
+    """页面访问统计"""
+    ACTIVITY_TYPES = [
+        ('page_visit', '页面访问'),
+        ('name_generation', '姓名生成'),
+        ('name_card_generation', '名片生成'),
+        ('tts_request', '语音合成'),
+        ('share_click', '分享点击'),
+        ('result_view', '结果查看'),
+    ]
+    
+    # 活动信息
+    activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES, verbose_name="活动类型")
+    page_url = models.URLField(blank=True, null=True, verbose_name="页面URL")
+    user_agent = models.TextField(blank=True, null=True, verbose_name="用户代理")
+    
+    # IP和地理位置信息
+    ip_address = models.GenericIPAddressField(verbose_name="IP地址")
+    country = models.CharField(max_length=50, blank=True, null=True, verbose_name="国家")
+    city = models.CharField(max_length=50, blank=True, null=True, verbose_name="城市")
+    
+    # 相关数据
+    generated_name = models.CharField(max_length=20, blank=True, null=True, verbose_name="生成的姓名")
+    request_id = models.IntegerField(blank=True, null=True, verbose_name="关联请求ID")
+    session_key = models.CharField(max_length=40, blank=True, null=True, verbose_name="会话密钥")
+    
+    # 分享相关
+    share_platform = models.CharField(max_length=20, blank=True, null=True, verbose_name="分享平台")
+    
+    # 时间戳
+    created_at = models.DateTimeField(default=timezone.now, verbose_name="创建时间")
+    
+    # 性能指标
+    response_time = models.FloatField(blank=True, null=True, verbose_name="响应时间(秒)")
+    
+    class Meta:
+        verbose_name = "页面访问统计"
+        verbose_name_plural = "页面访问统计"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['activity_type', 'created_at']),
+            models.Index(fields=['ip_address', 'created_at']),
+            models.Index(fields=['created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.get_activity_type_display()} - {self.ip_address} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+
+
+class DailyStatistics(models.Model):
+    """每日统计汇总"""
+    date = models.DateField(unique=True, verbose_name="日期")
+    
+    # 访问统计
+    page_visits = models.IntegerField(default=0, verbose_name="页面访问数")
+    unique_visitors = models.IntegerField(default=0, verbose_name="独立访客数")
+    unique_ips = models.IntegerField(default=0, verbose_name="独立IP数")
+    
+    # 功能使用统计
+    name_generations = models.IntegerField(default=0, verbose_name="姓名生成数")
+    name_card_generations = models.IntegerField(default=0, verbose_name="名片生成数")
+    tts_requests = models.IntegerField(default=0, verbose_name="语音合成请求数")
+    share_clicks = models.IntegerField(default=0, verbose_name="分享点击数")
+    
+    # 地理统计 (JSON格式存储)
+    country_stats = models.JSONField(default=dict, blank=True, verbose_name="国家统计")
+    city_stats = models.JSONField(default=dict, blank=True, verbose_name="城市统计")
+    
+    # 更新时间
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+    
+    class Meta:
+        verbose_name = "每日统计"
+        verbose_name_plural = "每日统计"
+        ordering = ['-date']
+    
+    def __str__(self):
+        return f"{self.date} - 访问: {self.page_visits}, 独立访客: {self.unique_visitors}"

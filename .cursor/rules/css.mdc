@@ -1,0 +1,6 @@
+---
+description: 
+globs: **.html
+alwaysApply: false
+---
+Try to avoid using inline CSS in the HTML file. Instead, locate the embedded CSS file associated with the HTML and add or optimize styles there for the new implementation.

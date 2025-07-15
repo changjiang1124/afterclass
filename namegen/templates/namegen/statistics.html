@@ -1,0 +1,221 @@
+ {% extends 'namegen/base.html' %}
+{% load static %}
+
+{% block title %}统计仪表板 - Chinese Name Generator{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-chart-bar"></i> 
+                统计仪表板
+                <small class="text-muted">Statistics Dashboard</small>
+            </h1>
+        </div>
+    </div>
+
+    {% if summary %}
+    <!-- 概览统计卡片 -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <div class="h1 text-primary">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <h3 class="text-primary">{{ summary.total_visits|default:0 }}</h3>
+                    <p class="text-muted mb-0">Total Page Visits<br>总页面访问量</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <div class="h1 text-success">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="text-success">{{ summary.total_unique_visitors|default:0 }}</h3>
+                    <p class="text-muted mb-0">Unique Visitors<br>独立访客数</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <div class="h1 text-warning">
+                        <i class="fas fa-signature"></i>
+                    </div>
+                    <h3 class="text-warning">{{ summary.total_name_generations|default:0 }}</h3>
+                    <p class="text-muted mb-0">Names Generated<br>生成姓名数量</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <div class="h1 text-info">
+                        <i class="fas fa-share-alt"></i>
+                    </div>
+                    <h3 class="text-info">{{ summary.total_share_clicks|default:0 }}</h3>
+                    <p class="text-muted mb-0">Share Clicks<br>分享点击数</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 地理分布 -->
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-globe"></i>
+                        Top Countries / 主要国家
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if summary.top_countries %}
+                        <div class="list-group list-group-flush">
+                            {% for country, count in summary.top_countries %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ country|default:"Unknown" }}</span>
+                                <span class="badge bg-primary">{{ count }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No country data available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-city"></i>
+                        Top Cities / 主要城市
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if summary.top_cities %}
+                        <div class="list-group list-group-flush">
+                            {% for city, count in summary.top_cities %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ city|default:"Unknown" }}</span>
+                                <span class="badge bg-info">{{ count }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No city data available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 热门姓名 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-fire"></i>
+                        Popular Generated Names / 热门生成姓名
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if popular_names %}
+                        <div class="row">
+                            {% for name_data in popular_names %}
+                            <div class="col-md-4 col-sm-6 mb-3">
+                                <div class="card border-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title text-primary">{{ name_data.generated_name }}</h5>
+                                        <p class="text-muted">Generated {{ name_data.count }} time{{ name_data.count|pluralize }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No popular names data available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 时间段选择 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt"></i>
+                        Time Period / 时间段选择
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-primary" onclick="loadStatistics(7)">
+                            Last 7 Days / 最近7天
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="loadStatistics(30)">
+                            Last 30 Days / 最近30天
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="loadStatistics(90)">
+                            Last 90 Days / 最近90天
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 时间范围显示 -->
+    {% if summary %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>数据时间范围:</strong> {{ summary.period }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function loadStatistics(days) {
+    // 显示加载状态
+    const container = document.querySelector('.container');
+    container.style.opacity = '0.5';
+    
+    // 发送请求
+    fetch(`/namegen/statistics/api/?days=${days}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 重新加载页面以显示新数据
+                window.location.href = `/namegen/statistics/?days=${days}`;
+            } else {
+                alert('Failed to load statistics');
+                container.style.opacity = '1';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading statistics');
+            container.style.opacity = '1';
+        });
+}
+</script>
+{% endblock %}

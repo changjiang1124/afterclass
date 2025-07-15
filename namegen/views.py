@@ -3,6 +3,7 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from .models import NameGenerationRequest
+from .statistics import StatisticsService
 import json
 import requests
 import base64
@@ -310,6 +311,14 @@ def generate_name(request):
                         name_request.name_meaning = f"{first_name_obj.get('meaning', '')}\n\n选择原因：{first_name_obj.get('reasoning', '')}"
                         name_request.save()
                         
+                        # 记录姓名生成统计
+                        StatisticsService.record_activity(
+                            request, 
+                            'name_generation',
+                            generated_name=name_request.generated_chinese_name,
+                            request_id=name_request.id
+                        )
+                        
                         return JsonResponse({
                             'success': True,
                             'request_id': name_request.id,
@@ -365,6 +374,14 @@ def result(request, request_id):
     """显示生成结果页面"""
     name_request = get_object_or_404(NameGenerationRequest, id=request_id)
     
+    # 记录结果查看统计
+    StatisticsService.record_activity(
+        request, 
+        'result_view',
+        generated_name=name_request.generated_chinese_name,
+        request_id=name_request.id
+    )
+    
     context = {
         'name_request': name_request,
     }
@@ -419,6 +436,13 @@ def text_to_speech(request):
             # 获取音频数据并转换为base64
             audio_data = response.audio_content
             audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+            
+            # 记录TTS统计
+            StatisticsService.record_activity(
+                request, 
+                'tts_request',
+                generated_name=text
+            )
             
             return JsonResponse({
                 'success': True,
@@ -494,6 +518,13 @@ def text_to_speech_advanced(request):
             audio_data = response.audio_content
             audio_base64 = base64.b64encode(audio_data).decode('utf-8')
             
+            # 记录高级TTS统计
+            StatisticsService.record_activity(
+                request, 
+                'tts_request',
+                generated_name=text
+            )
+            
             return JsonResponse({
                 'success': True,
                 'audio_data': audio_base64,
@@ -535,6 +566,13 @@ def generate_name_card(request):
             
             # 创建名片图片
             image_data = create_name_card_image(chinese_name, pinyin, characters, meaning, request)
+            
+            # 记录名片生成统计
+            StatisticsService.record_activity(
+                request, 
+                'name_card_generation',
+                generated_name=chinese_name
+            )
             
             return JsonResponse({
                 'success': True,
@@ -796,3 +834,60 @@ Crawl-delay: 1
 '''
     
     return HttpResponse(robots_content, content_type='text/plain')
+
+@csrf_exempt
+def track_share_click(request):
+    """跟踪分享按钮点击"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            platform = data.get('platform', 'unknown')
+            chinese_name = data.get('chinese_name', '')
+            
+            # 记录分享点击统计
+            StatisticsService.record_activity(
+                request, 
+                'share_click',
+                share_platform=platform,
+                generated_name=chinese_name
+            )
+            
+            return JsonResponse({'success': True})
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+def statistics_dashboard(request):
+    """统计数据仪表板"""
+    # 获取统计摘要
+    summary = StatisticsService.get_statistics_summary(days=30)
+    popular_names = StatisticsService.get_popular_names(days=30)
+    
+    context = {
+        'summary': summary,
+        'popular_names': popular_names,
+    }
+    
+    return render(request, 'namegen/statistics.html', context)
+
+@csrf_exempt
+def statistics_api(request):
+    """统计API接口"""
+    if request.method == 'GET':
+        days = int(request.GET.get('days', 30))
+        
+        summary = StatisticsService.get_statistics_summary(days=days)
+        popular_names = StatisticsService.get_popular_names(days=days)
+        
+        return JsonResponse({
+            'success': True,
+            'summary': summary,
+            'popular_names': popular_names
+        })
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
