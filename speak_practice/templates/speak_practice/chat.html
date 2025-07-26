@@ -377,11 +377,12 @@
 <div class="chat-container">
     <!-- Chat Header -->
     <div class="chat-header">
-        <a href="{% url 'speak_practice:scene_selection' %}" class="back-button">
+        <a href="{% url 'speak_practice:scene_selection' %}" class="back-button" title="Choose another topic">
             <i class="fas fa-arrow-left"></i>
         </a>
         <div class="header-content">
             <h4>{{ session.scene }}</h4>
+            <small style="color: #6b7280;">Click the arrow to choose another topic</small>
         </div>
     </div>
 

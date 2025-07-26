@@ -254,32 +254,54 @@ def translate_text_openai(text, target_language="en"):
 
 def generate_dynamic_topic_cards():
     """Generate 6 dynamic topic cards using AI for the scene selection page"""
-    system_prompt = """You are a Chinese language learning assistant. Generate 6 diverse and practical conversation scenarios for Chinese language practice.
+    import random
+    import time
+    
+    
+    
+    # Add randomness seed based on current time
+    random_seed = int(time.time()) % 1000
+    
+    system_prompt = f"""You are a Chinese language learning assistant. Generate 6 diverse and practical conversation scenarios for Chinese language practice.
+
+IMPORTANT: Be creative and generate different scenarios each time. Current randomness seed: {random_seed}
 
 Your response must be a JSON array with exactly 6 objects, each containing:
-{
+{{
     "title": "Short catchy title (2-4 words)",
     "description": "Detailed scenario description for practice",
     "level": "Beginner|Intermediate|Advanced",
     "icon": "fas fa-[icon-name]" (Font Awesome icon class)
-}
+}}
 
-Requirements:
-1. Cover different aspects of daily life in China
-2. Mix difficulty levels (2 Beginner, 2 Intermediate, 2 Advanced)
-3. Make scenarios culturally authentic and practical
-4. Vary the icons to match each scenario theme
-5. Ensure scenarios are engaging and relevant for language learners"""
+Make scenarios diverse across these categories:
+- Daily life situations (shopping, dining, transport)
+- Social interactions (meeting people, small talk)
+- Professional contexts (work, business)
+- Cultural experiences (festivals, traditions)
+- Problem-solving scenarios (asking for help, complaints)
+- Educational contexts (school, learning)
+
+Ensure variety in difficulty levels and make each scenario unique and engaging."""
 
     try:
         headers = {"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"}
         messages = [{"role": "system", "content": system_prompt}]
-        payload = {"model": "gpt-4o", "messages": messages, "temperature": 0.9}
+        payload = {
+            "model": "gpt-4o", 
+            "messages": messages, 
+            "temperature": 1.0,  # Increased temperature for more randomness
+            "top_p": 0.9,        # Add top_p for additional randomness
+            "presence_penalty": 0.6,  # Encourage new topics
+            "frequency_penalty": 0.3   # Reduce repetition
+        }
         
         response = requests.post(OPENAI_API_URL, headers=headers, json=payload, timeout=30)
         response.raise_for_status()
         
         ai_response = response.json()['choices'][0]['message']['content']
+        print(f"AI Response: {ai_response}")  # Debug log
+        
         topics = json.loads(ai_response)
         
         # Validate the response structure
@@ -287,51 +309,33 @@ Requirements:
             for topic in topics:
                 if not all(key in topic for key in ['title', 'description', 'level', 'icon']):
                     raise ValueError("Invalid topic structure")
+            print("Successfully generated AI topics")  # Debug log
             return topics
         else:
             raise ValueError("Invalid response format")
             
     except (requests.RequestException, json.JSONDecodeError, KeyError, ValueError) as e:
         print(f"Error generating dynamic topics: {e}")
-        # Fallback to static topics if AI generation fails
-        return [
-            {
-                "title": "Café Chat",
-                "description": "Ordering coffee and pastries at a local café",
-                "level": "Beginner",
-                "icon": "fas fa-coffee"
-            },
-            {
-                "title": "Finding Places",
-                "description": "Asking for directions to popular tourist attractions",
-                "level": "Beginner", 
-                "icon": "fas fa-map-marked-alt"
-            },
-            {
-                "title": "Weather Talk",
-                "description": "Discussing today's weather and weekend plans",
-                "level": "Beginner",
-                "icon": "fas fa-cloud-sun"
-            },
-            {
-                "title": "Work Intro",
-                "description": "Introducing yourself and background to new colleagues",
-                "level": "Intermediate",
-                "icon": "fas fa-handshake"
-            },
-            {
-                "title": "Market Deals",
-                "description": "Bargaining for souvenirs at a traditional market",
-                "level": "Intermediate",
-                "icon": "fas fa-shopping-bag"
-            },
-            {
-                "title": "Doctor Visit",
-                "description": "Explaining symptoms to a doctor during a consultation",
-                "level": "Advanced",
-                "icon": "fas fa-user-md"
-            }
+        print("Falling back to randomised static topics")  # Debug log
+        
+        # Enhanced fallback with randomised static topics
+        all_topics = [
+            {"title": "Café Chat", "description": "Ordering coffee and pastries at a local café", "level": "Beginner", "icon": "fas fa-coffee"},
+            {"title": "Finding Places", "description": "Asking for directions to popular tourist attractions", "level": "Beginner", "icon": "fas fa-map-marked-alt"},
+            {"title": "Weather Talk", "description": "Discussing today's weather and weekend plans", "level": "Beginner", "icon": "fas fa-cloud-sun"},
+            {"title": "Work Intro", "description": "Introducing yourself and background to new colleagues", "level": "Intermediate", "icon": "fas fa-handshake"},
+            {"title": "Market Deals", "description": "Bargaining for souvenirs at a traditional market", "level": "Intermediate", "icon": "fas fa-shopping-bag"},
+            {"title": "Doctor Visit", "description": "Explaining symptoms to a doctor during a consultation", "level": "Advanced", "icon": "fas fa-user-md"},
+            {"title": "Hotel Check-in", "description": "Checking into a hotel and asking about facilities", "level": "Beginner", "icon": "fas fa-bed"},
+            {"title": "Food Ordering", "description": "Ordering traditional Chinese dishes at a restaurant", "level": "Intermediate", "icon": "fas fa-utensils"},
+            {"title": "Job Interview", "description": "Participating in a job interview for a local company", "level": "Advanced", "icon": "fas fa-briefcase"},
+            {"title": "Bank Visit", "description": "Opening a bank account and asking about services", "level": "Intermediate", "icon": "fas fa-university"},
+            {"title": "Phone Call", "description": "Making a phone call to book an appointment", "level": "Intermediate", "icon": "fas fa-phone"},
+            {"title": "Emergency Help", "description": "Asking for help in an emergency situation", "level": "Advanced", "icon": "fas fa-exclamation-triangle"}
         ]
+        
+        # Randomly select 6 topics from the pool
+        return random.sample(all_topics, 6)
 
 
 def count_tokens_in_conversation(session_id):

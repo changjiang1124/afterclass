@@ -1,16 +1,24 @@
-/* Modern Design System */
+/* Modern Design System - Updated to match brand theme */
 :root {
-    /* Primary Colors */
-    --primary-50: #eff6ff;
-    --primary-100: #dbeafe;
-    --primary-200: #bfdbfe;
-    --primary-300: #93c5fd;
-    --primary-400: #60a5fa;
-    --primary-500: #3b82f6;
-    --primary-600: #2563eb;
-    --primary-700: #1d4ed8;
-    --primary-800: #1e40af;
-    --primary-900: #1e3a8a;
+    /* Primary Colors - Brand Orange Theme */
+    --primary-50: #fff7ed;
+    --primary-100: #ffedd5;
+    --primary-200: #fed7aa;
+    --primary-300: #fdba74;
+    --primary-400: #fb923c;
+    --primary-500: #FE4D01;
+    --primary-600: #ea580c;
+    --primary-700: #c2410c;
+    --primary-800: #9a3412;
+    --primary-900: #7c2d12;
+
+    /* Secondary Colors - Brand Yellow */
+    --secondary-100: #fef3c7;
+    --secondary-200: #fde68a;
+    --secondary-300: #fcd34d;
+    --secondary-400: #fbbf24;
+    --secondary-500: #FFD966;
+    --secondary-600: #d97706;
 
     /* Grays */
     --gray-50: #f9fafb;
@@ -24,24 +32,9 @@
     --gray-800: #1f2937;
     --gray-900: #111827;
 
-    /* Success Colors */
-    --green-400: #4ade80;
-    --green-500: #22c55e;
-    --green-600: #16a34a;
-
-    /* Error Colors */
-    --red-400: #f87171;
-    --red-500: #ef4444;
-    --red-600: #dc2626;
-
-    /* Warning Colors */
-    --amber-400: #fbbf24;
-    --amber-500: #f59e0b;
-    --amber-600: #d97706;
-
-    /* Semantic Colors */
-    --text-primary: var(--gray-900);
-    --text-secondary: var(--gray-600);
+    /* Text Colors */
+    --text-primary: #151515;
+    --text-secondary: #333333;
     --text-tertiary: var(--gray-500);
     --text-inverse: #ffffff;
     

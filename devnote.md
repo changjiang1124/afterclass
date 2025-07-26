@@ -2,32 +2,54 @@
 The system is for learnchineseperth, a chinese school in Perth. in the system, we will include applications for students mainly, like typing, reading comprehension, listening, and speaking. so the UI should be professional, clean, and easy to use.
 
 ## Tasks
-- [x] change dns afterclass.learnchineseperth.com.au to 170.64.162.255
-- [x] a .sh file to restart django project with gunicorn. be sure collect statics, make migrations, migrate, restart gunicorn. understand the codebase then come up the script.
-- [] pinyinit, add print button to print the pinyin file;
-- [x] add user profile / description which could be used as the reference for AI to generate more suitable content. 
+---
+AI Response: 
+```json
+[
+    {
+        "title": "Street Market Shopping",
+        "description": "Practice bargaining and buying fresh produce at a local street market. Engage with vendors, ask about prices, and learn about different fruits and vegetables. Perfect for building confidence in everyday transactions.",
+        "level": "Beginner",
+        "icon": "fas fa-shopping-cart"
+    },
+    {
+        "title": "Business Dinner Etiquette",
+        "description": "Join a formal business dinner where you must navigate Chinese dining etiquette. Practice introducing yourself, making small talk with colleagues, and understanding the nuances of toasting customs.",
+        "level": "Advanced",
+        "icon": "fas fa-utensils"
+    },
+    {
+        "title": "Festival Celebration Planning",
+        "description": "Participate in organizing a traditional Chinese festival celebration. Discuss decorations, food arrangements, and event planning details while learning cultural significance and related vocabulary.",
+        "level": "Intermediate",
+        "icon": "fas fa-flag"
+    },
+    {
+        "title": "University Campus Tour",
+        "description": "Guide new students on a tour around a university campus. Explain facilities, introduce faculty members, and provide directions while answering questions from curious attendees.",
+        "level": "Beginner",
+        "icon": "fas fa-university"
+    },
+    {
+        "title": "Technical Issue Resolution",
+        "description": "Handle a customer service call regarding a technical issue with a product. Practice listening skills to understand the problem, explain troubleshooting steps, and offer solutions to the caller.",
+        "level": "Advanced",
+        "icon": "fas fa-tools"
+    },
+    {
+        "title": "Commuter Chat on Metro",
+        "description": "Engage in casual conversation with a fellow passenger on the metro. Topics include daily commute experiences, favorite local spots, and personal hobbies. Enhance social interaction skills in public settings.",
+        "level": "Intermediate",
+        "icon": "fas fa-subway"
+    }
+]
+```
+Error generating dynamic topics: Expecting value: line 1 column 1 (char 0)
+Falling back to randomised static topics
+---
 
-
-## namegen 
-namegen, new a django application for Chinese name generation, the UI should be simple and easy to use.
-the function should not require login, as this is for traffic attraction / leads generation. 
-
-the function flow should be:
-1. a form to collection user information, including:
-    - first name (required) and surname (optional)
-    - gender (required, including male, female, rather not to specify)
-    - DOB (optional, indicate this is for considerations like Chinese zodiac calculation, season, etc.)
-    - Personality traits (required, Dropdown (Brave, Kind, Artistic, Calm, Cheerful, Wise, etc.))
-    - Preferred Style (tone of the name) 
-        - Let users select the vibe of their name:
-        - 🐉 Traditional/Classical (e.g. 明德、文君)
-        - 🎨 Artistic/Poetic (e.g. 子墨、清风)
-        - 🌟 Modern/Cool (e.g. 凯文、天宇)
-        - 💼 Professional/Formal (e.g. 嘉明、思远)
-2. use AI to generate the name, and display the name in the UI. with stylish free chinese font, big and bold, with pinyin, english meaning, audio pronunciation.
-
-style to use @main.css to align the brand style.
-
+report above error. why? 
+- [] the topic generation should be async load as it takes too long to load the page. 
 
 
 ## UI 

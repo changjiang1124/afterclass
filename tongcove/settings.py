@@ -13,19 +13,32 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 import socket
-from dotenv import load_dotenv
-
-load_dotenv()
-
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-
-# Google Cloud credentials
-GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
-if GOOGLE_APPLICATION_CREDENTIALS:
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = GOOGLE_APPLICATION_CREDENTIALS
+from dotenv import load_dotenv, dotenv_values
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+print(f"DEBUG: BASE_DIR: {BASE_DIR}")
+
+# Load .env file from project root directory and override system env
+env_path = BASE_DIR / '.env'
+print(f"DEBUG: Loading .env from: {env_path}")
+
+# Use dotenv_values to get values directly from .env file, ignoring system env
+env_vars = dotenv_values(env_path)
+OPENAI_API_KEY = env_vars.get('OPENAI_API_KEY')
+
+# Debug: Print API key info
+print(f"DEBUG Settings: .env file exists: {env_path.exists()}")
+print(f"DEBUG Settings: OPENAI_API_KEY from .env: {OPENAI_API_KEY is not None}")
+if OPENAI_API_KEY:
+    print(f"DEBUG Settings: API key length: {len(OPENAI_API_KEY)}")
+    print(f"DEBUG Settings: API key preview: {OPENAI_API_KEY[:10]}...{OPENAI_API_KEY[-4:]}")
+
+# Also load other env vars the same way
+GOOGLE_APPLICATION_CREDENTIALS = env_vars.get('GOOGLE_APPLICATION_CREDENTIALS')
+if GOOGLE_APPLICATION_CREDENTIALS:
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = GOOGLE_APPLICATION_CREDENTIALS
 
 DASHBOARD_COLORS = [
     '#99E7C5',

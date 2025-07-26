@@ -157,7 +157,7 @@
     z-index: -1;
 }
 
-.pinyin-icon-wrapper, .typing-icon-wrapper {
+.pinyin-icon-wrapper, .typing-icon-wrapper, .speaking-icon-wrapper {
     background-color: rgba(255, 255, 255, 0.2);
     width: 50px;
     height: 50px;

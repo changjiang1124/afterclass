@@ -59,7 +59,7 @@
 }
 
 .btn-customize {
-    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    background: linear-gradient(135deg, #FE4D01, #ea580c) !important;
     color: #ffffff !important;
     border: none !important;
     padding: 1rem 2rem !important;
@@ -80,7 +80,7 @@
 {% block content %}
 <div class="scene-selection-container">
     <div class="hero-section">
-        <h1 style="font-size: 3.5rem; font-weight: 800; margin-bottom: 1.5rem; background: linear-gradient(135deg, #2563eb, #1e40af); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: -0.02em;">
+        <h1 style="font-size: 3.5rem; font-weight: 800; margin-bottom: 1.5rem; background: linear-gradient(135deg, #FE4D01, #ea580c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: -0.02em;">
             Chinese Speaking Practice
         </h1>
         <p style="font-size: 1.25rem; color: #6b7280; max-width: 600px; margin: 0 auto 3rem; font-weight: 400; line-height: 1.7;">
@@ -109,18 +109,21 @@
                     onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'; this.style.background='#f9fafb';"
                 ></textarea>
             </div>
-            <button type="button" class="btn-customize" onclick="openCustomizeModal()">
+            <button type="submit" class="btn-customize">
                 <i class="fas fa-cog"></i>
-                Customize & Start Practice
+                Customise & Start Practice
             </button>
         </form>
     </div>
 
     <div style="display: flex; align-items: center; margin: 4rem 0; text-align: center; color: #6b7280; font-weight: 500; font-size: 0.875rem; letter-spacing: 0.05em; text-transform: uppercase;">
         <div style="content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #d1d5db, transparent);"></div>
-        <span style="padding: 0 1.5rem; background: #f9fafb; border-radius: 9999px;">
-            <i class="fas fa-magic" style="color: #3b82f6; margin-right: 0.5rem;"></i>
+        <span style="padding: 0 1.5rem; background: #f9fafb; border-radius: 9999px; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-magic" style="color: #FE4D01; margin-right: 0.5rem;"></i>
             AI Generated Topics - Refresh for New Scenarios
+            <button onclick="refreshTopics()" style="background: none; border: none; color: #FE4D01; cursor: pointer; padding: 0.25rem; border-radius: 50%; transition: all 0.3s ease;" title="Refresh topics">
+                <i class="fas fa-sync-alt"></i>
+            </button>
         </span>
         <div style="content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #d1d5db, transparent);"></div>
     </div>
@@ -156,7 +159,7 @@
 <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease;" id="customizeModal">
     <div style="background: #ffffff; border-radius: 1.5rem; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25); transform: scale(0.9) translateY(20px); transition: transform 0.3s ease; border: 1px solid #e5e7eb;">
         <div style="padding: 3rem; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between;">
-            <h3 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: #111827;">Customize Your Practice Session</h3>
+            <h3 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: #111827;">Customise Your Practice Session</h3>
             <button type="button" style="background: none; border: none; color: #9ca3af; cursor: pointer; padding: 0.75rem; border-radius: 0.75rem; transition: all 0.3s ease;" onclick="closeCustomizeModal()" onmouseover="this.style.color='#111827'; this.style.background='#f3f4f6';" onmouseout="this.style.color='#9ca3af'; this.style.background='none';">
                 <i class="fas fa-times"></i>
             </button>
@@ -242,16 +245,16 @@ document.querySelectorAll('.scene-card').forEach(card => {
     card.addEventListener('mouseenter', function() {
         this.style.transform = 'translateY(-8px)';
         this.style.boxShadow = '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)';
-        this.style.borderColor = '#bfdbfe';
+        this.style.borderColor = '#fed7aa';
         
         const icon = this.querySelector('.fas');
         const iconContainer = icon.parentElement;
-        iconContainer.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
+        iconContainer.style.background = 'linear-gradient(135deg, #FE4D01, #ea580c)';
         iconContainer.style.transform = 'scale(1.1)';
         icon.style.color = '#ffffff';
         
         const arrow = this.querySelector('.fa-arrow-right');
-        arrow.style.color = '#2563eb';
+        arrow.style.color = '#FE4D01';
         arrow.style.transform = 'translateX(4px)';
     });
     
@@ -262,14 +265,19 @@ document.querySelectorAll('.scene-card').forEach(card => {
         
         const icon = this.querySelector('.fas');
         const iconContainer = icon.parentElement;
-        iconContainer.style.background = 'linear-gradient(135deg, #dbeafe, #bfdbfe)';
+        iconContainer.style.background = 'linear-gradient(135deg, #fff7ed, #fed7aa)';
         iconContainer.style.transform = 'scale(1)';
-        icon.style.color = '#2563eb';
+        icon.style.color = '#FE4D01';
         
         const arrow = this.querySelector('.fa-arrow-right');
         arrow.style.color = '#9ca3af';
         arrow.style.transform = 'translateX(0)';
     });
 });
+
+// Add refresh button functionality
+function refreshTopics() {
+    location.reload();
+}
 </script>
 {% endblock %}
