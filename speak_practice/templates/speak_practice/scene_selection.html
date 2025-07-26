@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'speak_practice/speak_practice.css' %}">
+<style>
+/* Override Bootstrap styles */
+.scene-selection-container {
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    padding: 3rem 1.5rem !important;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.scene-selection-container * {
+    box-sizing: border-box;
+}
+
+.hero-section {
+    text-align: center;
+    margin-bottom: 4rem !important;
+    padding: 3rem 0 !important;
+}
+
+.custom-scene-section {
+    background: #ffffff !important;
+    border-radius: 1.5rem !important;
+    padding: 3rem !important;
+    margin-bottom: 4rem !important;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+    border: 1px solid #e5e7eb !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.suggested-scenes-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)) !important;
+    gap: 2rem !important;
+    margin-bottom: 3rem !important;
+}
+
+.scene-card {
+    all: unset !important;
+    display: block !important;
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 1rem !important;
+    padding: 2rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+    text-decoration: none !important;
+    color: inherit !important;
+}
+
+.btn-customize {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 1rem 2rem !important;
+    border-radius: 0.75rem !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    justify-content: center !important;
+    min-height: 48px !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="scene-selection-container">
+    <div class="hero-section">
+        <h1 style="font-size: 3.5rem; font-weight: 800; margin-bottom: 1.5rem; background: linear-gradient(135deg, #2563eb, #1e40af); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: -0.02em;">
+            Chinese Speaking Practice
+        </h1>
+        <p style="font-size: 1.25rem; color: #6b7280; max-width: 600px; margin: 0 auto 3rem; font-weight: 400; line-height: 1.7;">
+            Choose a scenario or create your own to start a conversation with your AI language partner.
+        </p>
+    </div>
+
+
+
+    <!-- Custom Scene Section -->
+    <div class="custom-scene-section">
+        <h2 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fas fa-edit" style="color: #2563eb;"></i>
+            Create Custom Scenario
+        </h2>
+        <form method="post" style="display: flex; flex-direction: column; gap: 1.5rem;">
+            {% csrf_token %}
+            <div style="position: relative;">
+                <textarea 
+                    style="width: 100%; min-height: 120px; padding: 1.5rem; border: 2px solid #e5e7eb; border-radius: 1rem; font-size: 1rem; font-family: inherit; resize: vertical; transition: all 0.3s ease; background: #f9fafb; color: #111827;"
+                    id="customScene" 
+                    name="scene" 
+                    rows="4" 
+                    placeholder="Describe your ideal conversation scenario... For example: 'Negotiating rent with a landlord in Beijing', 'Ordering street food in Shanghai', or 'Having a job interview for a tech company'..."
+                    onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px #dbeafe'; this.style.background='#ffffff';"
+                    onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'; this.style.background='#f9fafb';"
+                ></textarea>
+            </div>
+            <button type="button" class="btn-customize" onclick="openCustomizeModal()">
+                <i class="fas fa-cog"></i>
+                Customize & Start Practice
+            </button>
+        </form>
+    </div>
+
+    <div style="display: flex; align-items: center; margin: 4rem 0; text-align: center; color: #6b7280; font-weight: 500; font-size: 0.875rem; letter-spacing: 0.05em; text-transform: uppercase;">
+        <div style="content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #d1d5db, transparent);"></div>
+        <span style="padding: 0 1.5rem; background: #f9fafb; border-radius: 9999px;">
+            <i class="fas fa-magic" style="color: #3b82f6; margin-right: 0.5rem;"></i>
+            AI Generated Topics - Refresh for New Scenarios
+        </span>
+        <div style="content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #d1d5db, transparent);"></div>
+    </div>
+
+    <!-- Dynamic AI Generated Scenes Grid -->
+    <form method="post" id="scene-form">
+        {% csrf_token %}
+        <div class="suggested-scenes-grid">
+            {% for scene in dynamic_scenes %}
+            <button type="submit" name="scene" value="{{ scene.description }}" class="scene-card">
+                <div style="width: 56px; height: 56px; border-radius: 0.75rem; background: linear-gradient(135deg, #dbeafe, #bfdbfe); display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; transition: all 0.3s ease;">
+                    <i class="{{ scene.icon }}" style="font-size: 1.5rem; color: #2563eb; transition: color 0.3s ease;"></i>
+                </div>
+                <div style="font-size: 1.25rem; font-weight: 700; color: #111827; margin-bottom: 0.75rem; line-height: 1.4;">{{ scene.title }}</div>
+                <div style="font-size: 0.95rem; color: #6b7280; line-height: 1.6; margin-bottom: 1.5rem;">{{ scene.description }}</div>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: auto;">
+                    {% if scene.level == 'Beginner' %}
+                        <span style="padding: 0.5rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; background: #dcfce7; color: #166534;">{{ scene.level }}</span>
+                    {% elif scene.level == 'Intermediate' %}
+                        <span style="padding: 0.5rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; background: #fef3c7; color: #92400e;">{{ scene.level }}</span>
+                    {% else %}
+                        <span style="padding: 0.5rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; background: #fee2e2; color: #991b1b;">{{ scene.level }}</span>
+                    {% endif %}
+                    <i class="fas fa-arrow-right" style="color: #9ca3af; transition: all 0.3s ease;"></i>
+                </div>
+            </button>
+            {% endfor %}
+        </div>
+    </form>
+</div>
+
+<!-- Simplified Customization Modal -->
+<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease;" id="customizeModal">
+    <div style="background: #ffffff; border-radius: 1.5rem; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25); transform: scale(0.9) translateY(20px); transition: transform 0.3s ease; border: 1px solid #e5e7eb;">
+        <div style="padding: 3rem; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between;">
+            <h3 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: #111827;">Customize Your Practice Session</h3>
+            <button type="button" style="background: none; border: none; color: #9ca3af; cursor: pointer; padding: 0.75rem; border-radius: 0.75rem; transition: all 0.3s ease;" onclick="closeCustomizeModal()" onmouseover="this.style.color='#111827'; this.style.background='#f3f4f6';" onmouseout="this.style.color='#9ca3af'; this.style.background='none';">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div style="padding: 3rem;">
+            <form method="post" id="customize-form">
+                {% csrf_token %}
+                <div style="margin-bottom: 2rem;">
+                    <label for="modal-scene" style="display: block; font-weight: 600; margin-bottom: 0.75rem; color: #111827;">
+                        <i class="fas fa-theater-masks" style="color: #2563eb; margin-right: 0.5rem;"></i>
+                        Scenario Description
+                    </label>
+                    <textarea 
+                        style="width: 100%; min-height: 120px; padding: 1.5rem; border: 2px solid #e5e7eb; border-radius: 1rem; font-size: 1rem; font-family: inherit; resize: vertical; transition: all 0.3s ease; background: #f9fafb; color: #111827; margin-bottom: 1rem;"
+                        id="modal-scene" 
+                        name="scene" 
+                        rows="5" 
+                        placeholder="Describe your conversation scenario in detail. The more specific you are, the better your practice session will be..."
+                        onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px #dbeafe'; this.style.background='#ffffff';"
+                        onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'; this.style.background='#f9fafb';"
+                    ></textarea>
+                    <div style="font-size: 0.875rem; color: #6b7280;">
+                        <i class="fas fa-lightbulb" style="color: #f59e0b; margin-right: 0.5rem;"></i>
+                        <strong>Pro Tip:</strong> Include context like location, relationship to other person, and your goal in the conversation.
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" style="background: #ffffff; color: #6b7280; border: 2px solid #d1d5db; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;" onclick="closeCustomizeModal()" onmouseover="this.style.borderColor='#3b82f6'; this.style.color='#2563eb';" onmouseout="this.style.borderColor='#d1d5db'; this.style.color='#6b7280';">
+                        Cancel
+                    </button>
+                    <button type="submit" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: #ffffff; border: none; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 0.5rem;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
+                        <i class="fas fa-play"></i>
+                        Start Custom Practice
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openCustomizeModal() {
+    const customText = document.getElementById('customScene').value;
+    document.getElementById('modal-scene').value = customText;
+    const modal = document.getElementById('customizeModal');
+    modal.style.display = 'flex';
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+    modal.querySelector('div').style.transform = 'scale(1) translateY(0)';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCustomizeModal() {
+    const modal = document.getElementById('customizeModal');
+    modal.style.opacity = '0';
+    modal.style.visibility = 'hidden';
+    modal.querySelector('div').style.transform = 'scale(0.9) translateY(20px)';
+    setTimeout(() => {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }, 300);
+}
+
+// Close modal when clicking outside
+document.getElementById('customizeModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeCustomizeModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeCustomizeModal();
+    }
+});
+
+
+
+// Add hover effects to scene cards
+document.querySelectorAll('.scene-card').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-8px)';
+        this.style.boxShadow = '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)';
+        this.style.borderColor = '#bfdbfe';
+        
+        const icon = this.querySelector('.fas');
+        const iconContainer = icon.parentElement;
+        iconContainer.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
+        iconContainer.style.transform = 'scale(1.1)';
+        icon.style.color = '#ffffff';
+        
+        const arrow = this.querySelector('.fa-arrow-right');
+        arrow.style.color = '#2563eb';
+        arrow.style.transform = 'translateX(4px)';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+        this.style.boxShadow = '0 1px 2px 0 rgb(0 0 0 / 0.05)';
+        this.style.borderColor = '#e5e7eb';
+        
+        const icon = this.querySelector('.fas');
+        const iconContainer = icon.parentElement;
+        iconContainer.style.background = 'linear-gradient(135deg, #dbeafe, #bfdbfe)';
+        iconContainer.style.transform = 'scale(1)';
+        icon.style.color = '#2563eb';
+        
+        const arrow = this.querySelector('.fa-arrow-right');
+        arrow.style.color = '#9ca3af';
+        arrow.style.transform = 'translateX(0)';
+    });
+});
+</script>
+{% endblock %}

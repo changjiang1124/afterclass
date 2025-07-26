@@ -35,4 +35,5 @@ urlpatterns = [
     path('pinyin/', include('pinyinit.urls')),
     path('typing/', include('typingchinese.urls')),
     path('namegen/', include('namegen.urls')),
+    path('speak/', include('speak_practice.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -47,7 +47,7 @@ SECRET_KEY = "django-insecure-%e+3a^b1)*&c)cg9-h*ti+9b&5f^n@(7%f0mh$=g177u6b(z%g
 if socket.gethostname() == 'CJs-MBP-1421.local':
     DEBUG = True
 else:
-    DEBUG = False
+    DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', 'afterclass.learnchineseperth.com.au']
 
@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     'pinyinit',
     'typingchinese',
     'namegen',
+    'speak_practice',
     # 'ckeditor',
     'ckeditor_uploader',
     'django_ckeditor_5',

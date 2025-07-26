@@ -1,0 +1,122 @@
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from . import ai_services
+from .models import ChatSession, ChatMessage
+import json
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def scene_selection(request):
+    # In a real app, you'd generate dynamic scenes, maybe with an AI call
+    suggested_scenes = [
+        "Ordering a coffee",
+        "Asking for directions to the nearest subway station",
+        "Talking about the weather",
+        "Introducing yourself to a new colleague",
+    ]
+    if request.method == 'POST':
+        scene = request.POST.get('scene')
+        session = ChatSession.objects.create(user=request.user, scene=scene)
+        return redirect('speak_practice:chat_view', session_id=session.id)
+
+    return render(request, 'speak_practice/scene_selection.html', {'suggested_scenes': suggested_scenes})
+
+@login_required
+def chat_view(request, session_id):
+    session = ChatSession.objects.get(id=session_id, user=request.user)
+    messages = session.messages.order_by('timestamp')
+    return render(request, 'speak_practice/chat.html', {'session': session, 'messages': messages})
+
+@csrf_exempt
+def chat(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        user_message = data.get('message')
+        session_id = data.get('session_id')
+
+        # Retrieve or create chat session
+        if session_id:
+            session = ChatSession.objects.get(id=session_id)
+        else:
+            # Create a new session (you might want to pass user and scene info)
+            session = ChatSession.objects.create(user=request.user, scene="Default Scene")
+
+        # Save user message
+        ChatMessage.objects.create(
+            session=session,
+            sender_type='user',
+            message_content={'chinese_text': user_message}
+        )
+
+        # Prepare conversation history for AI
+        history = list(session.messages.order_by('timestamp').values('sender_type', 'message_content'))
+        conversation_history = []
+        for msg in history:
+            role = "user" if msg['sender_type'] == 'user' else "assistant"
+            content = msg['message_content'].get('chinese_text') or msg['message_content'].get('chinese')
+            conversation_history.append({"role": role, "content": content})
+
+        # Get AI response
+        ai_response_data = ai_services.get_ai_response(conversation_history)
+
+        if ai_response_data:
+            # Get TTS audio
+            tts_audio_b64 = ai_services.get_tts_audio(ai_response_data.get('chinese'))
+
+            # Save AI message
+            ChatMessage.objects.create(
+                session=session,
+                sender_type='ai',
+                message_content=ai_response_data
+            )
+
+            return JsonResponse({
+                'ai_response': ai_response_data,
+                'tts_audio': tts_audio_b64,
+                'session_id': session.id
+            })
+        else:
+            return JsonResponse({'error': 'Failed to get AI response'}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def transcribe_audio(request):
+    if request.method == 'POST':
+        audio_file = request.FILES.get('audio')
+        if not audio_file:
+            return JsonResponse({'error': 'No audio file provided'}, status=400)
+
+        chinese_text = ai_services.transcribe_audio(audio_file)
+        if chinese_text:
+            english_translation = ai_services.translate_text(chinese_text, target_language="en")
+            return JsonResponse({
+                'chinese_text': chinese_text,
+                'english_translation': english_translation
+            })
+        else:
+            return JsonResponse({'error': 'Failed to transcribe audio'}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def translate_text(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        text = data.get('text')
+        if not text:
+            return JsonResponse({'error': 'No text provided'}, status=400)
+
+        chinese_text = ai_services.translate_text(text, target_language="zh")
+        if chinese_text:
+            tts_audio_b64 = ai_services.get_tts_audio(chinese_text)
+            return JsonResponse({
+                'chinese_text': chinese_text,
+                'tts_audio': tts_audio_b64
+            })
+        else:
+            return JsonResponse({'error': 'Failed to translate text'}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+

@@ -143,3 +143,7 @@ pre-release.py
 
 deploy.sh
 GEMINI.md
+
+.kiro/*
+
+staticfiles/*

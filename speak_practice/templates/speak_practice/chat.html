@@ -1,0 +1,644 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'speak_practice/speak_practice.css' %}">
+<style>
+/* Override Bootstrap styles for chat */
+.chat-container {
+    max-width: 900px !important;
+    margin: 2rem auto !important;
+    background: #ffffff !important;
+    border-radius: 1.5rem !important;
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: calc(100vh - 120px) !important;
+    border: 1px solid #e5e7eb !important;
+    animation: fadeInScale 0.6s ease-out;
+}
+
+.chat-header {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    color: #ffffff !important;
+    padding: 2rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 1.5rem !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.chat-box {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding: 3rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%) !important;
+}
+
+.chat-footer {
+    background: #ffffff !important;
+    border-top: 1px solid #e5e7eb !important;
+    padding: 2rem !important;
+}
+
+.chat-message {
+    display: flex !important;
+    gap: 0.75rem !important;
+    max-width: 85% !important;
+    opacity: 0;
+    animation: slideInRight 0.5s ease-out forwards;
+}
+
+.chat-message.user {
+    align-self: flex-end !important;
+    flex-direction: row-reverse !important;
+    animation-name: slideInLeft;
+}
+
+.message-avatar {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 700 !important;
+    flex-shrink: 0 !important;
+    border: 2px solid #e5e7eb !important;
+    position: relative;
+}
+
+.message-avatar.ai {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    color: #ffffff !important;
+    border-color: #93c5fd !important;
+}
+
+.message-avatar.user {
+    background: linear-gradient(135deg, #4b5563, #374151) !important;
+    color: #ffffff !important;
+    border-color: #9ca3af !important;
+}
+
+.message-content {
+    background: #ffffff !important;
+    border-radius: 1rem !important;
+    padding: 1.5rem !important;
+    position: relative;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+    transition: all 0.3s ease !important;
+}
+
+.chat-message.user .message-content {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    color: #ffffff !important;
+    border-color: #60a5fa !important;
+    border-bottom-right-radius: 0.5rem !important;
+}
+
+.chat-message.ai .message-content {
+    border-bottom-left-radius: 0.5rem !important;
+}
+
+.chinese-text {
+    font-size: 1.1rem !important;
+    font-weight: 500 !important;
+    line-height: 1.6 !important;
+    margin-bottom: 0.75rem !important;
+}
+
+.pinyin-divider {
+    border: none !important;
+    height: 1px !important;
+    background: #e5e7eb !important;
+    margin: 0.75rem 0 !important;
+}
+
+.chat-message.user .pinyin-divider {
+    background: rgba(255, 255, 255, 0.3) !important;
+}
+
+.pinyin-text {
+    font-size: 0.95rem !important;
+    color: #6b7280 !important;
+    font-style: italic !important;
+    margin: 0 !important;
+}
+
+.chat-message.user .pinyin-text {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.input-controls {
+    display: flex !important;
+    gap: 1rem !important;
+    align-items: end !important;
+    margin-bottom: 1.5rem !important;
+}
+
+.text-input-wrapper {
+    flex: 1 !important;
+    position: relative;
+}
+
+.text-input {
+    width: 100% !important;
+    min-height: 52px !important;
+    padding: 1rem 1.5rem !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 1rem !important;
+    font-size: 1rem !important;
+    font-family: inherit !important;
+    resize: none !important;
+    transition: all 0.3s ease !important;
+    background: #f9fafb !important;
+}
+
+.text-input:focus {
+    outline: none !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px #dbeafe !important;
+    background: #ffffff !important;
+}
+
+.record-button, .send-button {
+    width: 52px !important;
+    height: 52px !important;
+    border-radius: 50% !important;
+    border: none !important;
+    color: #ffffff !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.record-button {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+}
+
+.send-button {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+}
+
+.record-button:hover, .send-button:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+}
+
+.confirmation-area {
+    background: #f3f4f6 !important;
+    border-radius: 0.75rem !important;
+    padding: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+    border: 1px solid #e5e7eb !important;
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.confirmation-buttons {
+    display: flex !important;
+    gap: 0.75rem !important;
+}
+
+.btn-confirm {
+    background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 0.75rem 1.5rem !important;
+    border-radius: 0.75rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+.btn-rerecord {
+    background: #ffffff !important;
+    color: #6b7280 !important;
+    border: 2px solid #d1d5db !important;
+    padding: 0.75rem 1.5rem !important;
+    border-radius: 0.75rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+.btn-confirm:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+}
+
+.btn-rerecord:hover {
+    border-color: #3b82f6 !important;
+    color: #2563eb !important;
+}
+
+.back-button {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: none !important;
+    color: #ffffff !important;
+    padding: 0.75rem !important;
+    border-radius: 0.75rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    text-decoration: none !important;
+}
+
+.back-button:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: translateX(-2px) !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+
+.header-content h4 {
+    font-weight: 700 !important;
+    margin: 0 !important;
+    font-size: 1.5rem !important;
+    position: relative;
+    z-index: 1;
+    color: #ffffff !important;
+}
+
+/* Scrollbar styling */
+.chat-box::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-box::-webkit-scrollbar-track {
+    background: #f3f4f6;
+}
+
+.chat-box::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 9999px;
+}
+
+.chat-box::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* Animation keyframes */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .chat-container {
+        margin: 0.5rem !important;
+        height: calc(100vh - 40px) !important;
+        border-radius: 1rem !important;
+    }
+    
+    .chat-header,
+    .chat-footer {
+        padding: 1.5rem !important;
+    }
+    
+    .chat-box {
+        padding: 1.5rem !important;
+    }
+    
+    .input-controls {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+    }
+    
+    .confirmation-buttons {
+        flex-direction: column !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <!-- Chat Header -->
+    <div class="chat-header">
+        <a href="{% url 'speak_practice:scene_selection' %}" class="back-button">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="header-content">
+            <h4>{{ session.scene }}</h4>
+        </div>
+    </div>
+
+    <!-- Chat Messages -->
+    <div class="chat-box" id="chat-box">
+        {% for message in messages %}
+            {% if message.sender_type == 'ai' %}
+            <div class="chat-message ai">
+                <div class="message-avatar ai">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">
+                    <div class="chinese-text">{{ message.message_content.chinese }}</div>
+                    <hr class="pinyin-divider">
+                    <div class="pinyin-text">{{ message.message_content.pinyin }}</div>
+                </div>
+            </div>
+            {% else %}
+            <div class="chat-message user">
+                <div class="message-avatar user">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="message-content">
+                    <div class="chinese-text">{{ message.message_content.chinese_text }}</div>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Chat Footer -->
+    <div class="chat-footer">
+        <!-- Confirmation Area (hidden by default) -->
+        <div id="confirmation-area" class="confirmation-area" style="display: none;">
+            <div style="margin-bottom: 1rem;">
+                <p style="margin: 0.5rem 0; font-size: 0.95rem;"><strong>You said:</strong> <span id="transcribed-text"></span></p>
+                <p style="margin: 0.5rem 0; font-size: 0.95rem;"><strong>English:</strong> <span id="english-translation"></span></p>
+            </div>
+            <div class="confirmation-buttons">
+                <button id="confirm-send-btn" class="btn-confirm">
+                    <i class="fas fa-check"></i>
+                    Send Message
+                </button>
+                <button id="rerecord-btn" class="btn-rerecord">
+                    <i class="fas fa-redo"></i>
+                    Re-record
+                </button>
+            </div>
+        </div>
+
+        <!-- Input Controls -->
+        <div id="input-area" class="input-controls">
+            <div class="text-input-wrapper">
+                <textarea 
+                    id="text-input" 
+                    class="text-input" 
+                    placeholder="Type your message in English or Chinese..."
+                    rows="1"
+                ></textarea>
+            </div>
+            <button id="record-btn" class="record-button" title="Record voice message">
+                <i class="fas fa-microphone"></i>
+            </button>
+            <button id="stop-btn" class="record-button" style="display: none; background: linear-gradient(135deg, #dc2626, #b91c1c) !important;" title="Stop recording">
+                <i class="fas fa-stop"></i>
+            </button>
+            <button id="send-text-btn" class="send-button" title="Send text message">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+
+        <!-- Status Indicator -->
+        <div id="status-indicator" style="display: none; text-align: center; padding: 0.75rem; color: #6b7280; font-size: 0.875rem;">
+            <i class="fas fa-circle-notch fa-spin" style="margin-right: 0.5rem;"></i>
+            <span id="status-text">Processing...</span>
+        </div>
+    </div>
+</div>
+
+<!-- Audio element for TTS playback -->
+<audio id="tts-audio" preload="none"></audio>
+
+<script>
+// Auto-resize textarea
+document.getElementById('text-input').addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = (this.scrollHeight) + 'px';
+    
+    // Limit max height
+    const maxHeight = 120;
+    if (this.scrollHeight > maxHeight) {
+        this.style.height = maxHeight + 'px';
+        this.style.overflowY = 'auto';
+    } else {
+        this.style.overflowY = 'hidden';
+    }
+});
+
+// Auto-scroll chat to bottom
+function scrollToBottom() {
+    const chatBox = document.getElementById('chat-box');
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Add new message to chat
+function addMessage(content, isUser = false) {
+    const chatBox = document.getElementById('chat-box');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${isUser ? 'user' : 'ai'}`;
+    messageDiv.style.opacity = '0';
+    
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = `message-avatar ${isUser ? 'user' : 'ai'}`;
+    avatarDiv.innerHTML = `<i class="fas fa-${isUser ? 'user' : 'robot'}"></i>`;
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+    
+    if (isUser) {
+        contentDiv.innerHTML = `<div class="chinese-text">${content}</div>`;
+    } else {
+        contentDiv.innerHTML = `
+            <div class="chinese-text">${content.chinese}</div>
+            <hr class="pinyin-divider">
+            <div class="pinyin-text">${content.pinyin}</div>
+        `;
+    }
+    
+    // Append elements based on message type
+    if (isUser) {
+        messageDiv.appendChild(contentDiv);
+        messageDiv.appendChild(avatarDiv);
+    } else {
+        messageDiv.appendChild(avatarDiv);
+        messageDiv.appendChild(contentDiv);
+    }
+    
+    chatBox.appendChild(messageDiv);
+    
+    // Trigger animation
+    setTimeout(() => {
+        messageDiv.style.opacity = '1';
+        messageDiv.style.transform = 'translateX(0)';
+    }, 50);
+    
+    scrollToBottom();
+}
+
+// Show/hide status indicator
+function showStatus(text) {
+    const statusEl = document.getElementById('status-indicator');
+    const statusText = document.getElementById('status-text');
+    statusText.textContent = text;
+    statusEl.style.display = 'block';
+}
+
+function hideStatus() {
+    document.getElementById('status-indicator').style.display = 'none';
+}
+
+// Show/hide confirmation area
+function showConfirmation(transcribed, english) {
+    document.getElementById('transcribed-text').textContent = transcribed;
+    document.getElementById('english-translation').textContent = english;
+    document.getElementById('confirmation-area').style.display = 'block';
+    document.getElementById('input-area').style.display = 'none';
+}
+
+function hideConfirmation() {
+    document.getElementById('confirmation-area').style.display = 'none';
+    document.getElementById('input-area').style.display = 'flex';
+}
+
+// Initialize chat when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    scrollToBottom();
+    
+    // Add loading state for record buttons
+    const recordBtn = document.getElementById('record-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    
+    recordBtn.addEventListener('click', function() {
+        this.classList.add('recording');
+        this.style.display = 'none';
+        stopBtn.style.display = 'flex';
+        showStatus('Listening...');
+    });
+    
+    stopBtn.addEventListener('click', function() {
+        recordBtn.classList.remove('recording');
+        this.style.display = 'none';
+        recordBtn.style.display = 'flex';
+        showStatus('Processing audio...');
+    });
+    
+    // Handle text input
+    const textInput = document.getElementById('text-input');
+    const sendBtn = document.getElementById('send-text-btn');
+    
+    textInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+    
+    sendBtn.addEventListener('click', sendMessage);
+    
+    function sendMessage() {
+        const message = textInput.value.trim();
+        if (!message) return;
+        
+        // Add user message to chat
+        addMessage(message, true);
+        textInput.value = '';
+        textInput.style.height = 'auto';
+        
+        showStatus('AI is thinking...');
+        
+        // Here the original chat functionality would continue...
+        // For now, just hide status after a delay
+        setTimeout(() => {
+            hideStatus();
+        }, 2000);
+    }
+    
+    // Confirmation buttons
+    document.getElementById('confirm-send-btn').addEventListener('click', function() {
+        const message = document.getElementById('transcribed-text').textContent;
+        addMessage(message, true);
+        hideConfirmation();
+        showStatus('AI is responding...');
+        
+        setTimeout(() => {
+            hideStatus();
+        }, 2000);
+    });
+    
+    document.getElementById('rerecord-btn').addEventListener('click', function() {
+        hideConfirmation();
+        hideStatus();
+    });
+});
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'speak_practice/speak_practice.js' %}"></script>
+<script>
+    const sessionId = "{{ session.id }}";
+    const chatApiUrl = "{% url 'speak_practice:chat_api' %}";
+    const transcribeApiUrl = "{% url 'speak_practice:transcribe_audio_api' %}";
+    const translateApiUrl = "{% url 'speak_practice:translate_text_api' %}";
+    const csrfToken = "{{ csrf_token }}";
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl, csrfToken);
+    });
+</script>
+{% endblock %}
