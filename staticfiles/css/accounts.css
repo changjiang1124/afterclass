@@ -322,3 +322,23 @@
 .btn-outline-secondary i {
     margin-right: 0.5rem;
 }
+
+/* System introduction on login page */
+.system-intro {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius);
+    text-align: center;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.system-intro p {
+    margin-bottom: 0.5rem;
+}
+
+.system-intro a {
+    color: #FE4D01;
+    font-weight: 500;
+}
