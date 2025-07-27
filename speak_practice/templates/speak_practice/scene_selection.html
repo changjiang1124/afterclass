@@ -74,6 +74,31 @@
     justify-content: center !important;
     min-height: 48px !important;
 }
+
+/* 同步模式备用样式 */
+.sync-fallback-message {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem 2rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 1rem;
+    color: #6b7280;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* 确保topics-container在异步模式下正确显示 */
+#topics-container {
+    display: none;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+    width: 100%;
+}
+
+#topics-container.topics-loaded {
+    display: grid;
+}
 </style>
 {% endblock %}
 
@@ -121,7 +146,7 @@
         <span style="padding: 0 1.5rem; background: #f9fafb; border-radius: 9999px; display: flex; align-items: center; gap: 0.5rem;">
             <i class="fas fa-magic" style="color: #FE4D01; margin-right: 0.5rem;"></i>
             AI Generated Topics - Refresh for New Scenarios
-            <button onclick="refreshTopics()" style="background: none; border: none; color: #FE4D01; cursor: pointer; padding: 0.25rem; border-radius: 50%; transition: all 0.3s ease;" title="Refresh topics">
+            <button id="refresh-topics-btn" class="refresh-button" onclick="refreshTopics()" title="Refresh topics">
                 <i class="fas fa-sync-alt"></i>
             </button>
         </span>
@@ -131,26 +156,77 @@
     <!-- Dynamic AI Generated Scenes Grid -->
     <form method="post" id="scene-form">
         {% csrf_token %}
-        <div class="suggested-scenes-grid">
-            {% for scene in dynamic_scenes %}
-            <button type="submit" name="scene" value="{{ scene.description }}" class="scene-card">
-                <div style="width: 56px; height: 56px; border-radius: 0.75rem; background: linear-gradient(135deg, #dbeafe, #bfdbfe); display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; transition: all 0.3s ease;">
-                    <i class="{{ scene.icon }}" style="font-size: 1.5rem; color: #2563eb; transition: color 0.3s ease;"></i>
+        <div class="suggested-scenes-grid" id="topics-grid">
+            <!-- 条件渲染：异步加载模式 -->
+            {% if load_topics_async %}
+                <!-- 骨架屏加载状态 -->
+                <div id="skeleton-state" class="skeleton-container">
+                    {% for i in "123456" %}
+                    <div class="skeleton-card">
+                        <div class="skeleton-element skeleton-icon"></div>
+                        <div class="skeleton-element skeleton-title"></div>
+                        <div class="skeleton-element skeleton-description"></div>
+                        <div class="skeleton-element skeleton-description"></div>
+                        <div class="skeleton-element skeleton-badge"></div>
+                    </div>
+                    {% endfor %}
                 </div>
-                <div style="font-size: 1.25rem; font-weight: 700; color: #111827; margin-bottom: 0.75rem; line-height: 1.4;">{{ scene.title }}</div>
-                <div style="font-size: 0.95rem; color: #6b7280; line-height: 1.6; margin-bottom: 1.5rem;">{{ scene.description }}</div>
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: auto;">
-                    {% if scene.level == 'Beginner' %}
-                        <span style="padding: 0.5rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; background: #dcfce7; color: #166534;">{{ scene.level }}</span>
-                    {% elif scene.level == 'Intermediate' %}
-                        <span style="padding: 0.5rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; background: #fef3c7; color: #92400e;">{{ scene.level }}</span>
-                    {% else %}
-                        <span style="padding: 0.5rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; background: #fee2e2; color: #991b1b;">{{ scene.level }}</span>
-                    {% endif %}
-                    <i class="fas fa-arrow-right" style="color: #9ca3af; transition: all 0.3s ease;"></i>
+                
+                <!-- 加载指示器 -->
+                <div id="loading-indicator" class="loading-indicator" style="display: none;">
+                    <div class="loading-content">
+                        <i class="fas fa-spinner loading-spinner"></i>
+                        <span class="loading-text">
+                            Generating AI-powered conversation topics<span class="loading-dots"></span>
+                        </span>
+                    </div>
                 </div>
-            </button>
-            {% endfor %}
+                
+                <!-- 错误状态 - 增强版本支持详细错误信息 -->
+                <div id="error-state" class="error-state" style="display: none;">
+                    <div class="error-container">
+                        <i class="fas fa-exclamation-triangle error-icon"></i>
+                        <h3 class="error-title">Unable to Generate Topics</h3>
+                        <p class="error-message">
+                            We're having trouble connecting to our AI service. You can try again or use the custom scenario option above to continue practicing.
+                        </p>
+                        <p class="error-suggestion" style="font-size: 0.875rem; color: #6b7280; margin-top: 0.75rem; line-height: 1.5;">
+                            Please try again or use the custom scenario option above to continue practicing.
+                        </p>
+                        <div class="error-actions">
+                            <button type="button" class="btn-retry" onclick="retryLoadTopics()">
+                                <i class="fas fa-redo"></i>
+                                Try Again
+                            </button>
+                            <button type="button" class="btn-fallback" onclick="showFallbackTopics()">
+                                <i class="fas fa-list"></i>
+                                Show Sample Topics
+                            </button>
+                        </div>
+                        <div class="error-details" style="margin-top: 1rem; padding: 1rem; background: #f9fafb; border-radius: 0.5rem; border-left: 4px solid #f59e0b; display: none;">
+                            <details>
+                                <summary style="cursor: pointer; font-size: 0.875rem; color: #6b7280; font-weight: 500;">
+                                    <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i>
+                                    Technical Details
+                                </summary>
+                                <div class="error-technical-info" style="margin-top: 0.5rem; font-size: 0.75rem; color: #6b7280; font-family: monospace;">
+                                    <!-- 技术错误信息将在这里显示 -->
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 动态生成的话题内容容器 -->
+                <div id="topics-container" style="display: none;">
+                    <!-- 动态生成的话题卡片将插入这里 -->
+                </div>
+            {% else %}
+                <!-- 同步加载模式的备用内容 -->
+                <div class="sync-fallback-message">
+                    <p>Loading topics...</p>
+                </div>
+            {% endif %}
         </div>
     </form>
 </div>
@@ -200,8 +276,12 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
+<script src="{% static 'speak_practice/topic-loader.js' %}"></script>
 <script>
+// 模态框功能
 function openCustomizeModal() {
     const customText = document.getElementById('customScene').value;
     document.getElementById('modal-scene').value = customText;
@@ -224,60 +304,301 @@ function closeCustomizeModal() {
     }, 300);
 }
 
-// Close modal when clicking outside
+// 模态框事件监听器
 document.getElementById('customizeModal').addEventListener('click', function(e) {
     if (e.target === this) {
         closeCustomizeModal();
     }
 });
 
-// Close modal with Escape key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeCustomizeModal();
     }
 });
 
-
-
-// Add hover effects to scene cards
-document.querySelectorAll('.scene-card').forEach(card => {
-    card.addEventListener('mouseenter', function() {
-        this.style.transform = 'translateY(-8px)';
-        this.style.boxShadow = '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)';
-        this.style.borderColor = '#fed7aa';
-        
-        const icon = this.querySelector('.fas');
-        const iconContainer = icon.parentElement;
-        iconContainer.style.background = 'linear-gradient(135deg, #FE4D01, #ea580c)';
-        iconContainer.style.transform = 'scale(1.1)';
-        icon.style.color = '#ffffff';
-        
-        const arrow = this.querySelector('.fa-arrow-right');
-        arrow.style.color = '#FE4D01';
-        arrow.style.transform = 'translateX(4px)';
-    });
+// 状态管理函数
+function showSkeletonState() {
+    const skeletonState = document.getElementById('skeleton-state');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const errorState = document.getElementById('error-state');
+    const topicsContainer = document.getElementById('topics-container');
     
-    card.addEventListener('mouseleave', function() {
-        this.style.transform = 'translateY(0)';
-        this.style.boxShadow = '0 1px 2px 0 rgb(0 0 0 / 0.05)';
-        this.style.borderColor = '#e5e7eb';
-        
-        const icon = this.querySelector('.fas');
-        const iconContainer = icon.parentElement;
-        iconContainer.style.background = 'linear-gradient(135deg, #fff7ed, #fed7aa)';
-        iconContainer.style.transform = 'scale(1)';
-        icon.style.color = '#FE4D01';
-        
-        const arrow = this.querySelector('.fa-arrow-right');
-        arrow.style.color = '#9ca3af';
-        arrow.style.transform = 'translateX(0)';
-    });
-});
-
-// Add refresh button functionality
-function refreshTopics() {
-    location.reload();
+    if (skeletonState) skeletonState.style.display = 'grid';
+    if (loadingIndicator) loadingIndicator.style.display = 'none';
+    if (errorState) errorState.style.display = 'none';
+    if (topicsContainer) {
+        topicsContainer.style.display = 'none';
+        topicsContainer.classList.remove('topics-loaded');
+    }
 }
+
+function showLoadingState() {
+    const skeletonState = document.getElementById('skeleton-state');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const errorState = document.getElementById('error-state');
+    const topicsContainer = document.getElementById('topics-container');
+    
+    if (skeletonState) skeletonState.style.display = 'none';
+    if (loadingIndicator) loadingIndicator.style.display = 'block';
+    if (errorState) errorState.style.display = 'none';
+    if (topicsContainer) {
+        topicsContainer.style.display = 'none';
+        topicsContainer.classList.remove('topics-loaded');
+    }
+}
+
+function showErrorState() {
+    const skeletonState = document.getElementById('skeleton-state');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const errorState = document.getElementById('error-state');
+    const topicsContainer = document.getElementById('topics-container');
+    
+    if (skeletonState) skeletonState.style.display = 'none';
+    if (loadingIndicator) loadingIndicator.style.display = 'none';
+    if (errorState) errorState.style.display = 'block';
+    if (topicsContainer) {
+        topicsContainer.style.display = 'none';
+        topicsContainer.classList.remove('topics-loaded');
+    }
+    
+    // 显示错误日志（如果有的话）
+    showErrorLog();
+}
+
+function showTopicsState() {
+    const skeletonState = document.getElementById('skeleton-state');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const errorState = document.getElementById('error-state');
+    const topicsContainer = document.getElementById('topics-container');
+    
+    if (skeletonState) skeletonState.style.display = 'none';
+    if (loadingIndicator) loadingIndicator.style.display = 'none';
+    if (errorState) errorState.style.display = 'none';
+    
+    if (topicsContainer) {
+        topicsContainer.style.display = 'grid';
+        topicsContainer.classList.add('topics-loaded');
+    }
+}
+
+// 刷新话题功能
+function refreshTopics() {
+    const refreshBtn = document.getElementById('refresh-topics-btn');
+    if (refreshBtn) {
+        refreshBtn.classList.add('spinning');
+    }
+    
+    showLoadingState();
+    
+    if (window.topicLoader) {
+        window.topicLoader.loadTopics().finally(() => {
+            if (refreshBtn) {
+                refreshBtn.classList.remove('spinning');
+            }
+        });
+    }
+}
+
+// 重试加载话题 - 增强版本包含重试计数和状态管理
+function retryLoadTopics() {
+    console.log('用户手动重试加载话题');
+    
+    // 重置重试按钮状态
+    const retryBtn = document.querySelector('.btn-retry');
+    if (retryBtn) {
+        retryBtn.disabled = true;
+        retryBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Retrying...';
+    }
+    
+    showLoadingState();
+    
+    if (window.topicLoader) {
+        window.topicLoader.retryLoad().finally(() => {
+            // 恢复重试按钮状态
+            if (retryBtn) {
+                retryBtn.disabled = false;
+                retryBtn.innerHTML = '<i class="fas fa-redo"></i> Try Again';
+            }
+        });
+    } else {
+        console.error('TopicLoader未初始化');
+        if (retryBtn) {
+            retryBtn.disabled = false;
+            retryBtn.innerHTML = '<i class="fas fa-redo"></i> Try Again';
+        }
+    }
+}
+
+// 显示错误详情
+function toggleErrorDetails() {
+    const errorDetails = document.querySelector('.error-details');
+    if (errorDetails) {
+        const isVisible = errorDetails.style.display !== 'none';
+        errorDetails.style.display = isVisible ? 'none' : 'block';
+    }
+}
+
+// 清除错误日志
+function clearErrorLog() {
+    try {
+        localStorage.removeItem('topicLoader_errors');
+        console.log('错误日志已清除');
+        
+        // 更新错误详情显示
+        const errorTechnicalInfo = document.querySelector('.error-technical-info');
+        if (errorTechnicalInfo) {
+            errorTechnicalInfo.innerHTML = '<em>Error log cleared</em>';
+        }
+    } catch (error) {
+        console.warn('清除错误日志失败:', error);
+    }
+}
+
+// 显示错误日志
+function showErrorLog() {
+    try {
+        const errorLog = JSON.parse(localStorage.getItem('topicLoader_errors') || '[]');
+        const errorTechnicalInfo = document.querySelector('.error-technical-info');
+        
+        if (errorTechnicalInfo) {
+            if (errorLog.length === 0) {
+                errorTechnicalInfo.innerHTML = '<em>No errors recorded</em>';
+            } else {
+                const recentErrors = errorLog.slice(-5); // 显示最近5个错误
+                const errorHtml = recentErrors.map(error => `
+                    <div style="margin-bottom: 0.5rem; padding: 0.5rem; background: #f3f4f6; border-radius: 0.25rem;">
+                        <div><strong>Type:</strong> ${error.type}</div>
+                        <div><strong>Message:</strong> ${error.message}</div>
+                        <div><strong>Time:</strong> ${new Date(error.timestamp).toLocaleString()}</div>
+                    </div>
+                `).join('');
+                
+                errorTechnicalInfo.innerHTML = `
+                    ${errorHtml}
+                    <div style="margin-top: 0.5rem; text-align: center;">
+                        <button onclick="clearErrorLog()" style="background: #ef4444; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; cursor: pointer;">
+                            Clear Log
+                        </button>
+                    </div>
+                `;
+            }
+        }
+    } catch (error) {
+        console.warn('显示错误日志失败:', error);
+    }
+}
+
+// 显示备用话题
+function showFallbackTopics() {
+    const fallbackTopics = [
+        {
+            title: "Café Chat",
+            description: "Ordering coffee and pastries at a local café",
+            level: "Beginner",
+            icon: "fas fa-coffee"
+        },
+        {
+            title: "Shopping Mall",
+            description: "Asking for directions and prices while shopping",
+            level: "Beginner",
+            icon: "fas fa-shopping-bag"
+        },
+        {
+            title: "Restaurant Dining",
+            description: "Ordering food and discussing preferences with friends",
+            level: "Intermediate",
+            icon: "fas fa-utensils"
+        },
+        {
+            title: "Job Interview",
+            description: "Professional conversation about skills and experience",
+            level: "Advanced",
+            icon: "fas fa-briefcase"
+        },
+        {
+            title: "Doctor Visit",
+            description: "Describing symptoms and understanding medical advice",
+            level: "Intermediate",
+            icon: "fas fa-stethoscope"
+        },
+        {
+            title: "Travel Planning",
+            description: "Discussing vacation plans and booking arrangements",
+            level: "Intermediate",
+            icon: "fas fa-plane"
+        }
+    ];
+    
+    if (window.topicLoader) {
+        try {
+            window.topicLoader.renderTopics(fallbackTopics);
+            showTopicsState();
+            console.log('备用话题已显示');
+        } catch (error) {
+            console.error('显示备用话题失败:', error);
+        }
+    } else {
+        console.error('TopicLoader未初始化，无法显示备用话题');
+    }
+}
+
+// 验证模板结构完整性
+function validateTemplateStructure() {
+    const requiredElements = ['topics-grid', 'skeleton-state', 'loading-indicator', 'error-state', 'topics-container'];
+    const missingElements = requiredElements.filter(id => !document.getElementById(id));
+    
+    if (missingElements.length > 0) {
+        console.error('模板结构不完整，缺少必要的DOM元素:', missingElements);
+        return false;
+    }
+    
+    // 验证骨架屏结构
+    const skeletonCards = document.querySelectorAll('.skeleton-card');
+    if (skeletonCards.length !== 6) {
+        console.warn('骨架屏卡片数量不正确，期望6个，实际', skeletonCards.length);
+    }
+    
+    console.log('模板结构验证通过');
+    return true;
+}
+
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', function() {
+    {% if load_topics_async %}
+        // 验证模板结构
+        if (!validateTemplateStructure()) {
+            console.error('模板结构验证失败，异步加载功能可能无法正常工作');
+            return;
+        }
+        
+        // 初始化TopicLoader
+        window.topicLoader = initializeTopicLoader({
+            apiUrl: '/speak_practice/api/topics/',
+            maxRetries: 3,
+            retryDelay: 1000,
+            timeout: 30000,
+            onLoadingStart: showLoadingState,
+            onLoadingSuccess: showTopicsState,
+            onLoadingError: showErrorState
+        });
+        
+        // 确保初始状态为骨架屏
+        showSkeletonState();
+        
+        // 开始加载话题（从骨架屏开始）
+        setTimeout(() => {
+            showLoadingState();
+            window.topicLoader.loadTopics().catch(error => {
+                console.error('初始话题加载失败:', error);
+                // 错误已经在TopicLoader中处理，这里只是记录
+            });
+        }, 1500); // 显示骨架屏1.5秒后开始加载
+        
+        console.log('异步话题加载模式已启用');
+    {% else %}
+        console.log('同步话题加载模式');
+    {% endif %}
+});
 </script>
 {% endblock %}

@@ -144,8 +144,12 @@ pre-release.py
 deploy.sh
 GEMINI.md
 
-.kiro/*
 
 staticfiles/*
 
 ozfavour-196110-71c7adee6fba.json
+
+# Temporary test files
+test*.js
+test*.py
+test*.html

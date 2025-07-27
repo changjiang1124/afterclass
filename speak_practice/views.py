@@ -3,11 +3,13 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
 from .models import ChatSession, ChatMessage
 import json
 import requests
 import base64
 import os
+import logging
 
 # OpenAI & Google Cloud Configuration
 OPENAI_API_KEY = settings.OPENAI_API_KEY
@@ -21,6 +23,7 @@ GOOGLE_TTS_URL = f"https://texttospeech.googleapis.com/v1/text:synthesize?key={G
 @login_required
 def scene_selection(request):
     if request.method == 'POST':
+        # 保持现有POST逻辑不变
         scene = request.POST.get('scene')
         if not scene:
             return redirect('speak_practice:scene_selection')
@@ -38,9 +41,10 @@ def scene_selection(request):
 
         return redirect('speak_practice:chat_view', session_id=session.id)
 
-    # Generate dynamic topic cards using AI
-    dynamic_scenes = generate_dynamic_topic_cards()
-    return render(request, 'speak_practice/scene_selection.html', {'dynamic_scenes': dynamic_scenes})
+    # GET请求：不再生成话题，直接渲染页面
+    return render(request, 'speak_practice/scene_selection.html', {
+        'load_topics_async': True  # 标记使用异步加载
+    })
 
 
 @login_required
@@ -257,8 +261,6 @@ def generate_dynamic_topic_cards():
     import random
     import time
     
-    
-    
     # Add randomness seed based on current time
     random_seed = int(time.time()) % 1000
     
@@ -288,7 +290,7 @@ Ensure variety in difficulty levels and make each scenario unique and engaging."
         headers = {"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"}
         messages = [{"role": "system", "content": system_prompt}]
         payload = {
-            "model": "gpt-4o", 
+            "model": "gpt-4o-mini",  # 使用4o-mini优化成本和速度
             "messages": messages, 
             "temperature": 1.0,  # Increased temperature for more randomness
             "top_p": 0.9,        # Add top_p for additional randomness
@@ -302,7 +304,15 @@ Ensure variety in difficulty levels and make each scenario unique and engaging."
         ai_response = response.json()['choices'][0]['message']['content']
         print(f"AI Response: {ai_response}")  # Debug log
         
-        topics = json.loads(ai_response)
+        # 清理AI响应，移除可能的markdown格式
+        cleaned_response = ai_response.strip()
+        if cleaned_response.startswith('```json'):
+            cleaned_response = cleaned_response[7:]  # 移除 ```json
+        if cleaned_response.endswith('```'):
+            cleaned_response = cleaned_response[:-3]  # 移除 ```
+        cleaned_response = cleaned_response.strip()
+        
+        topics = json.loads(cleaned_response)
         
         # Validate the response structure
         if isinstance(topics, list) and len(topics) == 6:
@@ -318,24 +328,72 @@ Ensure variety in difficulty levels and make each scenario unique and engaging."
         print(f"Error generating dynamic topics: {e}")
         print("Falling back to randomised static topics")  # Debug log
         
-        # Enhanced fallback with randomised static topics
-        all_topics = [
-            {"title": "Café Chat", "description": "Ordering coffee and pastries at a local café", "level": "Beginner", "icon": "fas fa-coffee"},
-            {"title": "Finding Places", "description": "Asking for directions to popular tourist attractions", "level": "Beginner", "icon": "fas fa-map-marked-alt"},
-            {"title": "Weather Talk", "description": "Discussing today's weather and weekend plans", "level": "Beginner", "icon": "fas fa-cloud-sun"},
-            {"title": "Work Intro", "description": "Introducing yourself and background to new colleagues", "level": "Intermediate", "icon": "fas fa-handshake"},
-            {"title": "Market Deals", "description": "Bargaining for souvenirs at a traditional market", "level": "Intermediate", "icon": "fas fa-shopping-bag"},
-            {"title": "Doctor Visit", "description": "Explaining symptoms to a doctor during a consultation", "level": "Advanced", "icon": "fas fa-user-md"},
-            {"title": "Hotel Check-in", "description": "Checking into a hotel and asking about facilities", "level": "Beginner", "icon": "fas fa-bed"},
-            {"title": "Food Ordering", "description": "Ordering traditional Chinese dishes at a restaurant", "level": "Intermediate", "icon": "fas fa-utensils"},
-            {"title": "Job Interview", "description": "Participating in a job interview for a local company", "level": "Advanced", "icon": "fas fa-briefcase"},
-            {"title": "Bank Visit", "description": "Opening a bank account and asking about services", "level": "Intermediate", "icon": "fas fa-university"},
-            {"title": "Phone Call", "description": "Making a phone call to book an appointment", "level": "Intermediate", "icon": "fas fa-phone"},
-            {"title": "Emergency Help", "description": "Asking for help in an emergency situation", "level": "Advanced", "icon": "fas fa-exclamation-triangle"}
-        ]
+        # 返回静态备用话题
+        return get_fallback_topics()
+
+
+def get_fallback_topics():
+    """获取静态备用话题列表 - 增强版本包含更多多样化的话题"""
+    import random
+    
+    # 扩展的静态备用话题池，按难度级别分类
+    beginner_topics = [
+        {"title": "Café Chat", "description": "Ordering coffee and pastries at a local café", "level": "Beginner", "icon": "fas fa-coffee"},
+        {"title": "Finding Places", "description": "Asking for directions to popular tourist attractions", "level": "Beginner", "icon": "fas fa-map-marked-alt"},
+        {"title": "Weather Talk", "description": "Discussing today's weather and weekend plans", "level": "Beginner", "icon": "fas fa-cloud-sun"},
+        {"title": "Hotel Check-in", "description": "Checking into a hotel and asking about facilities", "level": "Beginner", "icon": "fas fa-bed"},
+        {"title": "Shopping Basic", "description": "Buying clothes and asking about sizes and prices", "level": "Beginner", "icon": "fas fa-shopping-cart"},
+        {"title": "Transport Help", "description": "Asking about bus routes and train schedules", "level": "Beginner", "icon": "fas fa-bus"},
+        {"title": "Greeting Friends", "description": "Meeting friends and making small talk", "level": "Beginner", "icon": "fas fa-users"},
+        {"title": "Library Visit", "description": "Finding books and asking about library services", "level": "Beginner", "icon": "fas fa-book"}
+    ]
+    
+    intermediate_topics = [
+        {"title": "Work Intro", "description": "Introducing yourself and background to new colleagues", "level": "Intermediate", "icon": "fas fa-handshake"},
+        {"title": "Market Deals", "description": "Bargaining for souvenirs at a traditional market", "level": "Intermediate", "icon": "fas fa-shopping-bag"},
+        {"title": "Food Ordering", "description": "Ordering traditional Chinese dishes at a restaurant", "level": "Intermediate", "icon": "fas fa-utensils"},
+        {"title": "Bank Visit", "description": "Opening a bank account and asking about services", "level": "Intermediate", "icon": "fas fa-university"},
+        {"title": "Phone Call", "description": "Making a phone call to book an appointment", "level": "Intermediate", "icon": "fas fa-phone"},
+        {"title": "Apartment Hunt", "description": "Inquiring about rental properties and lease terms", "level": "Intermediate", "icon": "fas fa-home"},
+        {"title": "School Enrollment", "description": "Registering for classes and discussing course options", "level": "Intermediate", "icon": "fas fa-graduation-cap"},
+        {"title": "Health Check", "description": "Scheduling a medical appointment and describing symptoms", "level": "Intermediate", "icon": "fas fa-stethoscope"}
+    ]
+    
+    advanced_topics = [
+        {"title": "Doctor Visit", "description": "Explaining symptoms to a doctor during a consultation", "level": "Advanced", "icon": "fas fa-user-md"},
+        {"title": "Job Interview", "description": "Participating in a job interview for a local company", "level": "Advanced", "icon": "fas fa-briefcase"},
+        {"title": "Emergency Help", "description": "Asking for help in an emergency situation", "level": "Advanced", "icon": "fas fa-exclamation-triangle"},
+        {"title": "Legal Advice", "description": "Consulting with a lawyer about legal matters", "level": "Advanced", "icon": "fas fa-gavel"},
+        {"title": "Business Meeting", "description": "Participating in a formal business discussion", "level": "Advanced", "icon": "fas fa-handshake"},
+        {"title": "Insurance Claim", "description": "Filing an insurance claim and explaining the situation", "level": "Advanced", "icon": "fas fa-shield-alt"},
+        {"title": "Tax Consultation", "description": "Discussing tax matters with an accountant", "level": "Advanced", "icon": "fas fa-calculator"},
+        {"title": "Property Purchase", "description": "Negotiating a real estate transaction", "level": "Advanced", "icon": "fas fa-key"}
+    ]
+    
+    # 合并所有话题
+    all_topics = beginner_topics + intermediate_topics + advanced_topics
+    
+    # 确保选择的话题有适当的难度分布
+    try:
+        # 尝试选择2个初级、2个中级、2个高级话题
+        selected_topics = []
+        selected_topics.extend(random.sample(beginner_topics, min(2, len(beginner_topics))))
+        selected_topics.extend(random.sample(intermediate_topics, min(2, len(intermediate_topics))))
+        selected_topics.extend(random.sample(advanced_topics, min(2, len(advanced_topics))))
         
-        # Randomly select 6 topics from the pool
-        return random.sample(all_topics, 6)
+        # 如果不足6个，从剩余话题中随机选择
+        if len(selected_topics) < 6:
+            remaining_topics = [t for t in all_topics if t not in selected_topics]
+            needed = 6 - len(selected_topics)
+            selected_topics.extend(random.sample(remaining_topics, min(needed, len(remaining_topics))))
+        
+        # 随机打乱顺序
+        random.shuffle(selected_topics)
+        return selected_topics[:6]
+        
+    except (ValueError, IndexError):
+        # 如果出现任何错误，回退到简单的随机选择
+        return random.sample(all_topics, min(6, len(all_topics)))
 
 
 def count_tokens_in_conversation(session_id):
@@ -376,6 +434,111 @@ def should_end_conversation(session_id, max_tokens=10000):
     """Check if conversation should end due to token limit"""
     current_tokens = count_tokens_in_conversation(session_id)
     return current_tokens >= (max_tokens * 0.9)  # 90% threshold
+
+
+@csrf_exempt
+@login_required
+def load_topics_api(request):
+    """异步加载AI生成的话题卡片，包含完整的错误处理和降级策略"""
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Only GET method allowed'}, status=405)
+    
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # 尝试生成动态话题
+        topics = generate_dynamic_topic_cards()
+        
+        # 验证话题数据的完整性
+        if not topics or not isinstance(topics, list) or len(topics) == 0:
+            raise ValueError("Generated topics are empty or invalid")
+        
+        # 验证每个话题的必需字段
+        for topic in topics:
+            required_fields = ['title', 'description', 'level', 'icon']
+            if not all(field in topic for field in required_fields):
+                raise ValueError(f"Topic missing required fields: {topic}")
+        
+        logger.info(f"Successfully generated {len(topics)} AI topics")
+        
+        return JsonResponse({
+            'success': True,
+            'topics': topics,
+            'source': 'ai_generated',
+            'generated_at': timezone.now().isoformat()
+        })
+        
+    except requests.exceptions.Timeout as e:
+        logger.warning(f"AI API timeout: {e}")
+        return _handle_api_fallback('timeout', 'AI service timeout - using backup topics')
+        
+    except requests.exceptions.ConnectionError as e:
+        logger.warning(f"AI API connection error: {e}")
+        return _handle_api_fallback('connection_error', 'Connection to AI service failed - using backup topics')
+        
+    except requests.exceptions.HTTPError as e:
+        logger.warning(f"AI API HTTP error: {e}")
+        if hasattr(e, 'response') and e.response.status_code == 429:
+            return _handle_api_fallback('rate_limit', 'AI service rate limit exceeded - using backup topics')
+        else:
+            return _handle_api_fallback('http_error', f'AI service error ({e.response.status_code if hasattr(e, "response") else "unknown"}) - using backup topics')
+    
+    except json.JSONDecodeError as e:
+        logger.warning(f"AI API response parsing error: {e}")
+        return _handle_api_fallback('parse_error', 'AI service returned invalid data - using backup topics')
+        
+    except ValueError as e:
+        logger.warning(f"AI API data validation error: {e}")
+        return _handle_api_fallback('validation_error', 'AI service returned incomplete data - using backup topics')
+        
+    except Exception as e:
+        logger.error(f"Unexpected error in load_topics_api: {e}")
+        return _handle_api_fallback('unexpected_error', 'Unexpected error occurred - using backup topics')
+
+
+def _handle_api_fallback(error_type, error_message):
+    """处理API失败的统一降级逻辑"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # 获取静态备用话题
+        fallback_topics = get_fallback_topics()
+        
+        logger.info(f"Using fallback topics due to {error_type}")
+        
+        # 返回成功响应，但标记为降级模式
+        return JsonResponse({
+            'success': True,  # 对前端来说这仍然是成功的
+            'topics': fallback_topics,
+            'source': 'fallback',
+            'fallback_reason': error_type,
+            'message': error_message,
+            'generated_at': timezone.now().isoformat()
+        })
+        
+    except Exception as fallback_error:
+        logger.error(f"Even fallback topics failed: {fallback_error}")
+        
+        # 最后的降级：硬编码的最小话题集
+        emergency_topics = [
+            {"title": "Café Chat", "description": "Ordering coffee and pastries at a local café", "level": "Beginner", "icon": "fas fa-coffee"},
+            {"title": "Finding Places", "description": "Asking for directions to popular tourist attractions", "level": "Beginner", "icon": "fas fa-map-marked-alt"},
+            {"title": "Weather Talk", "description": "Discussing today's weather and weekend plans", "level": "Beginner", "icon": "fas fa-cloud-sun"},
+            {"title": "Work Intro", "description": "Introducing yourself and background to new colleagues", "level": "Intermediate", "icon": "fas fa-handshake"},
+            {"title": "Food Ordering", "description": "Ordering traditional Chinese dishes at a restaurant", "level": "Intermediate", "icon": "fas fa-utensils"},
+            {"title": "Emergency Help", "description": "Asking for help in an emergency situation", "level": "Advanced", "icon": "fas fa-exclamation-triangle"}
+        ]
+        
+        return JsonResponse({
+            'success': True,
+            'topics': emergency_topics,
+            'source': 'emergency_fallback',
+            'fallback_reason': 'complete_system_failure',
+            'message': 'Using emergency backup topics',
+            'generated_at': timezone.now().isoformat()
+        })
 
 
 @csrf_exempt
