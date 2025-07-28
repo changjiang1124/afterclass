@@ -94,7 +94,7 @@ def scene_selection(request):
 ```javascript
 class TopicLoader {
     constructor() {
-        this.apiUrl = '/speak_practice/api/topics/';
+        this.apiUrl = '/speak/api/topics/';
         this.retryCount = 0;
         this.maxRetries = 3;
         this.retryDelay = 1000;

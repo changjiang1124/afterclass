@@ -188,6 +188,11 @@
     background: linear-gradient(135deg, #ef4444, #dc2626) !important;
 }
 
+.record-button.recording {
+    background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+    animation: recordingPulse 1.5s ease-in-out infinite;
+}
+
 .send-button {
     background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
 }
@@ -195,6 +200,38 @@
 .record-button:hover, .send-button:hover {
     transform: scale(1.05) !important;
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+}
+
+.record-button:disabled, .send-button:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+}
+
+.recording-pulse {
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid #ef4444;
+    border-radius: 50%;
+    animation: pulseRing 1.5s ease-out infinite;
+}
+
+.recording-timer {
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    z-index: 10;
 }
 
 .confirmation-area {
@@ -344,6 +381,37 @@
     }
 }
 
+@keyframes recordingPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+}
+
+@keyframes pulseRing {
+    0% {
+        transform: scale(0.8);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.4);
+        opacity: 0;
+    }
+}
+
+@keyframes blink {
+    0%, 50% {
+        opacity: 1;
+    }
+    51%, 100% {
+        opacity: 0.3;
+    }
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
     .chat-container {
@@ -448,6 +516,7 @@
             </button>
             <button id="stop-btn" class="record-button" style="display: none; background: linear-gradient(135deg, #dc2626, #b91c1c) !important;" title="Stop recording">
                 <i class="fas fa-stop"></i>
+                <div class="recording-pulse"></div>
             </button>
             <button id="send-text-btn" class="send-button" title="Send text message">
                 <i class="fas fa-paper-plane"></i>
@@ -456,8 +525,12 @@
 
         <!-- Status Indicator -->
         <div id="status-indicator" style="display: none; text-align: center; padding: 0.75rem; color: #6b7280; font-size: 0.875rem;">
-            <i class="fas fa-circle-notch fa-spin" style="margin-right: 0.5rem;"></i>
+            <i id="status-icon" class="fas fa-circle-notch fa-spin" style="margin-right: 0.5rem;"></i>
             <span id="status-text">Processing...</span>
+            <div id="recording-timer" style="display: none; margin-top: 0.5rem; font-weight: 600; color: #ef4444;">
+                <i class="fas fa-circle" style="margin-right: 0.25rem; animation: blink 1s infinite;"></i>
+                <span id="timer-display">00:00</span>
+            </div>
         </div>
     </div>
 </div>

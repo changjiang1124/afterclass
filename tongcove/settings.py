@@ -21,9 +21,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(override=True)
 
 # Load environment variables
-env_vars = dotenv_values()
-OPENAI_API_KEY = env_vars.get('OPENAI_API_KEY')
-GOOGLE_APPLICATION_CREDENTIALS = env_vars.get('GOOGLE_APPLICATION_CREDENTIALS')
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+GOOGLE_APPLICATION_CREDENTIALS = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY')
 
 
 

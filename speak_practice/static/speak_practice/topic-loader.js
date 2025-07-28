@@ -5,7 +5,7 @@
 class TopicLoader {
     constructor(options = {}) {
         // API配置
-        this.apiUrl = options.apiUrl || '/speak_practice/api/topics/';
+        this.apiUrl = options.apiUrl || '/speak/api/topics/';
         this.csrfToken = options.csrfToken || this.getCSRFToken();
         
         // 重试配置
@@ -44,8 +44,61 @@ class TopicLoader {
      * 获取CSRF令牌
      */
     getCSRFToken() {
+        // 首先尝试从表单中获取
         const tokenElement = document.querySelector('[name=csrfmiddlewaretoken]');
-        return tokenElement ? tokenElement.value : '';
+        if (tokenElement && tokenElement.value) {
+            return tokenElement.value;
+        }
+        
+        // 尝试从meta标签获取
+        const metaToken = document.querySelector('meta[name="csrf-token"]');
+        if (metaToken && metaToken.content) {
+            return metaToken.content;
+        }
+        
+        // 尝试从cookie获取
+        const cookieValue = this.getCookieValue('csrftoken');
+        if (cookieValue) {
+            return cookieValue;
+        }
+        
+        console.warn('无法获取CSRF令牌');
+        return '';
+    }
+    
+    /**
+     * 从cookie中获取值
+     */
+    getCookieValue(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    /**
+     * 更新CSRF令牌
+     */
+    updateCSRFToken(newToken) {
+        if (newToken) {
+            this.csrfToken = newToken;
+            
+            // 更新页面中的CSRF令牌
+            const tokenElement = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (tokenElement) {
+                tokenElement.value = newToken;
+            }
+            
+            console.log('CSRF令牌已更新');
+        }
     }
     
     /**
@@ -192,6 +245,17 @@ class TopicLoader {
                 
                 // 处理成功响应
                 if (data.success && data.topics) {
+                    // 更新CSRF令牌（如果服务器提供了新的）
+                    if (data.csrf_token) {
+                        this.updateCSRFToken(data.csrf_token);
+                    }
+                    
+                    // 验证话题数据
+                    const validatedTopics = this.validateTopicsData(data.topics);
+                    if (validatedTopics.length === 0) {
+                        throw new Error('No valid topics received from server');
+                    }
+                    
                     // 如果是降级响应，记录但仍然返回话题
                     if (data.source === 'fallback') {
                         console.warn(`使用备用话题 (原因: ${data.fallback_reason}):`, data.message);
@@ -199,7 +263,7 @@ class TopicLoader {
                     } else {
                         console.log('成功获取AI生成的话题');
                     }
-                    return data.topics;
+                    return validatedTopics;
                 }
                 
                 // 处理失败响应但有备用话题的情况
@@ -340,12 +404,19 @@ class TopicLoader {
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
         
         try {
+            // 确保有有效的CSRF令牌
+            if (!this.csrfToken) {
+                this.csrfToken = this.getCSRFToken();
+            }
+            
             const response = await fetch(this.apiUrl, {
                 method: 'GET',
                 headers: {
                     'X-CSRFToken': this.csrfToken,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'  // 标识为Ajax请求
                 },
+                credentials: 'same-origin',  // 包含同源cookie
                 signal: controller.signal
             });
             
@@ -721,6 +792,97 @@ class TopicLoader {
             console.error('连本地备用话题都失败了:', error);
             throw new Error('Complete system failure - unable to load any topics');
         }
+    }
+    
+    /**
+     * 验证话题数据结构和内容
+     */
+    validateTopicsData(topics) {
+        if (!Array.isArray(topics)) {
+            console.error('话题数据不是数组格式');
+            return [];
+        }
+        
+        const validatedTopics = [];
+        
+        for (const topic of topics) {
+            if (!this.isValidTopic(topic)) {
+                console.warn('跳过无效话题:', topic);
+                continue;
+            }
+            
+            // 清理话题数据
+            const cleanTopic = {
+                title: this.sanitizeText(topic.title, 100),
+                description: this.sanitizeText(topic.description, 500),
+                level: this.sanitizeText(topic.level, 50),
+                icon: this.sanitizeIconClass(topic.icon)
+            };
+            
+            validatedTopics.push(cleanTopic);
+        }
+        
+        return validatedTopics;
+    }
+    
+    /**
+     * 验证单个话题是否有效
+     */
+    isValidTopic(topic) {
+        if (!topic || typeof topic !== 'object') {
+            return false;
+        }
+        
+        const requiredFields = ['title', 'description', 'level', 'icon'];
+        for (const field of requiredFields) {
+            if (!topic[field] || typeof topic[field] !== 'string' || topic[field].trim() === '') {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    /**
+     * 清理文本内容，防止XSS攻击
+     */
+    sanitizeText(text, maxLength = 1000) {
+        if (!text || typeof text !== 'string') {
+            return '';
+        }
+        
+        // 限制长度
+        text = text.substring(0, maxLength);
+        
+        // HTML转义
+        text = this.escapeHtml(text);
+        
+        // 移除潜在的恶意内容
+        text = text.replace(/<script[^>]*>.*?<\/script>/gi, '');
+        text = text.replace(/javascript:/gi, '');
+        text = text.replace(/on\w+\s*=/gi, '');
+        
+        // 清理多余空白
+        text = text.replace(/\s+/g, ' ').trim();
+        
+        return text;
+    }
+    
+    /**
+     * 验证和清理图标类名
+     */
+    sanitizeIconClass(iconClass) {
+        if (!iconClass || typeof iconClass !== 'string') {
+            return 'fas fa-comment';
+        }
+        
+        // 只允许Font Awesome图标格式
+        const iconPattern = /^fas fa-[a-z0-9-]+$/;
+        if (iconPattern.test(iconClass)) {
+            return iconClass;
+        }
+        
+        return 'fas fa-comment'; // 默认图标
     }
     
     /**
