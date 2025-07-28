@@ -137,11 +137,68 @@
     color: rgba(255, 255, 255, 0.8) !important;
 }
 
-.input-controls {
+.input-mode-selector {
     display: flex !important;
+    gap: 0.5rem !important;
+    margin-bottom: 1rem !important;
+    padding: 0.5rem !important;
+    background: #f8fafc !important;
+    border-radius: 0.75rem !important;
+    border: 1px solid #e5e7eb !important;
+    justify-content: center !important;
+}
+
+.mode-button {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    padding: 0.75rem 1.25rem !important;
+    border: none !important;
+    border-radius: 0.5rem !important;
+    background: transparent !important;
+    color: #6b7280 !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    min-width: 80px !important;
+    justify-content: center !important;
+}
+
+.mode-button:hover {
+    background: #ffffff !important;
+    color: #374151 !important;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+}
+
+.mode-button.active {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+}
+
+.mode-button i {
+    font-size: 1rem !important;
+}
+
+.input-controls {
+    margin-bottom: 1.5rem !important;
+}
+
+.input-mode-area {
+    display: none !important;
     gap: 1rem !important;
     align-items: end !important;
-    margin-bottom: 1.5rem !important;
+    width: 100% !important;
+}
+
+.input-mode-area.active {
+    display: flex !important;
+}
+
+.input-mode-area .text-input-wrapper {
+    flex: 1 !important;
+    position: relative !important;
 }
 
 .text-input-wrapper {
@@ -169,7 +226,7 @@
     background: #ffffff !important;
 }
 
-.record-button, .send-button {
+.record-button, .send-button, .translate-button {
     width: 52px !important;
     height: 52px !important;
     border-radius: 50% !important;
@@ -197,12 +254,207 @@
     background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
 }
 
-.record-button:hover, .send-button:hover {
+.translate-button {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+}
+
+.english-input {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+.pinyin-section {
+    margin-top: 1rem !important;
+}
+
+.pinyin-text {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    font-size: 0.9rem !important;
+    color: #10b981 !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.5px !important;
+    line-height: 1.5 !important;
+}
+
+.pinyin-display .translation-text {
+    border-left: 4px solid #10b981 !important;
+    background: #f0fdf4 !important;
+}
+
+.toggle-pinyin-btn {
+    background: none !important;
+    border: 1px solid #10b981 !important;
+    color: #10b981 !important;
+    padding: 0.25rem 0.5rem !important;
+    border-radius: 0.375rem !important;
+    font-size: 0.75rem !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+}
+
+.toggle-pinyin-btn:hover {
+    background: #10b981 !important;
+    color: #ffffff !important;
+}
+
+.toggle-pinyin-btn.active {
+    background: #10b981 !important;
+    color: #ffffff !important;
+}
+
+.pinyin-display {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.pinyin-highlight {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7) !important;
+    border: 1px solid #bbf7d0 !important;
+    border-radius: 0.5rem !important;
+    padding: 0.75rem 1rem !important;
+    margin-top: 0.5rem !important;
+}
+
+.pinyin-syllable {
+    display: inline-block !important;
+    margin-right: 0.5rem !important;
+    padding: 0.125rem 0.25rem !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+    border-radius: 0.25rem !important;
+    font-weight: 600 !important;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.audio-controls-section {
+    margin-top: 1.5rem !important;
+    padding-top: 1.5rem !important;
+    border-top: 1px solid #e5e7eb !important;
+}
+
+.audio-controls {
+    display: flex !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1rem !important;
+    flex-wrap: wrap !important;
+}
+
+.audio-control-btn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    padding: 0.75rem 1rem !important;
+    border: 2px solid #f59e0b !important;
+    background: #ffffff !important;
+    color: #f59e0b !important;
+    border-radius: 0.5rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    min-width: 80px !important;
+    justify-content: center !important;
+}
+
+.audio-control-btn:hover {
+    background: #f59e0b !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+}
+
+.audio-control-btn:active {
+    transform: translateY(0) !important;
+}
+
+.audio-control-btn:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+}
+
+.audio-control-btn.playing {
+    background: #10b981 !important;
+    border-color: #10b981 !important;
+    color: #ffffff !important;
+}
+
+.audio-feedback {
+    background: #fef3c7 !important;
+    border: 1px solid #fbbf24 !important;
+    border-radius: 0.5rem !important;
+    padding: 0.75rem 1rem !important;
+}
+
+.feedback-message {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    font-size: 0.875rem !important;
+    color: #92400e !important;
+}
+
+.feedback-message i {
+    color: #f59e0b !important;
+}
+
+.feedback-message.success {
+    background: #d1fae5 !important;
+    border-color: #10b981 !important;
+    color: #065f46 !important;
+}
+
+.feedback-message.success i {
+    color: #10b981 !important;
+}
+
+.audio-progress {
+    width: 100% !important;
+    height: 4px !important;
+    background: #e5e7eb !important;
+    border-radius: 2px !important;
+    margin-top: 0.5rem !important;
+    overflow: hidden !important;
+}
+
+.audio-progress-bar {
+    height: 100% !important;
+    background: linear-gradient(90deg, #f59e0b, #fbbf24) !important;
+    width: 0% !important;
+    transition: width 0.1s ease !important;
+}
+
+.keyboard-shortcuts-hint {
+    margin-top: 0.5rem !important;
+    padding-top: 0.5rem !important;
+    border-top: 1px solid rgba(251, 191, 36, 0.3) !important;
+    text-align: center !important;
+}
+
+.keyboard-shortcuts-hint small {
+    display: inline-block !important;
+    padding: 0.25rem 0.5rem !important;
+    background: rgba(251, 191, 36, 0.1) !important;
+    border-radius: 0.25rem !important;
+    font-size: 0.75rem !important;
+}
+
+.record-button:hover, .send-button:hover, .translate-button:hover {
     transform: scale(1.05) !important;
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
 }
 
-.record-button:disabled, .send-button:disabled {
+.record-button:disabled, .send-button:disabled, .translate-button:disabled {
     opacity: 0.6 !important;
     cursor: not-allowed !important;
     transform: none !important;
@@ -235,55 +487,275 @@
 }
 
 .confirmation-area {
-    background: #f3f4f6 !important;
-    border-radius: 0.75rem !important;
-    padding: 1.5rem !important;
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+    border-radius: 1rem !important;
+    padding: 2rem !important;
     margin-bottom: 1.5rem !important;
-    border: 1px solid #e5e7eb !important;
-    animation: fadeInUp 0.3s ease-out;
+    border: 2px solid #e2e8f0 !important;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+    animation: fadeInUp 0.4s ease-out;
+    position: relative;
+    overflow: hidden;
 }
 
-.confirmation-buttons {
+.confirmation-area::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6, #10b981);
+    border-radius: 1rem 1rem 0 0;
+}
+
+.confirmation-header h5 {
+    font-size: 1.1rem !important;
+    margin-bottom: 1.5rem !important;
+}
+
+.confirmation-content {
+    margin-bottom: 2rem !important;
+}
+
+.transcription-section,
+.translation-section {
+    margin-bottom: 1.5rem !important;
+}
+
+.transcription-section:last-child,
+.translation-section:last-child {
+    margin-bottom: 0 !important;
+}
+
+.section-label {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 0.75rem !important;
+    font-size: 0.95rem !important;
+    color: #374151 !important;
+    font-weight: 600 !important;
+}
+
+.edit-toggle-btn {
+    background: none !important;
+    border: 1px solid #d1d5db !important;
+    color: #6b7280 !important;
+    padding: 0.25rem 0.5rem !important;
+    border-radius: 0.375rem !important;
+    font-size: 0.75rem !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+}
+
+.edit-toggle-btn:hover {
+    border-color: #3b82f6 !important;
+    color: #2563eb !important;
+    background: #f8fafc !important;
+}
+
+.edit-toggle-btn.active {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+    border-color: #3b82f6 !important;
+}
+
+.text-editor {
+    width: 100% !important;
+    min-height: 2.5rem !important;
+    padding: 1rem 1.25rem !important;
+    border: 2px solid #3b82f6 !important;
+    border-radius: 0.75rem !important;
+    font-size: 1rem !important;
+    line-height: 1.6 !important;
+    color: #1f2937 !important;
+    background: #ffffff !important;
+    resize: vertical !important;
+    font-family: inherit !important;
+    transition: all 0.3s ease !important;
+}
+
+.text-editor:focus {
+    outline: none !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.edit-actions {
+    margin-top: 1rem !important;
     display: flex !important;
     gap: 0.75rem !important;
+    justify-content: flex-end !important;
+    padding-top: 1rem !important;
+    border-top: 1px solid #e5e7eb !important;
 }
 
-.btn-confirm {
-    background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+.btn-save-edit {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
     color: #ffffff !important;
     border: none !important;
-    padding: 0.75rem 1.5rem !important;
-    border-radius: 0.75rem !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 0.5rem !important;
     font-weight: 600 !important;
+    font-size: 0.875rem !important;
     cursor: pointer !important;
     transition: all 0.3s ease !important;
     display: flex !important;
     align-items: center !important;
+    gap: 0.375rem !important;
+}
+
+.btn-cancel-edit {
+    background: #ffffff !important;
+    color: #6b7280 !important;
+    border: 1px solid #d1d5db !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 0.5rem !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.375rem !important;
+}
+
+.btn-retranslate {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 0.5rem !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.375rem !important;
+}
+
+.btn-save-edit:hover {
+    background: linear-gradient(135deg, #059669, #047857) !important;
+    transform: translateY(-1px) !important;
+}
+
+.btn-cancel-edit:hover {
+    border-color: #9ca3af !important;
+    color: #4b5563 !important;
+}
+
+.btn-retranslate:hover {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+    transform: translateY(-1px) !important;
+}
+
+.transcription-text,
+.translation-text {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0.75rem !important;
+    padding: 1rem 1.25rem !important;
+    font-size: 1rem !important;
+    line-height: 1.6 !important;
+    color: #1f2937 !important;
+    min-height: 2.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+    transition: all 0.3s ease !important;
+}
+
+.transcription-text {
+    border-left: 4px solid #3b82f6 !important;
+    font-weight: 500 !important;
+}
+
+.translation-text {
+    border-left: 4px solid #8b5cf6 !important;
+    font-style: italic !important;
+    color: #6b7280 !important;
+}
+
+.confirmation-actions {
+    border-top: 1px solid #e5e7eb !important;
+    padding-top: 1.5rem !important;
+}
+
+.confirmation-buttons {
+    display: flex !important;
+    gap: 1rem !important;
+    margin-bottom: 1rem !important;
+    justify-content: center !important;
+}
+
+.confirmation-hint {
+    text-align: center !important;
+}
+
+.btn-confirm {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 0.875rem 2rem !important;
+    border-radius: 0.75rem !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     gap: 0.5rem !important;
+    min-width: 140px !important;
+    box-shadow: 0 2px 4px -1px rgb(0 0 0 / 0.1) !important;
 }
 
 .btn-rerecord {
     background: #ffffff !important;
     color: #6b7280 !important;
     border: 2px solid #d1d5db !important;
-    padding: 0.75rem 1.5rem !important;
+    padding: 0.875rem 2rem !important;
     border-radius: 0.75rem !important;
     font-weight: 600 !important;
+    font-size: 0.95rem !important;
     cursor: pointer !important;
     transition: all 0.3s ease !important;
     display: flex !important;
     align-items: center !important;
+    justify-content: center !important;
     gap: 0.5rem !important;
+    min-width: 140px !important;
 }
 
 .btn-confirm:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+    background: linear-gradient(135deg, #059669, #047857) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
 }
 
 .btn-rerecord:hover {
     border-color: #3b82f6 !important;
     color: #2563eb !important;
+    background: #f8fafc !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+}
+
+.btn-confirm:active,
+.btn-rerecord:active {
+    transform: translateY(0) !important;
+}
+
+.btn-confirm:disabled,
+.btn-rerecord:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
 }
 
 .back-button {
@@ -429,13 +901,103 @@
         padding: 1.5rem !important;
     }
     
-    .input-controls {
-        flex-direction: column !important;
+    .input-mode-selector {
+        gap: 0.25rem !important;
+        padding: 0.375rem !important;
+    }
+    
+    .mode-button {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.8rem !important;
+        min-width: 70px !important;
+    }
+    
+    .mode-button span {
+        display: none !important;
+    }
+    
+    .input-mode-area {
         gap: 0.75rem !important;
+    }
+    
+    .input-mode-area.active {
+        flex-direction: column !important;
+    }
+    
+    #voice-input-area.active {
+        flex-direction: row !important;
+        justify-content: center !important;
+    }
+    
+    .audio-controls {
+        justify-content: center !important;
+    }
+    
+    .audio-control-btn {
+        min-width: 70px !important;
+        font-size: 0.8rem !important;
+        padding: 0.5rem 0.75rem !important;
+    }
+    
+    .audio-control-btn span {
+        display: none !important;
+    }
+    
+    .keyboard-shortcuts-hint {
+        display: none !important;
+    }
+    
+    .confirmation-area {
+        padding: 1.5rem !important;
+        margin-bottom: 1rem !important;
     }
     
     .confirmation-buttons {
         flex-direction: column !important;
+        gap: 0.75rem !important;
+    }
+    
+    .btn-confirm,
+    .btn-rerecord {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 1rem 1.5rem !important;
+    }
+    
+    .transcription-text,
+    .translation-text {
+        font-size: 0.95rem !important;
+        padding: 0.875rem 1rem !important;
+    }
+    
+    .section-label {
+        font-size: 0.9rem !important;
+    }
+    
+    .confirmation-header h5 {
+        font-size: 1rem !important;
+    }
+    
+    .edit-actions {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+    
+    .btn-save-edit,
+    .btn-cancel-edit,
+    .btn-retranslate {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    
+    .edit-toggle-btn {
+        font-size: 0.7rem !important;
+        padding: 0.2rem 0.4rem !important;
+    }
+    
+    .text-editor {
+        font-size: 0.95rem !important;
+        min-height: 3rem !important;
     }
 }
 </style>
@@ -484,43 +1046,253 @@
     <!-- Chat Footer -->
     <div class="chat-footer">
         <!-- Confirmation Area (hidden by default) -->
-        <div id="confirmation-area" class="confirmation-area" style="display: none;">
-            <div style="margin-bottom: 1rem;">
-                <p style="margin: 0.5rem 0; font-size: 0.95rem;"><strong>You said:</strong> <span id="transcribed-text"></span></p>
-                <p style="margin: 0.5rem 0; font-size: 0.95rem;"><strong>English:</strong> <span id="english-translation"></span></p>
+        <div id="confirmation-area" class="confirmation-area" style="display: none;" role="dialog" aria-labelledby="confirmation-title" aria-describedby="confirmation-description">
+            <div class="confirmation-header">
+                <h5 id="confirmation-title" style="margin: 0 0 1rem 0; color: #374151; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-check-circle" style="color: #10b981;" aria-hidden="true"></i>
+                    Voice Recognition Complete
+                </h5>
             </div>
-            <div class="confirmation-buttons">
-                <button id="confirm-send-btn" class="btn-confirm">
-                    <i class="fas fa-check"></i>
-                    Send Message
-                </button>
-                <button id="rerecord-btn" class="btn-rerecord">
-                    <i class="fas fa-redo"></i>
-                    Re-record
-                </button>
+            
+            <div class="confirmation-content">
+                <div class="transcription-section">
+                    <div class="section-label">
+                        <i class="fas fa-microphone" style="color: #3b82f6; margin-right: 0.5rem;" aria-hidden="true"></i>
+                        <strong>You said (Chinese):</strong>
+                        <button id="edit-text-btn" class="edit-toggle-btn" title="Edit transcribed text" aria-label="Toggle text editing">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                    <div class="transcription-text" id="transcribed-text-display" role="textbox" aria-label="Transcribed Chinese text">
+                        <span id="transcribed-text"></span>
+                        <textarea id="transcribed-text-editor" class="text-editor" style="display: none;" placeholder="Edit your Chinese text here..." aria-label="Edit transcribed Chinese text"></textarea>
+                    </div>
+                    <div class="edit-actions" id="edit-actions" style="display: none;">
+                        <button id="save-edit-btn" class="btn-save-edit">
+                            <i class="fas fa-check"></i>
+                            Save Changes
+                        </button>
+                        <button id="cancel-edit-btn" class="btn-cancel-edit">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </button>
+                        <button id="retranslate-btn" class="btn-retranslate">
+                            <i class="fas fa-sync-alt"></i>
+                            Re-translate
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="translation-section">
+                    <div class="section-label">
+                        <i class="fas fa-language" style="color: #8b5cf6; margin-right: 0.5rem;" aria-hidden="true"></i>
+                        <strong>English translation:</strong>
+                    </div>
+                    <div class="translation-text" id="english-translation-display" role="textbox" aria-readonly="true" aria-label="English translation">
+                        <span id="english-translation"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="confirmation-actions">
+                <div class="confirmation-buttons">
+                    <button id="confirm-send-btn" class="btn-confirm" aria-describedby="confirm-help">
+                        <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                        Send Message
+                    </button>
+                    <button id="rerecord-btn" class="btn-rerecord" aria-describedby="rerecord-help">
+                        <i class="fas fa-microphone" aria-hidden="true"></i>
+                        Re-record
+                    </button>
+                </div>
+                <div class="confirmation-hint">
+                    <small id="confirmation-description" style="color: #6b7280; font-style: italic;">
+                        Review your message before sending, or re-record if needed
+                    </small>
+                    <div style="display: none;">
+                        <span id="confirm-help">Press Enter to send the message</span>
+                        <span id="rerecord-help">Press Escape or Ctrl+R to re-record</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Mode Selector -->
+        <div id="input-mode-selector" class="input-mode-selector">
+            <button id="voice-mode-btn" class="mode-button active" data-mode="voice" title="Voice input mode">
+                <i class="fas fa-microphone"></i>
+                <span>Voice</span>
+            </button>
+            <button id="chinese-mode-btn" class="mode-button" data-mode="chinese" title="Chinese text input mode">
+                <i class="fas fa-keyboard"></i>
+                <span>中文</span>
+            </button>
+            <button id="english-mode-btn" class="mode-button" data-mode="english" title="English input mode">
+                <i class="fas fa-language"></i>
+                <span>English</span>
+            </button>
+        </div>
+
+        <!-- English Translation Confirmation Area (hidden by default) -->
+        <div id="translation-confirmation-area" class="confirmation-area" style="display: none;" role="dialog" aria-labelledby="translation-confirmation-title" aria-describedby="translation-confirmation-description">
+            <div class="confirmation-header">
+                <h5 id="translation-confirmation-title" style="margin: 0 0 1rem 0; color: #374151; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-language" style="color: #8b5cf6;" aria-hidden="true"></i>
+                    Translation Complete
+                </h5>
+            </div>
+            
+            <div class="confirmation-content">
+                <div class="translation-section">
+                    <div class="section-label">
+                        <i class="fas fa-globe" style="color: #3b82f6; margin-right: 0.5rem;" aria-hidden="true"></i>
+                        <strong>Original English:</strong>
+                    </div>
+                    <div class="translation-text" id="original-english-display" role="textbox" aria-readonly="true" aria-label="Original English text">
+                        <span id="original-english-text"></span>
+                    </div>
+                </div>
+                
+                <div class="transcription-section">
+                    <div class="section-label">
+                        <i class="fas fa-language" style="color: #8b5cf6; margin-right: 0.5rem;" aria-hidden="true"></i>
+                        <strong>Chinese Translation:</strong>
+                        <button id="edit-translation-btn" class="edit-toggle-btn" title="Edit Chinese translation" aria-label="Toggle translation editing">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                    <div class="transcription-text" id="chinese-translation-display" role="textbox" aria-label="Chinese translation">
+                        <span id="chinese-translation-text"></span>
+                        <textarea id="chinese-translation-editor" class="text-editor" style="display: none;" placeholder="Edit Chinese translation here..." aria-label="Edit Chinese translation"></textarea>
+                    </div>
+                    <div class="edit-actions" id="translation-edit-actions" style="display: none;">
+                        <button id="save-translation-edit-btn" class="btn-save-edit">
+                            <i class="fas fa-check"></i>
+                            Save Changes
+                        </button>
+                        <button id="cancel-translation-edit-btn" class="btn-cancel-edit">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </button>
+                        <button id="play-tts-btn" class="btn-retranslate">
+                            <i class="fas fa-volume-up"></i>
+                            <span class="btn-text">Play Audio</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Audio Controls Section -->
+                    <div class="audio-controls-section" id="audio-controls-section">
+                        <div class="section-label">
+                            <i class="fas fa-volume-up" style="color: #f59e0b; margin-right: 0.5rem;" aria-hidden="true"></i>
+                            <strong>Pronunciation Practice:</strong>
+                        </div>
+                        <div class="audio-controls">
+                            <button id="replay-tts-btn" class="audio-control-btn" title="Replay pronunciation">
+                                <i class="fas fa-redo"></i>
+                                <span>Replay</span>
+                            </button>
+                            <button id="slow-tts-btn" class="audio-control-btn" title="Play slowly">
+                                <i class="fas fa-turtle"></i>
+                                <span>Slow</span>
+                            </button>
+                            <button id="stop-tts-btn" class="audio-control-btn" title="Stop audio">
+                                <i class="fas fa-stop"></i>
+                                <span>Stop</span>
+                            </button>
+                        </div>
+                        <div class="audio-feedback" id="audio-feedback">
+                            <div class="feedback-message" id="feedback-message">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Listen to the pronunciation and practice speaking along</span>
+                            </div>
+                            <div class="keyboard-shortcuts-hint">
+                                <small style="color: #6b7280; font-style: italic;">
+                                    Shortcuts: Ctrl+P (Play), Ctrl+S (Slow), Ctrl+R (Replay), Space (Stop/Play)
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pinyin-section" id="pinyin-section" style="display: none;">
+                    <div class="section-label">
+                        <i class="fas fa-font" style="color: #10b981; margin-right: 0.5rem;" aria-hidden="true"></i>
+                        <strong>Pinyin:</strong>
+                        <button id="toggle-pinyin-btn" class="edit-toggle-btn" title="Toggle pinyin display" aria-label="Toggle pinyin display">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="translation-text" id="pinyin-display" role="textbox" aria-readonly="true" aria-label="Pinyin pronunciation">
+                        <span id="pinyin-text"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="confirmation-actions">
+                <div class="confirmation-buttons">
+                    <button id="confirm-translation-send-btn" class="btn-confirm" aria-describedby="confirm-translation-help">
+                        <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                        Send Message
+                    </button>
+                    <button id="retranslate-btn" class="btn-rerecord" aria-describedby="retranslate-help">
+                        <i class="fas fa-language" aria-hidden="true"></i>
+                        Re-translate
+                    </button>
+                </div>
+                <div class="confirmation-hint">
+                    <small id="translation-confirmation-description" style="color: #6b7280; font-style: italic;">
+                        Review your translation before sending, or re-translate if needed
+                    </small>
+                    <div style="display: none;">
+                        <span id="confirm-translation-help">Press Enter to send the translated message</span>
+                        <span id="retranslate-help">Press Escape to re-translate</span>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Input Controls -->
         <div id="input-area" class="input-controls">
-            <div class="text-input-wrapper">
-                <textarea 
-                    id="text-input" 
-                    class="text-input" 
-                    placeholder="Type your message in English or Chinese..."
-                    rows="1"
-                ></textarea>
+            <!-- Voice Input Mode (default) -->
+            <div id="voice-input-area" class="input-mode-area active">
+                <button id="record-btn" class="record-button" title="Record voice message">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button id="stop-btn" class="record-button" style="display: none; background: linear-gradient(135deg, #dc2626, #b91c1c) !important;" title="Stop recording">
+                    <i class="fas fa-stop"></i>
+                    <div class="recording-pulse"></div>
+                </button>
             </div>
-            <button id="record-btn" class="record-button" title="Record voice message">
-                <i class="fas fa-microphone"></i>
-            </button>
-            <button id="stop-btn" class="record-button" style="display: none; background: linear-gradient(135deg, #dc2626, #b91c1c) !important;" title="Stop recording">
-                <i class="fas fa-stop"></i>
-                <div class="recording-pulse"></div>
-            </button>
-            <button id="send-text-btn" class="send-button" title="Send text message">
-                <i class="fas fa-paper-plane"></i>
-            </button>
+
+            <!-- Chinese Text Input Mode -->
+            <div id="chinese-input-area" class="input-mode-area">
+                <div class="text-input-wrapper">
+                    <textarea 
+                        id="chinese-text-input" 
+                        class="text-input" 
+                        placeholder="Type your message in Chinese..."
+                        rows="1"
+                    ></textarea>
+                </div>
+                <button id="send-chinese-btn" class="send-button" title="Send Chinese message">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+
+            <!-- English Input Mode -->
+            <div id="english-input-area" class="input-mode-area">
+                <div class="text-input-wrapper">
+                    <textarea 
+                        id="english-text-input" 
+                        class="text-input english-input" 
+                        placeholder="Type your message in English..."
+                        rows="1"
+                    ></textarea>
+                </div>
+                <button id="translate-btn" class="translate-button" title="Translate to Chinese">
+                    <i class="fas fa-language"></i>
+                </button>
+            </div>
         </div>
 
         <!-- Status Indicator -->
@@ -539,20 +1311,49 @@
 <audio id="tts-audio" preload="none"></audio>
 
 <script>
-// Auto-resize textarea
-document.getElementById('text-input').addEventListener('input', function() {
-    this.style.height = 'auto';
-    this.style.height = (this.scrollHeight) + 'px';
+// Global variables for input mode management
+let currentInputMode = 'voice';
+let currentTranslationData = null;
+
+// User preferences
+const UserPreferences = {
+    PINYIN_DISPLAY: 'chat_pinyin_display',
     
-    // Limit max height
-    const maxHeight = 120;
-    if (this.scrollHeight > maxHeight) {
-        this.style.height = maxHeight + 'px';
-        this.style.overflowY = 'auto';
-    } else {
-        this.style.overflowY = 'hidden';
+    get: function(key, defaultValue = null) {
+        try {
+            const value = localStorage.getItem(key);
+            return value !== null ? JSON.parse(value) : defaultValue;
+        } catch (e) {
+            return defaultValue;
+        }
+    },
+    
+    set: function(key, value) {
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+        } catch (e) {
+            console.warn('Failed to save user preference:', key, value);
+        }
     }
-});
+};
+
+// Auto-resize textarea function
+function setupTextareaAutoResize(textarea) {
+    if (!textarea) return;
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+        
+        // Limit max height
+        const maxHeight = 120;
+        if (this.scrollHeight > maxHeight) {
+            this.style.height = maxHeight + 'px';
+            this.style.overflowY = 'auto';
+        } else {
+            this.style.overflowY = 'hidden';
+        }
+    });
+}
 
 // Auto-scroll chat to bottom
 function scrollToBottom() {
@@ -616,88 +1417,622 @@ function hideStatus() {
     document.getElementById('status-indicator').style.display = 'none';
 }
 
-// Show/hide confirmation area
+// Input mode management
+function switchInputMode(mode) {
+    // Hide all input areas
+    document.getElementById('voice-input-area').classList.remove('active');
+    document.getElementById('chinese-input-area').classList.remove('active');
+    document.getElementById('english-input-area').classList.remove('active');
+    
+    // Remove active class from all mode buttons
+    document.querySelectorAll('.mode-button').forEach(btn => btn.classList.remove('active'));
+    
+    // Show selected input area and activate button
+    switch(mode) {
+        case 'voice':
+            document.getElementById('voice-input-area').classList.add('active');
+            document.getElementById('voice-mode-btn').classList.add('active');
+            break;
+        case 'chinese':
+            document.getElementById('chinese-input-area').classList.add('active');
+            document.getElementById('chinese-mode-btn').classList.add('active');
+            // Focus on Chinese input
+            setTimeout(() => {
+                const input = document.getElementById('chinese-text-input');
+                if (input) input.focus();
+            }, 100);
+            break;
+        case 'english':
+            document.getElementById('english-input-area').classList.add('active');
+            document.getElementById('english-mode-btn').classList.add('active');
+            // Focus on English input
+            setTimeout(() => {
+                const input = document.getElementById('english-text-input');
+                if (input) input.focus();
+            }, 100);
+            break;
+    }
+    
+    currentInputMode = mode;
+    hideAllConfirmationAreas();
+}
+
+// Hide all confirmation areas
+function hideAllConfirmationAreas() {
+    const confirmationArea = document.getElementById('confirmation-area');
+    const translationConfirmationArea = document.getElementById('translation-confirmation-area');
+    const inputArea = document.getElementById('input-area');
+    
+    if (confirmationArea) confirmationArea.style.display = 'none';
+    if (translationConfirmationArea) translationConfirmationArea.style.display = 'none';
+    if (inputArea) inputArea.style.display = 'flex';
+}
+
+// Show/hide voice confirmation area
 function showConfirmation(transcribed, english) {
-    document.getElementById('transcribed-text').textContent = transcribed;
-    document.getElementById('english-translation').textContent = english;
-    document.getElementById('confirmation-area').style.display = 'block';
-    document.getElementById('input-area').style.display = 'none';
+    const transcribedTextEl = document.getElementById('transcribed-text');
+    const englishTranslationEl = document.getElementById('english-translation');
+    const confirmationArea = document.getElementById('confirmation-area');
+    const inputArea = document.getElementById('input-area');
+    
+    if (transcribedTextEl) transcribedTextEl.textContent = transcribed;
+    if (englishTranslationEl) englishTranslationEl.textContent = english;
+    if (confirmationArea) confirmationArea.style.display = 'block';
+    if (inputArea) inputArea.style.display = 'none';
 }
 
 function hideConfirmation() {
-    document.getElementById('confirmation-area').style.display = 'none';
-    document.getElementById('input-area').style.display = 'flex';
+    const confirmationArea = document.getElementById('confirmation-area');
+    const inputArea = document.getElementById('input-area');
+    
+    if (confirmationArea) confirmationArea.style.display = 'none';
+    if (inputArea) inputArea.style.display = 'flex';
+}
+
+// Show/hide translation confirmation area
+function showTranslationConfirmation(originalEnglish, chineseTranslation, ttsAudio = null, pinyin = null) {
+    const originalEnglishEl = document.getElementById('original-english-text');
+    const chineseTranslationEl = document.getElementById('chinese-translation-text');
+    const translationConfirmationArea = document.getElementById('translation-confirmation-area');
+    const inputArea = document.getElementById('input-area');
+    
+    if (originalEnglishEl) originalEnglishEl.textContent = originalEnglish;
+    if (chineseTranslationEl) chineseTranslationEl.textContent = chineseTranslation;
+    
+    // Store translation data for later use
+    currentTranslationData = {
+        originalEnglish: originalEnglish,
+        chineseTranslation: chineseTranslation,
+        ttsAudio: ttsAudio,
+        pinyin: pinyin
+    };
+    
+    // Show/hide pinyin section based on availability
+    const pinyinSection = document.getElementById('pinyin-section');
+    const pinyinTextEl = document.getElementById('pinyin-text');
+    const togglePinyinBtn = document.getElementById('toggle-pinyin-btn');
+    
+    if (pinyin && pinyinSection && pinyinTextEl) {
+        setPinyinText(pinyinTextEl, pinyin);
+        
+        // Check user preference for pinyin display
+        const shouldShowPinyin = UserPreferences.get(UserPreferences.PINYIN_DISPLAY, true);
+        const pinyinDisplay = document.getElementById('pinyin-display');
+        
+        if (shouldShowPinyin && pinyinDisplay) {
+            pinyinSection.style.display = 'block';
+            pinyinDisplay.style.display = 'block';
+            
+            // Update toggle button state
+            if (togglePinyinBtn) {
+                const icon = togglePinyinBtn.querySelector('i');
+                if (icon) {
+                    icon.className = 'fas fa-eye-slash';
+                    togglePinyinBtn.title = 'Hide pinyin';
+                    togglePinyinBtn.classList.add('active');
+                }
+            }
+        } else {
+            pinyinSection.style.display = 'block';
+            if (pinyinDisplay) pinyinDisplay.style.display = 'none';
+            
+            // Update toggle button state
+            if (togglePinyinBtn) {
+                const icon = togglePinyinBtn.querySelector('i');
+                if (icon) {
+                    icon.className = 'fas fa-eye';
+                    togglePinyinBtn.title = 'Show pinyin';
+                    togglePinyinBtn.classList.remove('active');
+                }
+            }
+        }
+    } else if (pinyinSection) {
+        pinyinSection.style.display = 'none';
+        
+        // Reset toggle button state
+        if (togglePinyinBtn) {
+            const icon = togglePinyinBtn.querySelector('i');
+            if (icon) {
+                icon.className = 'fas fa-eye';
+                togglePinyinBtn.title = 'Show pinyin';
+                togglePinyinBtn.classList.remove('active');
+            }
+        }
+    }
+    
+    // Show translation confirmation area
+    if (translationConfirmationArea) translationConfirmationArea.style.display = 'block';
+    if (inputArea) inputArea.style.display = 'none';
+    
+    // Auto-play TTS if available
+    if (ttsAudio) {
+        playTTSAudio(ttsAudio);
+    }
+}
+
+function hideTranslationConfirmation() {
+    const translationConfirmationArea = document.getElementById('translation-confirmation-area');
+    const inputArea = document.getElementById('input-area');
+    
+    if (translationConfirmationArea) translationConfirmationArea.style.display = 'none';
+    if (inputArea) inputArea.style.display = 'flex';
+    currentTranslationData = null;
+}
+
+// Format pinyin text for better display
+function formatPinyinText(pinyinText) {
+    if (!pinyinText) return '';
+    
+    // Split by spaces and clean up
+    const pinyinWords = pinyinText.split(' ').filter(word => word.trim());
+    
+    // Create formatted HTML with individual syllable spans
+    const formattedHTML = pinyinWords.map(word => {
+        return `<span class="pinyin-syllable">${word.trim()}</span>`;
+    }).join('');
+    
+    return formattedHTML;
+}
+
+// Set pinyin text with HTML formatting
+function setPinyinText(element, pinyinText) {
+    if (!element || !pinyinText) return;
+    
+    const formattedHTML = formatPinyinText(pinyinText);
+    element.innerHTML = formattedHTML;
+}
+
+// Enhanced TTS Audio playback with controls and feedback
+let currentAudioPlayback = null;
+
+function playTTSAudio(base64Audio, playbackRate = 1.0) {
+    if (!base64Audio) {
+        showAudioFeedback('No audio available', 'error');
+        return;
+    }
+    
+    const audio = document.getElementById('tts-audio');
+    if (!audio) return;
+    
+    // Stop any current playback
+    stopTTSAudio();
+    
+    // Set up audio
+    audio.src = `data:audio/mp3;base64,${base64Audio}`;
+    audio.playbackRate = playbackRate;
+    
+    // Update UI state
+    updateAudioControlsState('playing');
+    showAudioFeedback('Playing pronunciation...', 'info');
+    
+    // Set up event listeners
+    const onEnded = () => {
+        updateAudioControlsState('stopped');
+        showAudioFeedback('Playback complete. Practice speaking along!', 'success');
+        audio.removeEventListener('ended', onEnded);
+        audio.removeEventListener('error', onError);
+    };
+    
+    const onError = (error) => {
+        updateAudioControlsState('error');
+        showAudioFeedback('Audio playback failed', 'error');
+        console.warn('TTS audio playback failed:', error);
+        audio.removeEventListener('ended', onEnded);
+        audio.removeEventListener('error', onError);
+    };
+    
+    audio.addEventListener('ended', onEnded);
+    audio.addEventListener('error', onError);
+    
+    // Start playback
+    audio.play().catch(error => {
+        onError(error);
+    });
+    
+    currentAudioPlayback = {
+        audio: audio,
+        base64Audio: base64Audio,
+        playbackRate: playbackRate
+    };
+}
+
+function stopTTSAudio() {
+    const audio = document.getElementById('tts-audio');
+    if (audio && !audio.paused) {
+        audio.pause();
+        audio.currentTime = 0;
+    }
+    
+    updateAudioControlsState('stopped');
+    currentAudioPlayback = null;
+}
+
+function replayTTSAudio() {
+    if (currentTranslationData && currentTranslationData.ttsAudio) {
+        playTTSAudio(currentTranslationData.ttsAudio, 1.0);
+    } else {
+        showAudioFeedback('No audio to replay', 'error');
+    }
+}
+
+function playSlowTTSAudio() {
+    if (currentTranslationData && currentTranslationData.ttsAudio) {
+        playTTSAudio(currentTranslationData.ttsAudio, 0.7); // 70% speed
+        showAudioFeedback('Playing slowly for practice...', 'info');
+    } else {
+        showAudioFeedback('No audio available for slow playback', 'error');
+    }
+}
+
+function updateAudioControlsState(state) {
+    const replayBtn = document.getElementById('replay-tts-btn');
+    const slowBtn = document.getElementById('slow-tts-btn');
+    const stopBtn = document.getElementById('stop-tts-btn');
+    const playBtn = document.getElementById('play-tts-btn');
+    
+    // Reset all button states
+    [replayBtn, slowBtn, stopBtn, playBtn].forEach(btn => {
+        if (btn) btn.classList.remove('playing');
+    });
+    
+    switch(state) {
+        case 'playing':
+            if (stopBtn) stopBtn.classList.add('playing');
+            [replayBtn, slowBtn, playBtn].forEach(btn => {
+                if (btn) btn.disabled = true;
+            });
+            if (stopBtn) stopBtn.disabled = false;
+            break;
+            
+        case 'stopped':
+        case 'error':
+            [replayBtn, slowBtn, playBtn, stopBtn].forEach(btn => {
+                if (btn) btn.disabled = false;
+            });
+            break;
+    }
+}
+
+function showAudioFeedback(message, type = 'info') {
+    const feedbackEl = document.getElementById('feedback-message');
+    if (!feedbackEl) return;
+    
+    // Update message
+    const textSpan = feedbackEl.querySelector('span');
+    if (textSpan) textSpan.textContent = message;
+    
+    // Update icon based on type
+    const icon = feedbackEl.querySelector('i');
+    if (icon) {
+        switch(type) {
+            case 'success':
+                icon.className = 'fas fa-check-circle';
+                feedbackEl.className = 'feedback-message success';
+                break;
+            case 'error':
+                icon.className = 'fas fa-exclamation-triangle';
+                feedbackEl.className = 'feedback-message error';
+                break;
+            case 'info':
+            default:
+                icon.className = 'fas fa-info-circle';
+                feedbackEl.className = 'feedback-message';
+                break;
+        }
+    }
+    
+    // Add animation
+    feedbackEl.style.animation = 'none';
+    setTimeout(() => {
+        feedbackEl.style.animation = 'fadeInUp 0.3s ease-out';
+    }, 10);
+}
+
+// English text translation
+async function translateEnglishText(englishText) {
+    if (!englishText.trim()) {
+        alert('Please enter some English text to translate.');
+        return;
+    }
+    
+    showStatus('Translating...');
+    
+    try {
+        const response = await fetch('{% url "speak_practice:translate_text_api" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                text: englishText
+            })
+        });
+        
+        const data = await response.json();
+        hideStatus();
+        
+        if (data.success) {
+            // Show translation confirmation with TTS audio
+            showTranslationConfirmation(
+                englishText,
+                data.chinese_text,
+                data.tts_audio,
+                data.pinyin || null
+            );
+        } else {
+            alert('Translation failed: ' + (data.error || 'Unknown error'));
+        }
+        
+    } catch (error) {
+        hideStatus();
+        console.error('Translation error:', error);
+        alert('Translation failed. Please check your connection and try again.');
+    }
+}
+
+// Send Chinese message (from any input mode)
+function sendChineseMessage(chineseText) {
+    if (!chineseText.trim()) return;
+    
+    // Add user message to chat
+    addMessage(chineseText, true);
+    
+    // Clear inputs and hide confirmations
+    const chineseTextInput = document.getElementById('chinese-text-input');
+    const englishTextInput = document.getElementById('english-text-input');
+    
+    if (chineseTextInput) chineseTextInput.value = '';
+    if (englishTextInput) englishTextInput.value = '';
+    
+    hideAllConfirmationAreas();
+    
+    showStatus('AI is thinking...');
+    
+    // Here the actual chat API call would happen
+    // For now, just hide status after a delay
+    setTimeout(() => {
+        hideStatus();
+    }, 2000);
 }
 
 // Initialize chat when page loads
 document.addEventListener('DOMContentLoaded', function() {
     scrollToBottom();
     
-    // Add loading state for record buttons
+    // Setup input mode switching
+    const voiceModeBtn = document.getElementById('voice-mode-btn');
+    const chineseModeBtn = document.getElementById('chinese-mode-btn');
+    const englishModeBtn = document.getElementById('english-mode-btn');
+    
+    if (voiceModeBtn) voiceModeBtn.addEventListener('click', () => switchInputMode('voice'));
+    if (chineseModeBtn) chineseModeBtn.addEventListener('click', () => switchInputMode('chinese'));
+    if (englishModeBtn) englishModeBtn.addEventListener('click', () => switchInputMode('english'));
+    
+    // Setup auto-resize for textareas
+    setupTextareaAutoResize(document.getElementById('chinese-text-input'));
+    setupTextareaAutoResize(document.getElementById('english-text-input'));
+    
+    // Voice input handlers (placeholder)
     const recordBtn = document.getElementById('record-btn');
     const stopBtn = document.getElementById('stop-btn');
     
-    recordBtn.addEventListener('click', function() {
-        this.classList.add('recording');
-        this.style.display = 'none';
-        stopBtn.style.display = 'flex';
-        showStatus('Listening...');
-    });
+    if (recordBtn) {
+        recordBtn.addEventListener('click', function() {
+            this.classList.add('recording');
+            this.style.display = 'none';
+            if (stopBtn) stopBtn.style.display = 'flex';
+            showStatus('Listening...');
+        });
+    }
     
-    stopBtn.addEventListener('click', function() {
-        recordBtn.classList.remove('recording');
-        this.style.display = 'none';
-        recordBtn.style.display = 'flex';
-        showStatus('Processing audio...');
-    });
+    if (stopBtn) {
+        stopBtn.addEventListener('click', function() {
+            if (recordBtn) {
+                recordBtn.classList.remove('recording');
+                recordBtn.style.display = 'flex';
+            }
+            this.style.display = 'none';
+            showStatus('Processing audio...');
+            
+            // Simulate voice recognition result
+            setTimeout(() => {
+                hideStatus();
+                showConfirmation('你好，我想学中文。', 'Hello, I want to learn Chinese.');
+            }, 2000);
+        });
+    }
     
-    // Handle text input
-    const textInput = document.getElementById('text-input');
-    const sendBtn = document.getElementById('send-text-btn');
+    // Chinese text input handlers
+    const chineseTextInput = document.getElementById('chinese-text-input');
+    const sendChineseBtn = document.getElementById('send-chinese-btn');
     
-    textInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
+    if (chineseTextInput) {
+        chineseTextInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChineseMessage(this.value);
+            }
+        });
+    }
+    
+    if (sendChineseBtn) {
+        sendChineseBtn.addEventListener('click', function() {
+            if (chineseTextInput) sendChineseMessage(chineseTextInput.value);
+        });
+    }
+    
+    // English text input handlers
+    const englishTextInput = document.getElementById('english-text-input');
+    const translateBtn = document.getElementById('translate-btn');
+    
+    if (englishTextInput) {
+        englishTextInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                translateEnglishText(this.value);
+            }
+        });
+    }
+    
+    if (translateBtn) {
+        translateBtn.addEventListener('click', function() {
+            if (englishTextInput) translateEnglishText(englishTextInput.value);
+        });
+    }
+    
+    // Voice confirmation handlers
+    const confirmSendBtn = document.getElementById('confirm-send-btn');
+    const rerecordBtn = document.getElementById('rerecord-btn');
+    
+    if (confirmSendBtn) {
+        confirmSendBtn.addEventListener('click', function() {
+            const transcribedTextEl = document.getElementById('transcribed-text');
+            if (transcribedTextEl) {
+                sendChineseMessage(transcribedTextEl.textContent);
+            }
+        });
+    }
+    
+    if (rerecordBtn) {
+        rerecordBtn.addEventListener('click', function() {
+            hideConfirmation();
+        });
+    }
+    
+    // Translation confirmation handlers
+    const confirmTranslationSendBtn = document.getElementById('confirm-translation-send-btn');
+    const retranslateBtn = document.getElementById('retranslate-btn');
+    
+    if (confirmTranslationSendBtn) {
+        confirmTranslationSendBtn.addEventListener('click', function() {
+            if (currentTranslationData) {
+                sendChineseMessage(currentTranslationData.chineseTranslation);
+            }
+        });
+    }
+    
+    if (retranslateBtn) {
+        retranslateBtn.addEventListener('click', function() {
+            hideTranslationConfirmation();
+            // Focus back on English input
+            setTimeout(() => {
+                const englishInput = document.getElementById('english-text-input');
+                if (englishInput) englishInput.focus();
+            }, 100);
+        });
+    }
+    
+    // TTS audio control handlers
+    const playTtsBtn = document.getElementById('play-tts-btn');
+    const replayTtsBtn = document.getElementById('replay-tts-btn');
+    const slowTtsBtn = document.getElementById('slow-tts-btn');
+    const stopTtsBtn = document.getElementById('stop-tts-btn');
+    
+    if (playTtsBtn) {
+        playTtsBtn.addEventListener('click', function() {
+            if (currentTranslationData && currentTranslationData.ttsAudio) {
+                playTTSAudio(currentTranslationData.ttsAudio);
+            } else {
+                showAudioFeedback('No audio available', 'error');
+            }
+        });
+    }
+    
+    if (replayTtsBtn) {
+        replayTtsBtn.addEventListener('click', replayTTSAudio);
+    }
+    
+    if (slowTtsBtn) {
+        slowTtsBtn.addEventListener('click', playSlowTTSAudio);
+    }
+    
+    if (stopTtsBtn) {
+        stopTtsBtn.addEventListener('click', stopTTSAudio);
+    }
+    
+    // Global keyboard shortcuts for translation confirmation
+    document.addEventListener('keydown', function(e) {
+        // Only handle shortcuts when translation confirmation is visible
+        const translationConfirmationArea = document.getElementById('translation-confirmation-area');
+        if (!translationConfirmationArea || translationConfirmationArea.style.display === 'none') {
+            return;
+        }
+        
+        // Audio control shortcuts
+        if (e.key === 'p' && (e.ctrlKey || e.metaKey)) {
             e.preventDefault();
-            sendMessage();
+            if (currentTranslationData && currentTranslationData.ttsAudio) {
+                playTTSAudio(currentTranslationData.ttsAudio);
+            }
+        } else if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            playSlowTTSAudio();
+        } else if (e.key === ' ' && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
+            if (currentAudioPlayback) {
+                stopTTSAudio();
+            } else {
+                replayTTSAudio();
+            }
+        } else if (e.key === 'r' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            replayTTSAudio();
         }
     });
     
-    sendBtn.addEventListener('click', sendMessage);
-    
-    function sendMessage() {
-        const message = textInput.value.trim();
-        if (!message) return;
+    // Pinyin toggle handler
+    const togglePinyinBtn = document.getElementById('toggle-pinyin-btn');
+    if (togglePinyinBtn) {
+        // Initialize pinyin display based on user preference
+        const pinyinDisplayPreference = UserPreferences.get(UserPreferences.PINYIN_DISPLAY, true);
         
-        // Add user message to chat
-        addMessage(message, true);
-        textInput.value = '';
-        textInput.style.height = 'auto';
-        
-        showStatus('AI is thinking...');
-        
-        // Here the original chat functionality would continue...
-        // For now, just hide status after a delay
-        setTimeout(() => {
-            hideStatus();
-        }, 2000);
+        togglePinyinBtn.addEventListener('click', function() {
+            const pinyinDisplay = document.getElementById('pinyin-display');
+            const icon = this.querySelector('i');
+            
+            if (pinyinDisplay && icon) {
+                const isCurrentlyVisible = pinyinDisplay.style.display !== 'none';
+                const newVisibility = !isCurrentlyVisible;
+                
+                // Update display
+                if (newVisibility) {
+                    pinyinDisplay.style.display = 'block';
+                    icon.className = 'fas fa-eye-slash';
+                    this.title = 'Hide pinyin';
+                    this.classList.add('active');
+                } else {
+                    pinyinDisplay.style.display = 'none';
+                    icon.className = 'fas fa-eye';
+                    this.title = 'Show pinyin';
+                    this.classList.remove('active');
+                }
+                
+                // Save user preference
+                UserPreferences.set(UserPreferences.PINYIN_DISPLAY, newVisibility);
+            }
+        });
     }
-    
-    // Confirmation buttons
-    document.getElementById('confirm-send-btn').addEventListener('click', function() {
-        const message = document.getElementById('transcribed-text').textContent;
-        addMessage(message, true);
-        hideConfirmation();
-        showStatus('AI is responding...');
-        
-        setTimeout(() => {
-            hideStatus();
-        }, 2000);
-    });
-    
-    document.getElementById('rerecord-btn').addEventListener('click', function() {
-        hideConfirmation();
-        hideStatus();
-    });
 });
 </script>
 {% endblock %}
@@ -709,10 +2044,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatApiUrl = "{% url 'speak_practice:chat_api' %}";
     const transcribeApiUrl = "{% url 'speak_practice:transcribe_audio_api' %}";
     const translateApiUrl = "{% url 'speak_practice:translate_text_api' %}";
+    const translateChineseApiUrl = "{% url 'speak_practice:translate_chinese_api' %}";
     const csrfToken = "{{ csrf_token }}";
 
     document.addEventListener('DOMContentLoaded', () => {
-        initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl, csrfToken);
+        initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl, translateChineseApiUrl, csrfToken);
     });
 </script>
 {% endblock %}

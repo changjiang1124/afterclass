@@ -358,6 +358,17 @@ def translate_text_api(request):
         # 清理翻译文本 (Clean translated text)
         clean_chinese_text = _sanitize_input(chinese_text, 1000)
         
+        # 生成拼音标注 (Generate pinyin annotation)
+        pinyin_text = None
+        try:
+            from pypinyin import pinyin, Style
+            pinyin_list = pinyin(clean_chinese_text, style=Style.TONE, heteronym=False)
+            pinyin_text = ' '.join([item[0] for item in pinyin_list])
+        except Exception as e:
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Pinyin generation failed for user {request.user.id}: {str(e)}")
+            pinyin_text = None
+        
         # 生成TTS音频 (Generate TTS audio) using new service
         try:
             from .services.text_to_speech import tts_service
@@ -384,7 +395,8 @@ def translate_text_api(request):
         
         return JsonResponse({
             'success': True, 
-            'chinese_text': clean_chinese_text, 
+            'chinese_text': clean_chinese_text,
+            'pinyin': pinyin_text,
             'tts_audio': tts_audio_b64,
             'tts_available': tts_audio_b64 is not None,
             'translation_info': {
@@ -418,6 +430,84 @@ def translate_text_api(request):
     except Exception as e:
         logger = logging.getLogger(__name__)
         logger.error(f"Unexpected error in translate_text_api for user {request.user.id}: {str(e)}")
+        return _create_safe_error_response("Translation failed", "server_error", 500)
+
+
+@csrf_protect
+@login_required
+@require_http_methods(["POST"])
+def translate_chinese_api(request):
+    """
+    中文到英文翻译API端点 (Chinese to English translation API endpoint)
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+
+    # 验证请求来源 (Validate request origin)
+    if not _validate_request_origin(request):
+        return _create_safe_error_response("Invalid request origin", "permission_error", 403)
+    
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return _create_safe_error_response("Invalid JSON data", "validation_error", 400)
+    
+    # 清理和验证输入文本 (Clean and validate input text)
+    chinese_text = _sanitize_input(data.get('chinese_text', ''), 500)
+    if not chinese_text:
+        return _create_safe_error_response("No Chinese text provided", "validation_error", 400)
+
+    try:
+        # 导入服务类 (Import service classes)
+        from .services.translation import TranslationService
+        from .services.exceptions import (
+            TranslationError,
+            TranslationTimeoutError,
+            UnsupportedLanguageError,
+            APIError
+        )
+        
+        # 初始化翻译服务 (Initialize translation service)
+        translation_service = TranslationService()
+        
+        # 准备翻译输入 (Prepare translation input)
+        translation_input = {
+            'text': chinese_text,
+            'source_lang': 'zh',
+            'target_lang': 'en'
+        }
+        
+        # 执行翻译 (Perform translation)
+        translation_result = translation_service.translate_text(**translation_input)
+        
+        # 构建响应 (Build response)
+        response_data = {
+            'success': True,
+            'chinese_text': chinese_text,
+            'english_translation': translation_result['translated_text'],
+            'csrf_token': get_token(request)
+        }
+        
+        return JsonResponse(response_data)
+        
+    except UnsupportedLanguageError as e:
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Unsupported language in translate_chinese_api for user {request.user.id}: {str(e)}")
+        return _create_safe_error_response("Language not supported", "language_error", 400)
+        
+    except TranslationTimeoutError as e:
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Translation timeout in translate_chinese_api for user {request.user.id}: {str(e)}")
+        return _create_safe_error_response("Translation timeout", "timeout_error", 408)
+        
+    except (TranslationError, APIError) as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Translation service error in translate_chinese_api for user {request.user.id}: {str(e)}")
+        return _create_safe_error_response("Translation service error", "service_error", 503)
+        
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Unexpected error in translate_chinese_api for user {request.user.id}: {str(e)}")
         return _create_safe_error_response("Translation failed", "server_error", 500)
 
 

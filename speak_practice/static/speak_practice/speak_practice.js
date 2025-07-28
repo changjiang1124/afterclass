@@ -428,7 +428,7 @@ class VoiceRecorder {
     }
 }
 
-function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl, csrfToken) {
+function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl, translateChineseApiUrl, csrfToken) {
     // --- UI Elements ---
     const chatBox = document.getElementById('chat-box');
     const inputArea = document.getElementById('input-area');
@@ -447,6 +447,14 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
     const englishTranslationElem = document.getElementById('english-translation');
     const confirmSendBtn = document.getElementById('confirm-send-btn');
     const rerecordBtn = document.getElementById('rerecord-btn');
+    
+    // Text Editing Controls
+    const editTextBtn = document.getElementById('edit-text-btn');
+    const transcribedTextEditor = document.getElementById('transcribed-text-editor');
+    const editActions = document.getElementById('edit-actions');
+    const saveEditBtn = document.getElementById('save-edit-btn');
+    const cancelEditBtn = document.getElementById('cancel-edit-btn');
+    const retranslateBtn = document.getElementById('retranslate-btn');
 
     // Audio element for TTS
     const ttsAudio = document.getElementById('tts-audio');
@@ -516,7 +524,13 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
     recordBtn.addEventListener('click', startRecording);
     stopBtn.addEventListener('click', stopRecording);
     confirmSendBtn.addEventListener('click', sendTranscribedMessage);
-    rerecordBtn.addEventListener('click', resetInputState);
+    rerecordBtn.addEventListener('click', handleRerecordRequest);
+    
+    // Text editing event listeners
+    editTextBtn.addEventListener('click', toggleTextEditing);
+    saveEditBtn.addEventListener('click', saveTextEdit);
+    cancelEditBtn.addEventListener('click', cancelTextEdit);
+    retranslateBtn.addEventListener('click', retranslateEditedText);
     sendTextBtn.addEventListener('click', sendTypedMessage);
     
     // Handle Enter key in text input
@@ -526,6 +540,84 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
             sendTypedMessage();
         }
     });
+    
+    // Handle keyboard shortcuts for confirmation interface
+    document.addEventListener('keydown', function(e) {
+        // 只在确认界面显示时处理快捷键 (Only handle shortcuts when confirmation interface is visible)
+        if (confirmationArea.style.display === 'block') {
+            // 如果正在编辑文本，处理编辑相关快捷键 (Handle editing shortcuts if in text editing mode)
+            if (isEditingText) {
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    if (!saveEditBtn.disabled) {
+                        saveTextEdit();
+                    }
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelTextEdit();
+                }
+            } else {
+                // 处理常规确认界面快捷键 (Handle regular confirmation shortcuts)
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (!confirmSendBtn.disabled) {
+                        sendTranscribedMessage();
+                    }
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    if (!rerecordBtn.disabled) {
+                        handleRerecordRequest();
+                    }
+                } else if (e.key === 'r' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    if (!rerecordBtn.disabled) {
+                        handleRerecordRequest();
+                    }
+                } else if (e.key === 'e' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    if (editTextBtn && !editTextBtn.disabled) {
+                        toggleTextEditing();
+                    }
+                }
+            }
+        }
+    });
+    
+    // Handle text editor specific events
+    if (transcribedTextEditor) {
+        transcribedTextEditor.addEventListener('input', function() {
+            // 实时文本验证 (Real-time text validation)
+            const text = this.value;
+            const charCount = text.length;
+            
+            // 更新字符计数显示 (Update character count display)
+            let charCountDisplay = document.getElementById('char-count-display');
+            if (!charCountDisplay) {
+                charCountDisplay = document.createElement('div');
+                charCountDisplay.id = 'char-count-display';
+                charCountDisplay.style.cssText = `
+                    font-size: 0.75rem;
+                    color: #6b7280;
+                    text-align: right;
+                    margin-top: 0.5rem;
+                `;
+                this.parentNode.appendChild(charCountDisplay);
+            }
+            
+            charCountDisplay.textContent = `${charCount}/500 characters`;
+            
+            // 如果超过限制，显示警告 (Show warning if over limit)
+            if (charCount > 500) {
+                charCountDisplay.style.color = '#ef4444';
+                this.style.borderColor = '#ef4444';
+                saveEditBtn.disabled = true;
+            } else {
+                charCountDisplay.style.color = '#6b7280';
+                this.style.borderColor = '#3b82f6';
+                saveEditBtn.disabled = false;
+            }
+        });
+    }
 
     // Auto-resize textarea
     textInput.addEventListener('input', function() {
@@ -655,16 +747,93 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
         }
     }
 
+    // 存储当前确认数据 (Store current confirmation data)
+    let currentConfirmationData = null;
+    let isEditingText = false;
+    let originalTranscribedText = '';
+    
     function showConfirmation(transcribed, english) {
+        return showConfirmationWithValidation(transcribed, english, null);
+    }
+    
+    function showConfirmationWithValidation(transcribed, english, apiData = null) {
+        // 验证输入参数 (Validate input parameters)
+        if (!transcribed || !english) {
+            console.error('Invalid confirmation data:', { transcribed, english });
+            showErrorStatus('Invalid transcription data received. Please try again.');
+            setTimeout(() => resetInputState(), 2000);
+            return false;
+        }
+        
+        // 验证文本长度 (Validate text length)
+        if (transcribed.length > 500) {
+            console.warn('Transcribed text is very long:', transcribed.length);
+            showErrorStatus('Transcribed text is too long. Please record a shorter message.');
+            setTimeout(() => resetInputState(), 3000);
+            return false;
+        }
+        
+        // 存储确认数据用于后续处理 (Store confirmation data for later processing)
+        currentConfirmationData = {
+            transcribed: transcribed,
+            english: english,
+            timestamp: Date.now(),
+            apiData: apiData
+        };
+        
+        // 更新确认界面内容 (Update confirmation interface content)
         transcribedTextElem.textContent = transcribed;
         englishTranslationElem.textContent = english;
+        
+        // 添加动画效果显示确认界面 (Show confirmation interface with animation)
         confirmationArea.style.display = 'block';
+        confirmationArea.style.opacity = '0';
+        confirmationArea.style.transform = 'translateY(20px)';
+        
+        // 隐藏输入区域 (Hide input area)
         inputArea.style.display = 'none';
+        
+        // 触发动画 (Trigger animation)
+        setTimeout(() => {
+            confirmationArea.style.transition = 'all 0.4s ease-out';
+            confirmationArea.style.opacity = '1';
+            confirmationArea.style.transform = 'translateY(0)';
+        }, 50);
+        
+        // 聚焦到确认发送按钮 (Focus on confirm send button)
+        setTimeout(() => {
+            confirmSendBtn.focus();
+        }, 400);
+        
+        // 滚动到底部以确保确认界面可见 (Scroll to bottom to ensure confirmation interface is visible)
+        setTimeout(() => {
+            scrollToBottom();
+        }, 200);
+        
+        console.log('Confirmation interface shown:', { transcribed, english, apiData });
+        return true;
     }
 
     function hideConfirmation() {
-        confirmationArea.style.display = 'none';
-        inputArea.style.display = 'flex';
+        // 添加动画效果隐藏确认界面 (Hide confirmation interface with animation)
+        confirmationArea.style.transition = 'all 0.3s ease-in';
+        confirmationArea.style.opacity = '0';
+        confirmationArea.style.transform = 'translateY(-10px)';
+        
+        setTimeout(() => {
+            confirmationArea.style.display = 'none';
+            inputArea.style.display = 'flex';
+            
+            // 重置动画属性 (Reset animation properties)
+            confirmationArea.style.transition = '';
+            confirmationArea.style.opacity = '';
+            confirmationArea.style.transform = '';
+            
+            // 聚焦到文本输入框 (Focus on text input)
+            textInput.focus();
+        }, 300);
+        
+        console.log('Confirmation interface hidden');
     }
 
     function resetInputState() {
@@ -684,9 +853,240 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
         stopBtn.style.display = 'none';
         recordBtn.style.display = 'flex';
         
+        // 重置确认按钮状态 (Reset confirmation button state)
+        confirmSendBtn.disabled = false;
+        rerecordBtn.disabled = false;
+        confirmSendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+        rerecordBtn.innerHTML = '<i class="fas fa-microphone"></i> Re-record';
+        
         // Clear text input
         textInput.value = '';
         textInput.style.height = 'auto';
+        
+        // 聚焦到文本输入框 (Focus on text input)
+        setTimeout(() => {
+            textInput.focus();
+        }, 100);
+        
+        // 重置文本编辑状态 (Reset text editing state)
+        isEditingText = false;
+        originalTranscribedText = '';
+        if (editTextBtn) {
+            editTextBtn.classList.remove('active');
+            editTextBtn.innerHTML = '<i class="fas fa-edit"></i>';
+        }
+        if (editActions) {
+            editActions.style.display = 'none';
+        }
+        if (transcribedTextEditor) {
+            transcribedTextEditor.style.display = 'none';
+        }
+        if (transcribedTextElem) {
+            transcribedTextElem.style.display = 'inline';
+        }
+        
+        console.log('Input state reset');
+    }
+    
+    // --- Text Editing Functions ---
+    function toggleTextEditing() {
+        if (isEditingText) {
+            cancelTextEdit();
+        } else {
+            startTextEditing();
+        }
+    }
+    
+    function startTextEditing() {
+        if (!currentConfirmationData) {
+            console.error('No confirmation data available for editing');
+            return;
+        }
+        
+        isEditingText = true;
+        originalTranscribedText = transcribedTextElem.textContent;
+        
+        // 更新编辑按钮状态 (Update edit button state)
+        editTextBtn.classList.add('active');
+        editTextBtn.innerHTML = '<i class="fas fa-times"></i>';
+        editTextBtn.title = 'Cancel editing';
+        
+        // 显示文本编辑器 (Show text editor)
+        transcribedTextEditor.value = originalTranscribedText;
+        transcribedTextEditor.style.display = 'block';
+        transcribedTextElem.style.display = 'none';
+        
+        // 显示编辑操作按钮 (Show edit action buttons)
+        editActions.style.display = 'flex';
+        
+        // 聚焦到编辑器 (Focus on editor)
+        setTimeout(() => {
+            transcribedTextEditor.focus();
+            transcribedTextEditor.select();
+        }, 100);
+        
+        // 禁用确认和重录按钮 (Disable confirm and re-record buttons)
+        confirmSendBtn.disabled = true;
+        rerecordBtn.disabled = true;
+        
+        console.log('Text editing started');
+    }
+    
+    function saveTextEdit() {
+        const editedText = transcribedTextEditor.value.trim();
+        
+        // 验证编辑后的文本 (Validate edited text)
+        if (!editedText) {
+            showErrorStatus('Text cannot be empty. Please enter some text.');
+            setTimeout(() => hideStatus(), 2000);
+            return;
+        }
+        
+        if (editedText.length > 500) {
+            showErrorStatus('Text is too long. Please keep it under 500 characters.');
+            setTimeout(() => hideStatus(), 2000);
+            return;
+        }
+        
+        // 添加保存动画 (Add save animation)
+        saveEditBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        saveEditBtn.disabled = true;
+        
+        // 更新显示的文本 (Update displayed text)
+        transcribedTextElem.textContent = editedText;
+        
+        // 更新确认数据 (Update confirmation data)
+        if (currentConfirmationData) {
+            currentConfirmationData.transcribed = editedText;
+            currentConfirmationData.edited = true;
+            currentConfirmationData.originalText = originalTranscribedText;
+        }
+        
+        // 结束编辑模式 (End editing mode)
+        setTimeout(() => {
+            endTextEditing();
+            console.log('Text edit saved:', { original: originalTranscribedText, edited: editedText });
+        }, 500);
+    }
+    
+    function cancelTextEdit() {
+        // 恢复原始文本 (Restore original text)
+        transcribedTextEditor.value = originalTranscribedText;
+        
+        endTextEditing();
+        console.log('Text edit cancelled');
+    }
+    
+    function endTextEditing() {
+        isEditingText = false;
+        
+        // 重置编辑按钮状态 (Reset edit button state)
+        editTextBtn.classList.remove('active');
+        editTextBtn.innerHTML = '<i class="fas fa-edit"></i>';
+        editTextBtn.title = 'Edit transcribed text';
+        
+        // 隐藏文本编辑器 (Hide text editor)
+        transcribedTextEditor.style.display = 'none';
+        transcribedTextElem.style.display = 'inline';
+        
+        // 隐藏编辑操作按钮 (Hide edit action buttons)
+        editActions.style.display = 'none';
+        
+        // 重新启用确认和重录按钮 (Re-enable confirm and re-record buttons)
+        confirmSendBtn.disabled = false;
+        rerecordBtn.disabled = false;
+        
+        // 重置保存按钮状态 (Reset save button state)
+        saveEditBtn.innerHTML = '<i class="fas fa-check"></i> Save Changes';
+        saveEditBtn.disabled = false;
+    }
+    
+    async function retranslateEditedText() {
+        const editedText = transcribedTextEditor.value.trim();
+        
+        if (!editedText) {
+            showErrorStatus('Please enter some text to translate.');
+            setTimeout(() => hideStatus(), 2000);
+            return;
+        }
+        
+        // 添加重新翻译动画 (Add re-translate animation)
+        retranslateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Translating...';
+        retranslateBtn.disabled = true;
+        
+        try {
+            showProcessingStatus('Re-translating text...');
+            
+            // 调用翻译API (Call translation API)
+            const response = await fetch(translateChineseApiUrl, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-CSRFToken': csrfToken 
+                },
+                body: JSON.stringify({ 
+                    chinese_text: editedText 
+                }),
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            if (!data.success) {
+                throw new Error(data.error || 'Re-translation failed.');
+            }
+            
+            // 更新英文翻译 (Update English translation)
+            englishTranslationElem.textContent = data.english_translation;
+            
+            // 更新确认数据 (Update confirmation data)
+            if (currentConfirmationData) {
+                currentConfirmationData.english = data.english_translation;
+                currentConfirmationData.retranslated = true;
+            }
+            
+            hideStatus();
+            console.log('Text re-translated successfully:', { 
+                chinese: editedText, 
+                english: data.english_translation 
+            });
+            
+        } catch (error) {
+            console.error('Re-translation Error:', error);
+            showErrorStatus('Re-translation failed. Please try again.');
+            setTimeout(() => hideStatus(), 3000);
+        } finally {
+            // 重置重新翻译按钮状态 (Reset re-translate button state)
+            retranslateBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Re-translate';
+            retranslateBtn.disabled = false;
+        }
+    }
+    
+    function handleRerecordRequest() {
+        // 添加视觉反馈 (Add visual feedback)
+        rerecordBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
+        rerecordBtn.disabled = true;
+        confirmSendBtn.disabled = true;
+        
+        console.log('Re-record requested', {
+            previousData: currentConfirmationData
+        });
+        
+        // 清除当前确认数据 (Clear current confirmation data)
+        currentConfirmationData = null;
+        
+        // 短暂延迟后重置状态并准备新录音 (Reset state after brief delay and prepare for new recording)
+        setTimeout(() => {
+            resetInputState();
+            
+            // 提示用户可以开始新录音 (Hint user can start new recording)
+            showStatus('Ready to record. Click the microphone button to start.');
+            setTimeout(() => {
+                hideStatus();
+            }, 2000);
+        }, 500);
     }
 
     function scrollToBottom() {
@@ -794,7 +1194,9 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
             }
             
             hideStatus();
-            showConfirmation(data.chinese_text, data.english_translation);
+            
+            // 集成确认流程到聊天逻辑 (Integrate confirmation flow into chat logic)
+            showConfirmationWithValidation(data.chinese_text, data.english_translation, data);
 
         } catch (error) {
             console.error('Transcription Error:', error);
@@ -832,9 +1234,57 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
 
     // --- Message Sending ---
     function sendTranscribedMessage() {
-        const message = transcribedTextElem.textContent;
-        sendMessage(message);
+        const message = transcribedTextElem.textContent.trim();
+        
+        // 验证消息内容 (Validate message content)
+        if (!message) {
+            console.error('No transcribed message to send');
+            showErrorStatus('No message to send. Please try recording again.');
+            setTimeout(() => resetInputState(), 2000);
+            return;
+        }
+        
+        // 验证确认数据 (Validate confirmation data)
+        if (!currentConfirmationData) {
+            console.error('No confirmation data available');
+            showErrorStatus('Confirmation data missing. Please try again.');
+            setTimeout(() => resetInputState(), 2000);
+            return;
+        }
+        
+        // 禁用确认按钮防止重复点击 (Disable confirm button to prevent double-clicking)
+        confirmSendBtn.disabled = true;
+        rerecordBtn.disabled = true;
+        
+        // 添加视觉反馈 (Add visual feedback)
+        confirmSendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        
+        console.log('Sending transcribed message:', {
+            message,
+            confirmationData: currentConfirmationData
+        });
+        
+        // 创建消息对象包含额外信息 (Create message object with additional info)
+        const messageData = {
+            text: message,
+            inputMethod: 'voice',
+            englishTranslation: currentConfirmationData.english,
+            timestamp: currentConfirmationData.timestamp
+        };
+        
+        // 发送消息 (Send message)
+        sendMessageWithMetadata(messageData);
         hideConfirmation();
+        
+        // 清除确认数据 (Clear confirmation data)
+        currentConfirmationData = null;
+        
+        // 重置按钮状态 (Reset button state)
+        setTimeout(() => {
+            confirmSendBtn.disabled = false;
+            rerecordBtn.disabled = false;
+            confirmSendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+        }, 1000);
     }
 
     async function sendTypedMessage() {
@@ -867,7 +1317,15 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
                 playAudio(data.tts_audio);
             }
             
-            sendMessage(data.chinese_text);
+            // 发送翻译后的消息 (Send translated message)
+            const messageData = {
+                text: data.chinese_text,
+                inputMethod: 'translation',
+                englishTranslation: text, // 原始英文作为翻译
+                timestamp: Date.now()
+            };
+            
+            sendMessageWithMetadata(messageData);
             textInput.value = '';
             textInput.style.height = 'auto';
 
@@ -879,21 +1337,42 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
     }
 
     async function sendMessage(message) {
+        return sendMessageWithMetadata({ text: message, inputMethod: 'text' });
+    }
+    
+    async function sendMessageWithMetadata(messageData) {
+        const message = messageData.text;
+        const inputMethod = messageData.inputMethod || 'text';
+        
         // Add user message to chat immediately
-        appendMessage('user', { chinese_text: message });
+        appendMessage('user', { 
+            chinese_text: message,
+            input_method: inputMethod,
+            english_translation: messageData.englishTranslation
+        });
+        
         showProcessingStatus('AI is thinking...');
 
         try {
+            // 准备发送数据 (Prepare data to send)
+            const requestData = { 
+                message: message, 
+                session_id: sessionId,
+                input_method: inputMethod
+            };
+            
+            // 如果有英文翻译，包含在请求中 (Include English translation if available)
+            if (messageData.englishTranslation) {
+                requestData.english_translation = messageData.englishTranslation;
+            }
+            
             const response = await fetch(chatApiUrl, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json', 
                     'X-CSRFToken': csrfToken 
                 },
-                body: JSON.stringify({ 
-                    message: message, 
-                    session_id: sessionId 
-                }),
+                body: JSON.stringify(requestData),
             });
             
             if (!response.ok) {
@@ -923,13 +1402,32 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
                 if (data.token_info && data.token_info.conversation_ended) {
                     showConversationEndMessage();
                 }
+                
+                console.log('Message sent successfully:', {
+                    message,
+                    inputMethod,
+                    hasTranslation: !!messageData.englishTranslation
+                });
             }, 500);
 
         } catch (error) {
             console.error('Chat Error:', error);
-            alert(`Chat Error: ${error.message}`);
+            
+            // 显示用户友好的错误信息 (Show user-friendly error message)
+            let errorMessage = 'Failed to send message. ';
+            if (error.message.includes('network') || error.message.includes('HTTP')) {
+                errorMessage += 'Please check your connection and try again.';
+            } else {
+                errorMessage += 'Please try again.';
+            }
+            
+            showErrorStatus(errorMessage);
+            setTimeout(() => resetInputState(), 3000);
         } finally {
-            resetInputState();
+            // 只有在没有错误时才重置状态 (Only reset state if no error)
+            if (!document.getElementById('status-indicator').style.display.includes('block')) {
+                resetInputState();
+            }
         }
     }
 
@@ -942,7 +1440,18 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
         // Create avatar
         const avatar = document.createElement('div');
         avatar.classList.add('message-avatar', sender);
-        avatar.innerHTML = `<i class="fas fa-${sender === 'ai' ? 'robot' : 'user'}"></i>`;
+        
+        // 根据输入方法显示不同图标 (Show different icons based on input method)
+        let avatarIcon = sender === 'ai' ? 'robot' : 'user';
+        if (sender === 'user' && content.input_method === 'voice') {
+            avatarIcon = 'microphone';
+            avatar.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+        } else if (sender === 'user' && content.input_method === 'translation') {
+            avatarIcon = 'language';
+            avatar.style.background = 'linear-gradient(135deg, #8b5cf6, #7c3aed)';
+        }
+        
+        avatar.innerHTML = `<i class="fas fa-${avatarIcon}"></i>`;
 
         // Create message content
         const messageContent = document.createElement('div');
@@ -955,9 +1464,30 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
                 <div class="pinyin-text">${content.pinyin}</div>
             `;
         } else {
-            messageContent.innerHTML = `
-                <div class="chinese-text">${content.chinese_text}</div>
-            `;
+            let userMessageHtml = `<div class="chinese-text">${content.chinese_text}</div>`;
+            
+            // 如果有英文翻译，显示它 (Show English translation if available)
+            if (content.english_translation) {
+                userMessageHtml += `
+                    <hr class="pinyin-divider">
+                    <div class="pinyin-text" style="font-style: italic; color: rgba(255, 255, 255, 0.7);">
+                        English: ${content.english_translation}
+                    </div>
+                `;
+            }
+            
+            // 添加输入方法指示器 (Add input method indicator)
+            if (content.input_method && content.input_method !== 'text') {
+                const methodLabel = content.input_method === 'voice' ? 'Voice' : 'Translation';
+                userMessageHtml += `
+                    <div style="margin-top: 0.5rem; font-size: 0.75rem; opacity: 0.8;">
+                        <i class="fas fa-${content.input_method === 'voice' ? 'microphone' : 'language'}" style="margin-right: 0.25rem;"></i>
+                        ${methodLabel}
+                    </div>
+                `;
+            }
+            
+            messageContent.innerHTML = userMessageHtml;
         }
 
         // Append elements based on message type
@@ -979,6 +1509,8 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
 
         // Auto-scroll to bottom
         scrollToBottom();
+        
+        console.log('Message appended:', { sender, content });
     }
 
     // --- Audio Playback ---
