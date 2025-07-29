@@ -12,4 +12,5 @@ urlpatterns = [
     path('api/translate-chinese/', views.translate_chinese_api, name='translate_chinese_api'),
     path('api/topics/', views.load_topics_api, name='load_topics_api'),
     path('api/generate-scene/', views.generate_scene_api, name='generate_scene_api'),
+    path('api/restart-session/', views.restart_session_api, name='restart_session_api'),
 ]

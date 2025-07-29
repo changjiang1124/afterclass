@@ -9,6 +9,13 @@ from django.core.exceptions import ValidationError
 from django.utils.html import escape
 from django.middleware.csrf import get_token
 from .models import ChatSession, ChatMessage
+from .security import (
+    secure_api, 
+    AudioSecurityValidator, 
+    InputSanitizer, 
+    RateLimiter
+)
+from .security_monitor import log_security_event
 import json
 import requests
 import base64
@@ -63,8 +70,8 @@ def chat_view(request, session_id):
         return redirect('speak_practice:scene_selection')
 
 
+@secure_api('chat_api', require_auth=True)
 @csrf_protect
-@login_required
 @require_http_methods(["POST"])
 def chat_api(request):
     if request.method != 'POST':
@@ -85,9 +92,24 @@ def chat_api(request):
         if not _validate_json_structure(data, ['message', 'session_id']):
             return _create_safe_error_response("Missing required fields", "validation_error", 400)
         
-        # 清理和验证输入
-        user_message = _sanitize_input(data.get('message'), 1000)
+        # 使用增强的输入清理和验证 (Use enhanced input sanitization and validation)
+        field_configs = {
+            'message': {'max_length': 1000, 'allow_html': False}
+        }
+        sanitized_data = InputSanitizer.sanitize_json_data(data, field_configs)
+        user_message = sanitized_data.get('message', '')
         session_id = data.get('session_id')
+        
+        # 验证消息内容安全性 (Validate message content security)
+        security_check = InputSanitizer.validate_text_content(user_message)
+        if not security_check['is_safe']:
+            log_security_event('malicious_input_detected', request, {
+                'endpoint': 'chat_api',
+                'threats': security_check['threats_detected'],
+                'risk_level': security_check['risk_level'],
+                'input_preview': user_message[:100]
+            })
+            return _create_safe_error_response("Invalid message content", "security_violation", 400)
         
         if not user_message:
             return _create_safe_error_response("Message cannot be empty", "validation_error", 400)
@@ -197,8 +219,8 @@ IMPORTANT: This conversation is approaching the token limit. You should naturall
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
+@secure_api('transcribe_audio', require_auth=True)
 @csrf_protect
-@login_required
 @require_http_methods(["POST"])
 def transcribe_audio_api(request):
     """
@@ -212,10 +234,22 @@ def transcribe_audio_api(request):
     if not _validate_request_origin(request):
         return _create_safe_error_response("Invalid request origin", "permission_error", 403)
     
-    # 获取音频文件 (Get audio file)
+    # 获取音频文件并进行安全验证 (Get audio file and perform security validation)
     audio_file = request.FILES.get('audio')
     if not audio_file:
         return _create_safe_error_response("No audio file provided", "validation_error", 400)
+    
+    # 执行综合音频文件安全验证 (Perform comprehensive audio file security validation)
+    validation_result = AudioSecurityValidator.comprehensive_validate(audio_file)
+    if not validation_result['is_valid']:
+        log_security_event('malicious_audio_upload', request, {
+            'endpoint': 'transcribe_audio_api',
+            'filename': audio_file.name,
+            'file_size': audio_file.size,
+            'errors': validation_result['errors'],
+            'validation_details': validation_result['validation_details']
+        })
+        return _create_safe_error_response("Invalid audio file", "audio_security_violation", 400)
 
     try:
         # 导入服务类 (Import service classes)
@@ -236,8 +270,8 @@ def transcribe_audio_api(request):
         transcription_result = speech_service.process(audio_file)
         chinese_text = transcription_result['transcribed_text']
         
-        # 清理转录文本 (Clean transcribed text)
-        clean_chinese_text = _sanitize_input(chinese_text, 1000)
+        # 使用增强的文本清理 (Use enhanced text sanitization)
+        clean_chinese_text = InputSanitizer.sanitize_text(chinese_text, 1000, allow_html=False)
         
         # 初始化翻译服务并翻译为英文 (Initialize translation service and translate to English)
         translation_service = TranslationService()
@@ -249,7 +283,7 @@ def transcribe_audio_api(request):
         
         translation_result = translation_service.process(translation_input)
         english_translation = translation_result['translated_text']
-        clean_english_translation = _sanitize_input(english_translation, 1000)
+        clean_english_translation = InputSanitizer.sanitize_text(english_translation, 1000, allow_html=False)
         
         # 记录成功的处理 (Log successful processing)
         logger = logging.getLogger(__name__)
@@ -306,8 +340,8 @@ def transcribe_audio_api(request):
         return _create_safe_error_response("Audio processing failed", "server_error", 500)
 
 
+@secure_api('translate_text', require_auth=True)
 @csrf_protect
-@login_required
 @require_http_methods(["POST"])
 def translate_text_api(request):
     """
@@ -326,10 +360,22 @@ def translate_text_api(request):
     except json.JSONDecodeError:
         return _create_safe_error_response("Invalid JSON data", "validation_error", 400)
     
-    # 清理和验证输入文本 (Clean and validate input text)
-    text = _sanitize_input(data.get('text', ''), 1000)
+    # 使用增强的输入清理和验证 (Use enhanced input sanitization and validation)
+    raw_text = data.get('text', '')
+    text = InputSanitizer.sanitize_text(raw_text, 1000, allow_html=False)
     if not text:
         return _create_safe_error_response("No text provided", "validation_error", 400)
+    
+    # 验证文本内容安全性 (Validate text content security)
+    security_check = InputSanitizer.validate_text_content(text)
+    if not security_check['is_safe']:
+        log_security_event('malicious_input_detected', request, {
+            'endpoint': 'translate_text_api',
+            'threats': security_check['threats_detected'],
+            'risk_level': security_check['risk_level'],
+            'input_preview': text[:100]
+        })
+        return _create_safe_error_response("Invalid text content", "security_violation", 400)
 
     try:
         # 导入服务类 (Import service classes)
@@ -355,8 +401,8 @@ def translate_text_api(request):
         translation_result = translation_service.process(translation_input)
         chinese_text = translation_result['translated_text']
         
-        # 清理翻译文本 (Clean translated text)
-        clean_chinese_text = _sanitize_input(chinese_text, 1000)
+        # 使用增强的文本清理 (Use enhanced text sanitization)
+        clean_chinese_text = InputSanitizer.sanitize_text(chinese_text, 1000, allow_html=False)
         
         # 生成拼音标注 (Generate pinyin annotation)
         pinyin_text = None
@@ -433,8 +479,8 @@ def translate_text_api(request):
         return _create_safe_error_response("Translation failed", "server_error", 500)
 
 
+@secure_api('translate_chinese', require_auth=True)
 @csrf_protect
-@login_required
 @require_http_methods(["POST"])
 def translate_chinese_api(request):
     """
@@ -452,10 +498,22 @@ def translate_chinese_api(request):
     except json.JSONDecodeError:
         return _create_safe_error_response("Invalid JSON data", "validation_error", 400)
     
-    # 清理和验证输入文本 (Clean and validate input text)
-    chinese_text = _sanitize_input(data.get('chinese_text', ''), 500)
+    # 使用增强的输入清理和验证 (Use enhanced input sanitization and validation)
+    raw_chinese_text = data.get('chinese_text', '')
+    chinese_text = InputSanitizer.sanitize_text(raw_chinese_text, 500, allow_html=False)
     if not chinese_text:
         return _create_safe_error_response("No Chinese text provided", "validation_error", 400)
+    
+    # 验证文本内容安全性 (Validate text content security)
+    security_check = InputSanitizer.validate_text_content(chinese_text)
+    if not security_check['is_safe']:
+        log_security_event('malicious_input_detected', request, {
+            'endpoint': 'translate_chinese_api',
+            'threats': security_check['threats_detected'],
+            'risk_level': security_check['risk_level'],
+            'input_preview': chinese_text[:100]
+        })
+        return _create_safe_error_response("Invalid text content", "security_violation", 400)
 
     try:
         # 导入服务类 (Import service classes)
@@ -1112,3 +1170,86 @@ Generate 3-5 diverse scenarios that are:
     except Exception as e:
         print(f"Unexpected error in generate_scene_api: {e}")
         return JsonResponse({'error': 'Internal server error'}, status=500)
+
+
+@csrf_protect
+@login_required
+@require_http_methods(["POST"])
+def restart_session_api(request):
+    """
+    重启对话会话API端点 (Restart conversation session API endpoint)
+    清除当前会话的所有消息并生成新的开场白
+    """
+    try:
+        data = json.loads(request.body)
+        session_id = data.get('session_id')
+        
+        if not session_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'Session ID is required'
+            }, status=400)
+        
+        # 验证会话是否存在且属于当前用户 (Verify session exists and belongs to current user)
+        try:
+            session = ChatSession.objects.get(id=session_id, user=request.user)
+        except ChatSession.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Session not found or access denied'
+            }, status=404)
+        
+        # 删除会话中的所有消息 (Delete all messages in the session)
+        ChatMessage.objects.filter(session=session).delete()
+        
+        # 生成新的开场白 (Generate new opening message)
+        initial_ai_message_content = get_initial_ai_message(session.scene)
+        
+        if initial_ai_message_content:
+            try:
+                message_data = json.loads(initial_ai_message_content)
+                
+                # 创建新的AI开场消息 (Create new AI opening message)
+                ChatMessage.objects.create(
+                    session=session,
+                    sender_type='ai',
+                    message_content=message_data
+                )
+                
+                # 生成TTS音频 (Generate TTS audio)
+                tts_audio = None
+                if message_data.get('chinese'):
+                    tts_audio = get_tts_audio(message_data['chinese'])
+                
+                return JsonResponse({
+                    'success': True,
+                    'opening_message': {
+                        'chinese': message_data.get('chinese', ''),
+                        'pinyin': message_data.get('pinyin', ''),
+                        'tts_audio': tts_audio
+                    },
+                    'message': 'Conversation restarted successfully'
+                })
+                
+            except json.JSONDecodeError:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Failed to parse AI response'
+                }, status=500)
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Failed to generate opening message'
+            }, status=500)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON in request body'
+        }, status=400)
+    except Exception as e:
+        logging.error(f"Error in restart_session_api: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Internal server error'
+        }, status=500)

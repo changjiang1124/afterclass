@@ -1,3 +1,1673 @@
+// --- UXEnhancer Class ---
+class UXEnhancer {
+    constructor(options = {}) {
+        this.statusIndicator = options.statusIndicator;
+        this.errorHandler = options.errorHandler;
+        
+        // 键盘快捷键配置 (Keyboard shortcuts configuration)
+        this.shortcuts = {
+            'ctrl+enter': 'sendMessage',
+            'ctrl+r': 'startRecording',
+            'escape': 'cancelOperation',
+            'ctrl+z': 'undoLastAction',
+            'f1': 'showHelp',
+            'ctrl+shift+r': 'restartConversation'
+        };
+        
+        // 操作历史 (Operation history)
+        this.operationHistory = [];
+        this.maxHistorySize = 10;
+        
+        // 帮助系统 (Help system)
+        this.helpVisible = false;
+        
+        // 确认对话框 (Confirmation dialogs)
+        this.confirmationCallbacks = new Map();
+        
+        // 回调函数 (Callback functions)
+        this.onShortcut = options.onShortcut || (() => {});
+        this.onUndo = options.onUndo || (() => {});
+        this.onHelp = options.onHelp || (() => {});
+        
+        this.initializeKeyboardShortcuts();
+        this.initializeTooltips();
+        this.initializeHelpSystem();
+    }
+    
+    /**
+     * 初始化键盘快捷键 (Initialize keyboard shortcuts)
+     */
+    initializeKeyboardShortcuts() {
+        document.addEventListener('keydown', (event) => {
+            const shortcut = this.getShortcutString(event);
+            const action = this.shortcuts[shortcut];
+            
+            if (action && this.canExecuteShortcut(action, event)) {
+                event.preventDefault();
+                this.executeShortcut(action, event);
+            }
+        });
+        
+        // 显示快捷键提示 (Show shortcut hints)
+        this.createShortcutHints();
+    }
+    
+    /**
+     * 获取快捷键字符串 (Get shortcut string)
+     */
+    getShortcutString(event) {
+        const parts = [];
+        
+        if (event.ctrlKey) parts.push('ctrl');
+        if (event.shiftKey) parts.push('shift');
+        if (event.altKey) parts.push('alt');
+        if (event.metaKey) parts.push('meta');
+        
+        const key = event.key.toLowerCase();
+        if (key !== 'control' && key !== 'shift' && key !== 'alt' && key !== 'meta') {
+            parts.push(key);
+        }
+        
+        return parts.join('+');
+    }
+    
+    /**
+     * 检查是否可以执行快捷键 (Check if shortcut can be executed)
+     */
+    canExecuteShortcut(action, event) {
+        // 如果在输入框中，只允许特定快捷键 (Only allow specific shortcuts in input fields)
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+            return ['sendMessage', 'showHelp', 'escape'].includes(action);
+        }
+        
+        // 如果有模态框打开，只允许关闭操作 (Only allow close operations if modal is open)
+        if (this.helpVisible) {
+            return action === 'showHelp' || action === 'escape';
+        }
+        
+        return true;
+    }
+    
+    /**
+     * 执行快捷键操作 (Execute shortcut action)
+     */
+    executeShortcut(action, event) {
+        console.log(`Executing shortcut: ${action}`);
+        
+        switch (action) {
+            case 'sendMessage':
+                this.triggerSendMessage();
+                break;
+            case 'startRecording':
+                this.triggerStartRecording();
+                break;
+            case 'cancelOperation':
+                this.triggerCancelOperation();
+                break;
+            case 'undoLastAction':
+                this.triggerUndo();
+                break;
+            case 'showHelp':
+                this.toggleHelp();
+                break;
+            case 'restartConversation':
+                this.triggerRestartConversation();
+                break;
+        }
+        
+        this.onShortcut(action, event);
+    }
+    
+    /**
+     * 触发发送消息 (Trigger send message)
+     */
+    triggerSendMessage() {
+        const textInput = document.getElementById('text-input');
+        const sendButton = document.getElementById('send-text-btn');
+        
+        if (textInput && textInput.value.trim() && sendButton && !sendButton.disabled) {
+            sendButton.click();
+        }
+    }
+    
+    /**
+     * 触发开始录音 (Trigger start recording)
+     */
+    triggerStartRecording() {
+        const recordButton = document.getElementById('record-btn');
+        const stopButton = document.getElementById('stop-btn');
+        
+        if (recordButton && recordButton.style.display !== 'none' && !recordButton.disabled) {
+            recordButton.click();
+        } else if (stopButton && stopButton.style.display !== 'none' && !stopButton.disabled) {
+            stopButton.click();
+        }
+    }
+    
+    /**
+     * 触发取消操作 (Trigger cancel operation)
+     */
+    triggerCancelOperation() {
+        // 关闭帮助 (Close help)
+        if (this.helpVisible) {
+            this.hideHelp();
+            return;
+        }
+        
+        // 取消确认界面 (Cancel confirmation)
+        const confirmationArea = document.getElementById('confirmation-area');
+        const rerecordButton = document.getElementById('rerecord-btn');
+        
+        if (confirmationArea && confirmationArea.style.display !== 'none' && rerecordButton) {
+            rerecordButton.click();
+        }
+        
+        // 停止录音 (Stop recording)
+        const stopButton = document.getElementById('stop-btn');
+        if (stopButton && stopButton.style.display !== 'none') {
+            stopButton.click();
+        }
+    }
+    
+    /**
+     * 触发撤销操作 (Trigger undo operation)
+     */
+    triggerUndo() {
+        if (this.operationHistory.length > 0) {
+            const lastOperation = this.operationHistory.pop();
+            this.executeUndo(lastOperation);
+        } else {
+            if (this.statusIndicator) {
+                this.statusIndicator.showInfo('No actions to undo');
+            }
+        }
+    }
+    
+    /**
+     * 触发重启对话 (Trigger restart conversation)
+     */
+    triggerRestartConversation() {
+        this.showConfirmation(
+            'Restart Conversation',
+            'Are you sure you want to restart the conversation? All messages will be lost.',
+            () => {
+                const restartButton = document.getElementById('restart-conversation-btn');
+                if (restartButton) {
+                    restartButton.click();
+                }
+            }
+        );
+    }
+    
+    /**
+     * 记录操作 (Record operation)
+     */
+    recordOperation(type, data) {
+        this.operationHistory.push({
+            type: type,
+            data: data,
+            timestamp: Date.now()
+        });
+        
+        // 限制历史记录大小 (Limit history size)
+        if (this.operationHistory.length > this.maxHistorySize) {
+            this.operationHistory.shift();
+        }
+    }
+    
+    /**
+     * 执行撤销 (Execute undo)
+     */
+    executeUndo(operation) {
+        console.log('Undoing operation:', operation);
+        
+        switch (operation.type) {
+            case 'message_sent':
+                this.undoMessageSent(operation.data);
+                break;
+            case 'text_edited':
+                this.undoTextEdit(operation.data);
+                break;
+            case 'recording_completed':
+                this.undoRecording(operation.data);
+                break;
+        }
+        
+        this.onUndo(operation);
+    }
+    
+    /**
+     * 撤销发送消息 (Undo message sent)
+     */
+    undoMessageSent(data) {
+        // 这里可以实现消息撤销逻辑 (Message undo logic can be implemented here)
+        if (this.statusIndicator) {
+            this.statusIndicator.showInfo('Message undo is not available in this version');
+        }
+    }
+    
+    /**
+     * 撤销文本编辑 (Undo text edit)
+     */
+    undoTextEdit(data) {
+        const textEditor = document.getElementById('transcribed-text-editor');
+        if (textEditor && data.previousText) {
+            textEditor.value = data.previousText;
+        }
+    }
+    
+    /**
+     * 撤销录音 (Undo recording)
+     */
+    undoRecording(data) {
+        // 重置到录音前状态 (Reset to pre-recording state)
+        const confirmationArea = document.getElementById('confirmation-area');
+        if (confirmationArea) {
+            confirmationArea.style.display = 'none';
+        }
+    }
+    
+    /**
+     * 显示确认对话框 (Show confirmation dialog)
+     */
+    showConfirmation(title, message, onConfirm, onCancel = null) {
+        const confirmationId = `confirmation_${Date.now()}`;
+        
+        const overlay = document.createElement('div');
+        overlay.className = 'confirmation-overlay';
+        overlay.id = confirmationId;
+        
+        overlay.innerHTML = `
+            <div class="confirmation-dialog">
+                <div class="confirmation-header">
+                    <h5>${title}</h5>
+                </div>
+                <div class="confirmation-body">
+                    <p>${message}</p>
+                </div>
+                <div class="confirmation-actions">
+                    <button class="btn-confirm-action" data-action="confirm">
+                        <i class="fas fa-check"></i>
+                        <span>Confirm</span>
+                    </button>
+                    <button class="btn-cancel-action" data-action="cancel">
+                        <i class="fas fa-times"></i>
+                        <span>Cancel</span>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        // 添加事件监听器 (Add event listeners)
+        const confirmButton = overlay.querySelector('.btn-confirm-action');
+        const cancelButton = overlay.querySelector('.btn-cancel-action');
+        
+        confirmButton.addEventListener('click', () => {
+            this.hideConfirmation(confirmationId);
+            if (onConfirm) onConfirm();
+        });
+        
+        cancelButton.addEventListener('click', () => {
+            this.hideConfirmation(confirmationId);
+            if (onCancel) onCancel();
+        });
+        
+        // ESC键关闭 (Close with ESC key)
+        const escapeHandler = (event) => {
+            if (event.key === 'Escape') {
+                this.hideConfirmation(confirmationId);
+                if (onCancel) onCancel();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+        
+        // 点击外部关闭 (Close when clicking outside)
+        overlay.addEventListener('click', (event) => {
+            if (event.target === overlay) {
+                this.hideConfirmation(confirmationId);
+                if (onCancel) onCancel();
+            }
+        });
+        
+        // 显示动画 (Show animation)
+        requestAnimationFrame(() => {
+            overlay.classList.add('visible');
+        });
+    }
+    
+    /**
+     * 隐藏确认对话框 (Hide confirmation dialog)
+     */
+    hideConfirmation(confirmationId) {
+        const overlay = document.getElementById(confirmationId);
+        if (overlay) {
+            overlay.classList.remove('visible');
+            setTimeout(() => {
+                if (overlay.parentNode) {
+                    overlay.parentNode.removeChild(overlay);
+                }
+            }, 300);
+        }
+    }
+    
+    /**
+     * 初始化工具提示 (Initialize tooltips)
+     */
+    initializeTooltips() {
+        // 为按钮添加工具提示 (Add tooltips to buttons)
+        const tooltipElements = [
+            { selector: '#record-btn', text: 'Start recording (Ctrl+R)' },
+            { selector: '#stop-btn', text: 'Stop recording (Ctrl+R)' },
+            { selector: '#send-text-btn', text: 'Send message (Ctrl+Enter)' },
+            { selector: '#restart-conversation-btn', text: 'Restart conversation (Ctrl+Shift+R)' },
+            { selector: '#change-topic-btn', text: 'Change topic' }
+        ];
+        
+        tooltipElements.forEach(({ selector, text }) => {
+            const element = document.querySelector(selector);
+            if (element) {
+                element.title = text;
+                element.setAttribute('data-tooltip', text);
+            }
+        });
+    }
+    
+    /**
+     * 初始化帮助系统 (Initialize help system)
+     */
+    initializeHelpSystem() {
+        // 创建帮助按钮 (Create help button)
+        this.createHelpButton();
+    }
+    
+    /**
+     * 创建帮助按钮 (Create help button)
+     */
+    createHelpButton() {
+        const helpButton = document.createElement('button');
+        helpButton.id = 'help-button';
+        helpButton.className = 'help-button';
+        helpButton.innerHTML = '<i class="fas fa-question-circle"></i>';
+        helpButton.title = 'Show help (F1)';
+        
+        helpButton.addEventListener('click', () => {
+            this.toggleHelp();
+        });
+        
+        // 添加到页面 (Add to page)
+        const chatContainer = document.querySelector('.chat-container');
+        if (chatContainer) {
+            chatContainer.appendChild(helpButton);
+        }
+    }
+    
+    /**
+     * 切换帮助显示 (Toggle help display)
+     */
+    toggleHelp() {
+        if (this.helpVisible) {
+            this.hideHelp();
+        } else {
+            this.showHelp();
+        }
+    }
+    
+    /**
+     * 显示帮助 (Show help)
+     */
+    showHelp() {
+        if (this.helpVisible) return;
+        
+        const helpOverlay = document.createElement('div');
+        helpOverlay.id = 'help-overlay';
+        helpOverlay.className = 'help-overlay';
+        
+        helpOverlay.innerHTML = `
+            <div class="help-dialog">
+                <div class="help-header">
+                    <h4>Help & Keyboard Shortcuts</h4>
+                    <button class="help-close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="help-content">
+                    <div class="help-section">
+                        <h5>Voice Recording</h5>
+                        <ul>
+                            <li>Click the microphone button to start recording</li>
+                            <li>Speak clearly in Chinese</li>
+                            <li>Click stop when finished</li>
+                            <li>Review and edit the transcription if needed</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h5>Text Input</h5>
+                        <ul>
+                            <li>Type your message in the text box</li>
+                            <li>Press Ctrl+Enter to send</li>
+                            <li>Use English input mode for translation help</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h5>Keyboard Shortcuts</h5>
+                        <div class="shortcuts-grid">
+                            <div class="shortcut-item">
+                                <kbd>Ctrl+Enter</kbd>
+                                <span>Send message</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <kbd>Ctrl+R</kbd>
+                                <span>Start/Stop recording</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <kbd>Escape</kbd>
+                                <span>Cancel operation</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <kbd>Ctrl+Z</kbd>
+                                <span>Undo last action</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <kbd>F1</kbd>
+                                <span>Show/Hide help</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <kbd>Ctrl+Shift+R</kbd>
+                                <span>Restart conversation</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h5>Tips</h5>
+                        <ul>
+                            <li>Speak slowly and clearly for better recognition</li>
+                            <li>Use the edit feature to correct transcription errors</li>
+                            <li>Try the English input mode if you're stuck</li>
+                            <li>Listen to AI responses to improve pronunciation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(helpOverlay);
+        
+        // 添加事件监听器 (Add event listeners)
+        const closeButton = helpOverlay.querySelector('.help-close-btn');
+        closeButton.addEventListener('click', () => {
+            this.hideHelp();
+        });
+        
+        // ESC键关闭 (Close with ESC key)
+        const escapeHandler = (event) => {
+            if (event.key === 'Escape') {
+                this.hideHelp();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+        
+        // 点击外部关闭 (Close when clicking outside)
+        helpOverlay.addEventListener('click', (event) => {
+            if (event.target === helpOverlay) {
+                this.hideHelp();
+            }
+        });
+        
+        this.helpVisible = true;
+        
+        // 显示动画 (Show animation)
+        requestAnimationFrame(() => {
+            helpOverlay.classList.add('visible');
+        });
+        
+        this.onHelp(true);
+    }
+    
+    /**
+     * 隐藏帮助 (Hide help)
+     */
+    hideHelp() {
+        const helpOverlay = document.getElementById('help-overlay');
+        if (helpOverlay) {
+            helpOverlay.classList.remove('visible');
+            setTimeout(() => {
+                if (helpOverlay.parentNode) {
+                    helpOverlay.parentNode.removeChild(helpOverlay);
+                }
+            }, 300);
+        }
+        
+        this.helpVisible = false;
+        this.onHelp(false);
+    }
+    
+    /**
+     * 创建快捷键提示 (Create shortcut hints)
+     */
+    createShortcutHints() {
+        const hintsContainer = document.createElement('div');
+        hintsContainer.id = 'shortcut-hints';
+        hintsContainer.className = 'shortcut-hints';
+        
+        hintsContainer.innerHTML = `
+            <div class="hint-item">
+                <kbd>Ctrl+Enter</kbd> Send
+            </div>
+            <div class="hint-item">
+                <kbd>Ctrl+R</kbd> Record
+            </div>
+            <div class="hint-item">
+                <kbd>F1</kbd> Help
+            </div>
+        `;
+        
+        // 添加到聊天容器 (Add to chat container)
+        const chatFooter = document.querySelector('.chat-footer');
+        if (chatFooter) {
+            chatFooter.appendChild(hintsContainer);
+        }
+    }
+    
+    /**
+     * 销毁UX增强器 (Destroy UX enhancer)
+     */
+    destroy() {
+        this.hideHelp();
+        this.operationHistory = [];
+        this.confirmationCallbacks.clear();
+        
+        // 移除帮助按钮 (Remove help button)
+        const helpButton = document.getElementById('help-button');
+        if (helpButton && helpButton.parentNode) {
+            helpButton.parentNode.removeChild(helpButton);
+        }
+        
+        // 移除快捷键提示 (Remove shortcut hints)
+        const hintsContainer = document.getElementById('shortcut-hints');
+        if (hintsContainer && hintsContainer.parentNode) {
+            hintsContainer.parentNode.removeChild(hintsContainer);
+        }
+    }
+}
+
+// --- ErrorHandler Class ---
+class ErrorHandler {
+    constructor(options = {}) {
+        this.statusIndicator = options.statusIndicator;
+        this.maxRetries = options.maxRetries || 3;
+        this.retryDelay = options.retryDelay || 1000; // 1 second base delay
+        this.retryMultiplier = options.retryMultiplier || 2; // Exponential backoff
+        
+        // 错误类型配置 (Error type configurations)
+        this.errorTypes = {
+            network: {
+                message: 'Network connection failed. Please check your internet connection.',
+                retryable: true,
+                autoRetry: true
+            },
+            api: {
+                message: 'Service temporarily unavailable. Please try again.',
+                retryable: true,
+                autoRetry: false
+            },
+            audio_validation: {
+                message: 'Invalid audio file. Please record again.',
+                retryable: false,
+                autoRetry: false
+            },
+            transcription_timeout: {
+                message: 'Speech recognition timed out. Please try again.',
+                retryable: true,
+                autoRetry: false
+            },
+            tts_quota_exceeded: {
+                message: 'Voice synthesis service temporarily unavailable.',
+                retryable: false,
+                autoRetry: false
+            },
+            microphone_permission: {
+                message: 'Microphone access denied. Please allow microphone access and try again.',
+                retryable: false,
+                autoRetry: false
+            },
+            browser_not_supported: {
+                message: 'Voice recording is not supported in this browser.',
+                retryable: false,
+                autoRetry: false
+            },
+            file_too_large: {
+                message: 'Audio file is too large. Please record a shorter message.',
+                retryable: false,
+                autoRetry: false
+            }
+        };
+        
+        // 重试状态 (Retry state)
+        this.retryAttempts = new Map();
+        this.activeRetries = new Set();
+        
+        // 回调函数 (Callback functions)
+        this.onError = options.onError || (() => {});
+        this.onRetry = options.onRetry || (() => {});
+        this.onRetrySuccess = options.onRetrySuccess || (() => {});
+        this.onRetryFailed = options.onRetryFailed || (() => {});
+        
+        // 网络状态监控 (Network status monitoring)
+        this.isOnline = navigator.onLine;
+        this.initializeNetworkMonitoring();
+    }
+    
+    /**
+     * 初始化网络状态监控 (Initialize network status monitoring)
+     */
+    initializeNetworkMonitoring() {
+        window.addEventListener('online', () => {
+            this.isOnline = true;
+            this.showConnectionStatus('online');
+            console.log('Network connection restored');
+        });
+        
+        window.addEventListener('offline', () => {
+            this.isOnline = false;
+            this.showConnectionStatus('offline');
+            console.log('Network connection lost');
+        });
+    }
+    
+    /**
+     * 处理错误 (Handle error)
+     */
+    async handleError(error, context = {}) {
+        const errorType = this.identifyErrorType(error);
+        const errorConfig = this.errorTypes[errorType] || this.errorTypes.api;
+        
+        console.error(`Error handled: ${errorType}`, error, context);
+        
+        // 触发错误回调 (Trigger error callback)
+        this.onError(error, errorType, context);
+        
+        // 检查是否可以重试 (Check if retryable)
+        if (errorConfig.retryable && this.canRetry(context.operationId)) {
+            if (errorConfig.autoRetry) {
+                return await this.autoRetry(context);
+            } else {
+                this.showRetryOption(context, errorConfig.message);
+                return false;
+            }
+        } else {
+            this.showError(errorConfig.message, { retryable: false });
+            return false;
+        }
+    }
+    
+    /**
+     * 识别错误类型 (Identify error type)
+     */
+    identifyErrorType(error) {
+        if (!this.isOnline) {
+            return 'network';
+        }
+        
+        if (error.name === 'NetworkError' || error.message.includes('fetch')) {
+            return 'network';
+        }
+        
+        if (error.message.includes('Permission denied')) {
+            return 'microphone_permission';
+        }
+        
+        if (error.message.includes('not supported')) {
+            return 'browser_not_supported';
+        }
+        
+        if (error.message.includes('too large')) {
+            return 'file_too_large';
+        }
+        
+        if (error.message.includes('timeout')) {
+            return 'transcription_timeout';
+        }
+        
+        if (error.message.includes('quota') || error.message.includes('limit')) {
+            return 'tts_quota_exceeded';
+        }
+        
+        if (error.message.includes('audio') && error.message.includes('validation')) {
+            return 'audio_validation';
+        }
+        
+        // 检查HTTP状态码 (Check HTTP status codes)
+        if (error.status) {
+            if (error.status >= 500) {
+                return 'api';
+            }
+            if (error.status === 429) {
+                return 'tts_quota_exceeded';
+            }
+            if (error.status === 408) {
+                return 'transcription_timeout';
+            }
+        }
+        
+        return 'api';
+    }
+    
+    /**
+     * 检查是否可以重试 (Check if can retry)
+     */
+    canRetry(operationId) {
+        if (!operationId) return false;
+        
+        const attempts = this.retryAttempts.get(operationId) || 0;
+        return attempts < this.maxRetries;
+    }
+    
+    /**
+     * 自动重试 (Auto retry)
+     */
+    async autoRetry(context) {
+        const { operationId, retryFunction } = context;
+        
+        if (!operationId || !retryFunction) {
+            console.error('Auto retry failed: missing operationId or retryFunction');
+            return false;
+        }
+        
+        const attempts = this.retryAttempts.get(operationId) || 0;
+        const delay = this.retryDelay * Math.pow(this.retryMultiplier, attempts);
+        
+        this.retryAttempts.set(operationId, attempts + 1);
+        this.activeRetries.add(operationId);
+        
+        // 显示重试状态 (Show retry status)
+        if (this.statusIndicator) {
+            this.statusIndicator.showInfo(`Retrying... (${attempts + 1}/${this.maxRetries})`, {
+                autoHide: false
+            });
+        }
+        
+        // 触发重试回调 (Trigger retry callback)
+        this.onRetry(operationId, attempts + 1);
+        
+        try {
+            // 等待延迟 (Wait for delay)
+            await this.delay(delay);
+            
+            // 执行重试 (Execute retry)
+            const result = await retryFunction();
+            
+            // 重试成功 (Retry successful)
+            this.retryAttempts.delete(operationId);
+            this.activeRetries.delete(operationId);
+            
+            if (this.statusIndicator) {
+                this.statusIndicator.showSuccess('Operation completed successfully');
+            }
+            
+            this.onRetrySuccess(operationId, attempts + 1);
+            return result;
+            
+        } catch (retryError) {
+            this.activeRetries.delete(operationId);
+            
+            // 检查是否还能继续重试 (Check if can continue retrying)
+            if (this.canRetry(operationId)) {
+                return await this.autoRetry(context);
+            } else {
+                // 重试失败 (Retry failed)
+                this.retryAttempts.delete(operationId);
+                
+                if (this.statusIndicator) {
+                    this.statusIndicator.showError('Operation failed after multiple attempts');
+                }
+                
+                this.onRetryFailed(operationId, attempts + 1);
+                return false;
+            }
+        }
+    }
+    
+    /**
+     * 显示重试选项 (Show retry option)
+     */
+    showRetryOption(context, message) {
+        const { operationId, retryFunction } = context;
+        
+        if (this.statusIndicator) {
+            this.statusIndicator.hide();
+        }
+        
+        // 创建重试界面 (Create retry interface)
+        this.createRetryInterface(message, async () => {
+            if (retryFunction) {
+                try {
+                    const result = await retryFunction();
+                    this.hideRetryInterface();
+                    
+                    if (this.statusIndicator) {
+                        this.statusIndicator.showSuccess('Operation completed successfully');
+                    }
+                    
+                    return result;
+                } catch (error) {
+                    await this.handleError(error, context);
+                }
+            }
+        });
+    }
+    
+    /**
+     * 创建重试界面 (Create retry interface)
+     */
+    createRetryInterface(message, retryCallback) {
+        // 移除现有的重试界面 (Remove existing retry interface)
+        this.hideRetryInterface();
+        
+        const retryContainer = document.createElement('div');
+        retryContainer.id = 'retry-container';
+        retryContainer.className = 'retry-container';
+        
+        retryContainer.innerHTML = `
+            <div class="retry-message">${message}</div>
+            <button id="retry-button" class="retry-button">
+                <i class="fas fa-redo"></i>
+                <span>Try Again</span>
+            </button>
+        `;
+        
+        // 添加到页面 (Add to page)
+        const chatContainer = document.querySelector('.chat-container') || document.body;
+        chatContainer.appendChild(retryContainer);
+        
+        // 添加事件监听器 (Add event listener)
+        const retryButton = retryContainer.querySelector('#retry-button');
+        retryButton.addEventListener('click', async () => {
+            retryButton.classList.add('btn-loading');
+            retryButton.disabled = true;
+            
+            try {
+                await retryCallback();
+            } finally {
+                retryButton.classList.remove('btn-loading');
+                retryButton.disabled = false;
+            }
+        });
+    }
+    
+    /**
+     * 隐藏重试界面 (Hide retry interface)
+     */
+    hideRetryInterface() {
+        const retryContainer = document.getElementById('retry-container');
+        if (retryContainer) {
+            retryContainer.remove();
+        }
+    }
+    
+    /**
+     * 显示错误信息 (Show error message)
+     */
+    showError(message, options = {}) {
+        if (this.statusIndicator) {
+            this.statusIndicator.showError(message, options);
+        }
+        
+        // 如果不可重试，显示详细错误信息 (If not retryable, show detailed error)
+        if (!options.retryable) {
+            this.createErrorMessage(message);
+        }
+    }
+    
+    /**
+     * 创建错误消息 (Create error message)
+     */
+    createErrorMessage(message) {
+        const errorContainer = document.createElement('div');
+        errorContainer.className = 'error-message';
+        
+        errorContainer.innerHTML = `
+            <i class="fas fa-exclamation-triangle error-icon"></i>
+            <div class="error-text">${message}</div>
+        `;
+        
+        // 添加到聊天框 (Add to chat box)
+        const chatBox = document.getElementById('chat-box');
+        if (chatBox) {
+            chatBox.appendChild(errorContainer);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            // 自动移除错误消息 (Auto remove error message)
+            setTimeout(() => {
+                if (errorContainer.parentNode) {
+                    errorContainer.remove();
+                }
+            }, 10000);
+        }
+    }
+    
+    /**
+     * 显示连接状态 (Show connection status)
+     */
+    showConnectionStatus(status) {
+        const connectionStatus = document.getElementById('connection-status');
+        if (!connectionStatus) return;
+        
+        connectionStatus.className = `connection-status ${status}`;
+        
+        const indicator = connectionStatus.querySelector('.connection-indicator');
+        const text = connectionStatus.querySelector('.connection-text');
+        
+        if (status === 'online') {
+            text.textContent = 'Online';
+            indicator.classList.remove('pulse');
+            connectionStatus.classList.add('visible');
+            
+            // 3秒后隐藏 (Hide after 3 seconds)
+            setTimeout(() => {
+                connectionStatus.classList.remove('visible');
+            }, 3000);
+        } else {
+            text.textContent = 'Offline';
+            indicator.classList.add('pulse');
+            connectionStatus.classList.add('visible');
+        }
+    }
+    
+    /**
+     * 延迟函数 (Delay function)
+     */
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    
+    /**
+     * 重置重试计数 (Reset retry count)
+     */
+    resetRetryCount(operationId) {
+        this.retryAttempts.delete(operationId);
+        this.activeRetries.delete(operationId);
+    }
+    
+    /**
+     * 获取重试状态 (Get retry status)
+     */
+    getRetryStatus(operationId) {
+        return {
+            attempts: this.retryAttempts.get(operationId) || 0,
+            isRetrying: this.activeRetries.has(operationId),
+            canRetry: this.canRetry(operationId)
+        };
+    }
+    
+    /**
+     * 销毁错误处理器 (Destroy error handler)
+     */
+    destroy() {
+        this.hideRetryInterface();
+        this.retryAttempts.clear();
+        this.activeRetries.clear();
+        
+        window.removeEventListener('online', this.handleOnline);
+        window.removeEventListener('offline', this.handleOffline);
+    }
+}
+
+// --- StatusIndicator Class ---
+class StatusIndicator {
+    constructor(options = {}) {
+        this.container = options.container || document.getElementById('status-indicator');
+        this.textElement = options.textElement || document.getElementById('status-text');
+        this.iconElement = options.iconElement || document.getElementById('status-icon');
+        this.progressElement = options.progressElement || document.getElementById('status-progress');
+        
+        // 状态配置 (Status configurations)
+        this.statusConfig = {
+            loading: {
+                icon: 'fas fa-spinner fa-spin',
+                className: 'status-loading',
+                showProgress: false
+            },
+            success: {
+                icon: 'fas fa-check-circle',
+                className: 'status-success',
+                showProgress: false
+            },
+            error: {
+                icon: 'fas fa-exclamation-triangle',
+                className: 'status-error',
+                showProgress: false
+            },
+            warning: {
+                icon: 'fas fa-exclamation-circle',
+                className: 'status-warning',
+                showProgress: false
+            },
+            info: {
+                icon: 'fas fa-info-circle',
+                className: 'status-info',
+                showProgress: false
+            },
+            recording: {
+                icon: 'fas fa-microphone',
+                className: 'status-recording',
+                showProgress: true
+            },
+            processing: {
+                icon: 'fas fa-cog fa-spin',
+                className: 'status-processing',
+                showProgress: true
+            },
+            playing: {
+                icon: 'fas fa-volume-up',
+                className: 'status-playing',
+                showProgress: true
+            }
+        };
+        
+        // 当前状态 (Current state)
+        this.currentStatus = null;
+        this.isVisible = false;
+        this.hideTimeout = null;
+        this.progressValue = 0;
+        
+        // 回调函数 (Callback functions)
+        this.onShow = options.onShow || (() => {});
+        this.onHide = options.onHide || (() => {});
+        this.onStatusChange = options.onStatusChange || (() => {});
+        
+        this.initializeElements();
+    }
+    
+    /**
+     * 初始化状态指示器元素 (Initialize status indicator elements)
+     */
+    initializeElements() {
+        if (!this.container) {
+            this.createStatusIndicator();
+        }
+        
+        // 确保所有必要的子元素存在 (Ensure all necessary child elements exist)
+        if (!this.iconElement) {
+            this.iconElement = this.container.querySelector('.status-icon') || this.createIconElement();
+        }
+        
+        if (!this.textElement) {
+            this.textElement = this.container.querySelector('.status-text') || this.createTextElement();
+        }
+        
+        if (!this.progressElement) {
+            this.progressElement = this.container.querySelector('.status-progress') || this.createProgressElement();
+        }
+        
+        // 初始隐藏 (Initially hidden)
+        this.container.style.display = 'none';
+    }
+    
+    /**
+     * 创建状态指示器容器 (Create status indicator container)
+     */
+    createStatusIndicator() {
+        this.container = document.createElement('div');
+        this.container.id = 'status-indicator';
+        this.container.className = 'status-indicator';
+        
+        // 添加到页面 (Add to page)
+        const chatContainer = document.querySelector('.chat-container') || document.body;
+        chatContainer.appendChild(this.container);
+    }
+    
+    /**
+     * 创建图标元素 (Create icon element)
+     */
+    createIconElement() {
+        const icon = document.createElement('i');
+        icon.className = 'status-icon';
+        this.container.appendChild(icon);
+        return icon;
+    }
+    
+    /**
+     * 创建文本元素 (Create text element)
+     */
+    createTextElement() {
+        const text = document.createElement('span');
+        text.className = 'status-text';
+        this.container.appendChild(text);
+        return text;
+    }
+    
+    /**
+     * 创建进度元素 (Create progress element)
+     */
+    createProgressElement() {
+        const progressContainer = document.createElement('div');
+        progressContainer.className = 'status-progress-container';
+        
+        const progressBar = document.createElement('div');
+        progressBar.className = 'status-progress';
+        
+        progressContainer.appendChild(progressBar);
+        this.container.appendChild(progressContainer);
+        
+        return progressBar;
+    }
+    
+    /**
+     * 显示状态指示器 (Show status indicator)
+     */
+    show(type, message, options = {}) {
+        const config = this.statusConfig[type] || this.statusConfig.info;
+        
+        // 清除之前的隐藏定时器 (Clear previous hide timeout)
+        if (this.hideTimeout) {
+            clearTimeout(this.hideTimeout);
+            this.hideTimeout = null;
+        }
+        
+        // 更新状态 (Update status)
+        this.currentStatus = type;
+        this.isVisible = true;
+        
+        // 更新样式类 (Update style classes)
+        this.container.className = `status-indicator ${config.className}`;
+        
+        // 更新图标 (Update icon)
+        if (this.iconElement) {
+            this.iconElement.className = `status-icon ${config.icon}`;
+        }
+        
+        // 更新文本 (Update text)
+        if (this.textElement) {
+            this.textElement.textContent = message;
+        }
+        
+        // 处理进度条 (Handle progress bar)
+        if (config.showProgress && this.progressElement) {
+            this.progressElement.parentElement.style.display = 'block';
+            this.updateProgress(options.progress || 0);
+        } else if (this.progressElement) {
+            this.progressElement.parentElement.style.display = 'none';
+        }
+        
+        // 显示容器 (Show container)
+        this.container.style.display = 'flex';
+        
+        // 添加显示动画 (Add show animation)
+        this.container.style.opacity = '0';
+        this.container.style.transform = 'translateY(-10px)';
+        
+        requestAnimationFrame(() => {
+            this.container.style.transition = 'all 0.3s ease-out';
+            this.container.style.opacity = '1';
+            this.container.style.transform = 'translateY(0)';
+        });
+        
+        // 自动隐藏设置 (Auto-hide setting)
+        const autoHideDelay = options.autoHide !== false ? (options.autoHideDelay || 3000) : null;
+        if (autoHideDelay && type !== 'loading' && type !== 'processing' && type !== 'recording') {
+            this.hideTimeout = setTimeout(() => {
+                this.hide();
+            }, autoHideDelay);
+        }
+        
+        // 触发回调 (Trigger callbacks)
+        this.onShow(type, message);
+        this.onStatusChange(type, message);
+    }
+    
+    /**
+     * 隐藏状态指示器 (Hide status indicator)
+     */
+    hide() {
+        if (!this.isVisible) return;
+        
+        // 清除隐藏定时器 (Clear hide timeout)
+        if (this.hideTimeout) {
+            clearTimeout(this.hideTimeout);
+            this.hideTimeout = null;
+        }
+        
+        // 添加隐藏动画 (Add hide animation)
+        this.container.style.transition = 'all 0.3s ease-in';
+        this.container.style.opacity = '0';
+        this.container.style.transform = 'translateY(-10px)';
+        
+        setTimeout(() => {
+            this.container.style.display = 'none';
+            this.isVisible = false;
+            this.currentStatus = null;
+            this.progressValue = 0;
+            
+            // 触发回调 (Trigger callback)
+            this.onHide();
+        }, 300);
+    }
+    
+    /**
+     * 更新进度 (Update progress)
+     */
+    updateProgress(value) {
+        this.progressValue = Math.max(0, Math.min(100, value));
+        
+        if (this.progressElement) {
+            this.progressElement.style.width = `${this.progressValue}%`;
+        }
+    }
+    
+    /**
+     * 更新状态消息 (Update status message)
+     */
+    updateMessage(message) {
+        if (this.textElement) {
+            this.textElement.textContent = message;
+        }
+    }
+    
+    /**
+     * 显示加载状态 (Show loading status)
+     */
+    showLoading(message = 'Loading...', options = {}) {
+        this.show('loading', message, { autoHide: false, ...options });
+    }
+    
+    /**
+     * 显示成功状态 (Show success status)
+     */
+    showSuccess(message = 'Success!', options = {}) {
+        this.show('success', message, { autoHideDelay: 2000, ...options });
+    }
+    
+    /**
+     * 显示错误状态 (Show error status)
+     */
+    showError(message = 'Error occurred', options = {}) {
+        this.show('error', message, { autoHideDelay: 5000, ...options });
+    }
+    
+    /**
+     * 显示警告状态 (Show warning status)
+     */
+    showWarning(message = 'Warning', options = {}) {
+        this.show('warning', message, { autoHideDelay: 4000, ...options });
+    }
+    
+    /**
+     * 显示信息状态 (Show info status)
+     */
+    showInfo(message = 'Information', options = {}) {
+        this.show('info', message, { autoHideDelay: 3000, ...options });
+    }
+    
+    /**
+     * 显示录音状态 (Show recording status)
+     */
+    showRecording(message = 'Recording...', options = {}) {
+        this.show('recording', message, { autoHide: false, ...options });
+    }
+    
+    /**
+     * 显示处理状态 (Show processing status)
+     */
+    showProcessing(message = 'Processing...', options = {}) {
+        this.show('processing', message, { autoHide: false, ...options });
+    }
+    
+    /**
+     * 显示播放状态 (Show playing status)
+     */
+    showPlaying(message = 'Playing audio...', options = {}) {
+        this.show('playing', message, { autoHide: false, ...options });
+    }
+    
+    /**
+     * 获取当前状态 (Get current status)
+     */
+    getCurrentStatus() {
+        return {
+            type: this.currentStatus,
+            isVisible: this.isVisible,
+            progress: this.progressValue
+        };
+    }
+    
+    /**
+     * 销毁状态指示器 (Destroy status indicator)
+     */
+    destroy() {
+        if (this.hideTimeout) {
+            clearTimeout(this.hideTimeout);
+        }
+        
+        if (this.container && this.container.parentNode) {
+            this.container.parentNode.removeChild(this.container);
+        }
+        
+        this.container = null;
+        this.textElement = null;
+        this.iconElement = null;
+        this.progressElement = null;
+    }
+}
+
+// --- AudioPlayer Class ---
+class AudioPlayer {
+    constructor(options = {}) {
+        this.audioElement = options.audioElement || document.getElementById('tts-audio');
+        this.isPlaying = false;
+        this.isPaused = false;
+        this.currentAudio = null;
+        this.playbackRate = 1.0;
+        this.volume = 1.0;
+        
+        // 回调函数 (Callback functions)
+        this.onPlayStart = options.onPlayStart || (() => {});
+        this.onPlayEnd = options.onPlayEnd || (() => {});
+        this.onPlayPause = options.onPlayPause || (() => {});
+        this.onPlayResume = options.onPlayResume || (() => {});
+        this.onError = options.onError || ((error) => console.error('AudioPlayer Error:', error));
+        this.onProgress = options.onProgress || (() => {});
+        
+        // 配置选项 (Configuration options)
+        this.autoPlay = options.autoPlay !== false; // 默认自动播放
+        this.showControls = options.showControls !== false; // 默认显示控制按钮
+        this.enableProgress = options.enableProgress !== false; // 默认启用进度跟踪
+        
+        // 进度跟踪 (Progress tracking)
+        this.progressInterval = null;
+        this.progressUpdateRate = options.progressUpdateRate || 100; // 100ms更新间隔
+        
+        this.initializeAudioElement();
+    }
+    
+    /**
+     * 初始化音频元素 (Initialize audio element)
+     */
+    initializeAudioElement() {
+        if (!this.audioElement) {
+            console.warn('Audio element not found, creating new one');
+            this.audioElement = document.createElement('audio');
+            this.audioElement.id = 'tts-audio';
+            this.audioElement.preload = 'none';
+            document.body.appendChild(this.audioElement);
+        }
+        
+        // 设置事件监听器 (Set up event listeners)
+        this.audioElement.addEventListener('ended', () => this.handlePlayEnd());
+        this.audioElement.addEventListener('error', (event) => this.handleError(event));
+        this.audioElement.addEventListener('loadstart', () => this.handleLoadStart());
+        this.audioElement.addEventListener('canplay', () => this.handleCanPlay());
+        this.audioElement.addEventListener('pause', () => this.handlePause());
+        this.audioElement.addEventListener('play', () => this.handlePlay());
+        
+        // 设置默认属性 (Set default properties)
+        this.audioElement.volume = this.volume;
+        this.audioElement.playbackRate = this.playbackRate;
+    }
+    
+    /**
+     * 播放Base64编码的音频 (Play Base64 encoded audio)
+     */
+    async playBase64Audio(base64Data, options = {}) {
+        if (!base64Data) {
+            this.onError(new Error('No audio data provided'));
+            return false;
+        }
+        
+        try {
+            // 停止当前播放 (Stop current playback)
+            this.stop();
+            
+            // 设置播放选项 (Set playback options)
+            const playbackRate = options.playbackRate || this.playbackRate;
+            const volume = options.volume !== undefined ? options.volume : this.volume;
+            const autoPlay = options.autoPlay !== undefined ? options.autoPlay : this.autoPlay;
+            
+            // 设置音频源 (Set audio source)
+            const audioSrc = base64Data.startsWith('data:') ? 
+                base64Data : `data:audio/mp3;base64,${base64Data}`;
+            
+            this.audioElement.src = audioSrc;
+            this.audioElement.playbackRate = playbackRate;
+            this.audioElement.volume = volume;
+            
+            // 存储当前音频信息 (Store current audio info)
+            this.currentAudio = {
+                base64Data: base64Data,
+                playbackRate: playbackRate,
+                volume: volume,
+                timestamp: Date.now()
+            };
+            
+            if (autoPlay) {
+                await this.audioElement.play();
+            }
+            
+            return true;
+            
+        } catch (error) {
+            this.onError(error);
+            return false;
+        }
+    }
+    
+    /**
+     * 播放音频 (Play audio)
+     */
+    async play() {
+        if (!this.audioElement.src) {
+            this.onError(new Error('No audio source available'));
+            return false;
+        }
+        
+        try {
+            await this.audioElement.play();
+            return true;
+        } catch (error) {
+            this.onError(error);
+            return false;
+        }
+    }
+    
+    /**
+     * 暂停播放 (Pause playback)
+     */
+    pause() {
+        if (this.isPlaying && !this.audioElement.paused) {
+            this.audioElement.pause();
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * 停止播放 (Stop playback)
+     */
+    stop() {
+        if (this.audioElement) {
+            this.audioElement.pause();
+            this.audioElement.currentTime = 0;
+            this.clearProgressTracking();
+            this.isPlaying = false;
+            this.isPaused = false;
+        }
+    }
+    
+    /**
+     * 重播当前音频 (Replay current audio)
+     */
+    async replay() {
+        if (this.currentAudio) {
+            return await this.playBase64Audio(this.currentAudio.base64Data, {
+                playbackRate: this.currentAudio.playbackRate,
+                volume: this.currentAudio.volume
+            });
+        } else {
+            this.onError(new Error('No audio to replay'));
+            return false;
+        }
+    }
+    
+    /**
+     * 设置播放速度 (Set playback rate)
+     */
+    setPlaybackRate(rate) {
+        if (rate > 0 && rate <= 3) {
+            this.playbackRate = rate;
+            if (this.audioElement) {
+                this.audioElement.playbackRate = rate;
+            }
+            if (this.currentAudio) {
+                this.currentAudio.playbackRate = rate;
+            }
+        }
+    }
+    
+    /**
+     * 设置音量 (Set volume)
+     */
+    setVolume(volume) {
+        if (volume >= 0 && volume <= 1) {
+            this.volume = volume;
+            if (this.audioElement) {
+                this.audioElement.volume = volume;
+            }
+            if (this.currentAudio) {
+                this.currentAudio.volume = volume;
+            }
+        }
+    }
+    
+    /**
+     * 获取播放状态 (Get playback state)
+     */
+    getState() {
+        return {
+            isPlaying: this.isPlaying,
+            isPaused: this.isPaused,
+            currentTime: this.audioElement ? this.audioElement.currentTime : 0,
+            duration: this.audioElement ? this.audioElement.duration : 0,
+            playbackRate: this.playbackRate,
+            volume: this.volume,
+            hasAudio: !!this.currentAudio
+        };
+    }
+    
+    /**
+     * 开始进度跟踪 (Start progress tracking)
+     */
+    startProgressTracking() {
+        if (!this.enableProgress) return;
+        
+        this.clearProgressTracking();
+        this.progressInterval = setInterval(() => {
+            if (this.isPlaying && this.audioElement) {
+                const progress = {
+                    currentTime: this.audioElement.currentTime,
+                    duration: this.audioElement.duration || 0,
+                    percentage: this.audioElement.duration ? 
+                        (this.audioElement.currentTime / this.audioElement.duration) * 100 : 0
+                };
+                this.onProgress(progress);
+            }
+        }, this.progressUpdateRate);
+    }
+    
+    /**
+     * 清除进度跟踪 (Clear progress tracking)
+     */
+    clearProgressTracking() {
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+            this.progressInterval = null;
+        }
+    }
+    
+    /**
+     * 处理播放开始事件 (Handle play start event)
+     */
+    handlePlay() {
+        this.isPlaying = true;
+        this.isPaused = false;
+        this.startProgressTracking();
+        this.onPlayStart();
+    }
+    
+    /**
+     * 处理播放结束事件 (Handle play end event)
+     */
+    handlePlayEnd() {
+        this.isPlaying = false;
+        this.isPaused = false;
+        this.clearProgressTracking();
+        this.onPlayEnd();
+    }
+    
+    /**
+     * 处理暂停事件 (Handle pause event)
+     */
+    handlePause() {
+        if (this.isPlaying) {
+            this.isPaused = true;
+            this.isPlaying = false;
+            this.clearProgressTracking();
+            this.onPlayPause();
+        }
+    }
+    
+    /**
+     * 处理错误事件 (Handle error event)
+     */
+    handleError(event) {
+        this.isPlaying = false;
+        this.isPaused = false;
+        this.clearProgressTracking();
+        
+        const error = new Error(`Audio playback error: ${event.target.error?.message || 'Unknown error'}`);
+        this.onError(error);
+    }
+    
+    /**
+     * 处理加载开始事件 (Handle load start event)
+     */
+    handleLoadStart() {
+        // 可以在这里添加加载状态指示
+    }
+    
+    /**
+     * 处理可以播放事件 (Handle can play event)
+     */
+    handleCanPlay() {
+        // 音频已准备好播放
+    }
+    
+    /**
+     * 销毁播放器实例 (Destroy player instance)
+     */
+    destroy() {
+        this.stop();
+        this.clearProgressTracking();
+        
+        if (this.audioElement) {
+            // 移除事件监听器 (Remove event listeners)
+            this.audioElement.removeEventListener('ended', this.handlePlayEnd);
+            this.audioElement.removeEventListener('error', this.handleError);
+            this.audioElement.removeEventListener('loadstart', this.handleLoadStart);
+            this.audioElement.removeEventListener('canplay', this.handleCanPlay);
+            this.audioElement.removeEventListener('pause', this.handlePause);
+            this.audioElement.removeEventListener('play', this.handlePlay);
+        }
+        
+        this.currentAudio = null;
+    }
+}
+
 // --- AudioProcessor Class ---
 class AudioProcessor {
     constructor(options = {}) {
@@ -433,8 +2103,58 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
     const chatBox = document.getElementById('chat-box');
     const inputArea = document.getElementById('input-area');
     const confirmationArea = document.getElementById('confirmation-area');
-    const statusIndicator = document.getElementById('status-indicator');
-    const statusText = document.getElementById('status-text');
+    
+    // 创建状态指示器实例 (Create status indicator instance)
+    const statusIndicator = new StatusIndicator({
+        container: document.getElementById('status-indicator'),
+        textElement: document.getElementById('status-text'),
+        iconElement: document.getElementById('status-icon'),
+        progressElement: document.getElementById('status-progress'),
+        onShow: (type, message) => {
+            console.log(`Status shown: ${type} - ${message}`);
+        },
+        onHide: () => {
+            console.log('Status hidden');
+        },
+        onStatusChange: (type, message) => {
+            console.log(`Status changed: ${type} - ${message}`);
+        }
+    });
+    
+    // 创建错误处理器实例 (Create error handler instance)
+    const errorHandler = new ErrorHandler({
+        statusIndicator: statusIndicator,
+        maxRetries: 3,
+        retryDelay: 1000,
+        retryMultiplier: 2,
+        onError: (error, errorType, context) => {
+            console.error(`Error handled by ErrorHandler: ${errorType}`, error, context);
+        },
+        onRetry: (operationId, attempt) => {
+            console.log(`Retrying operation ${operationId}, attempt ${attempt}`);
+        },
+        onRetrySuccess: (operationId, attempts) => {
+            console.log(`Operation ${operationId} succeeded after ${attempts} attempts`);
+        },
+        onRetryFailed: (operationId, attempts) => {
+            console.error(`Operation ${operationId} failed after ${attempts} attempts`);
+        }
+    });
+    
+    // 创建UX增强器实例 (Create UX enhancer instance)
+    const uxEnhancer = new UXEnhancer({
+        statusIndicator: statusIndicator,
+        errorHandler: errorHandler,
+        onShortcut: (action, event) => {
+            console.log(`Keyboard shortcut executed: ${action}`);
+        },
+        onUndo: (operation) => {
+            console.log(`Operation undone:`, operation);
+        },
+        onHelp: (visible) => {
+            console.log(`Help ${visible ? 'shown' : 'hidden'}`);
+        }
+    });
     
     // Input Controls
     const textInput = document.getElementById('text-input');
@@ -458,6 +2178,53 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
 
     // Audio element for TTS
     const ttsAudio = document.getElementById('tts-audio');
+    
+    // 创建音频播放器实例 (Create audio player instance)
+    const audioPlayer = new AudioPlayer({
+        audioElement: ttsAudio,
+        onPlayStart: () => {
+            console.log('TTS audio playback started');
+            showAudioPlaybackStatus('playing');
+            updateAudioControlsState('playing');
+        },
+        onPlayEnd: () => {
+            console.log('TTS audio playback ended');
+            showAudioPlaybackStatus('completed');
+            updateAudioControlsState('stopped');
+            
+            // 播放完成后重置状态 (Reset state after playback completion)
+            setTimeout(() => {
+                hideStatus();
+            }, 1000);
+        },
+        onPlayPause: () => {
+            console.log('TTS audio playback paused');
+            showAudioPlaybackStatus('paused');
+            updateAudioControlsState('paused');
+        },
+        onPlayResume: () => {
+            console.log('TTS audio playback resumed');
+            showAudioPlaybackStatus('playing');
+            updateAudioControlsState('playing');
+        },
+        onError: (error) => {
+            console.error('TTS audio playback error:', error);
+            showAudioPlaybackStatus('error');
+            updateAudioControlsState('error');
+            
+            // 错误后重置状态 (Reset state after error)
+            setTimeout(() => {
+                hideStatus();
+            }, 3000);
+        },
+        onProgress: (progress) => {
+            // 更新进度条 (Update progress bar)
+            updateAudioProgress(progress);
+        },
+        autoPlay: true,
+        showControls: true,
+        enableProgress: true
+    });
 
     // 录音计时器相关变量 (Recording timer related variables)
     let recordingTimer = null;
@@ -533,6 +2300,25 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
     retranslateBtn.addEventListener('click', retranslateEditedText);
     sendTextBtn.addEventListener('click', sendTypedMessage);
     
+    // Audio control event listeners
+    const replayTtsBtn = document.getElementById('replay-tts-btn');
+    const slowTtsBtn = document.getElementById('slow-tts-btn');
+    const stopTtsBtn = document.getElementById('stop-tts-btn');
+    const playTtsBtn = document.getElementById('play-tts-btn');
+    
+    if (replayTtsBtn) {
+        replayTtsBtn.addEventListener('click', replayCurrentAudio);
+    }
+    if (slowTtsBtn) {
+        slowTtsBtn.addEventListener('click', playSlowAudio);
+    }
+    if (stopTtsBtn) {
+        stopTtsBtn.addEventListener('click', stopCurrentAudio);
+    }
+    if (playTtsBtn) {
+        playTtsBtn.addEventListener('click', playCurrentAudio);
+    }
+    
     // Handle Enter key in text input
     textInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -579,6 +2365,41 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
                         toggleTextEditing();
                     }
                 }
+            }
+        } else {
+            // 全局音频控制快捷键 (Global audio control shortcuts)
+            if (e.key === ' ' && (e.ctrlKey || e.metaKey)) {
+                // Ctrl/Cmd + Space: 暂停/恢复播放 (Pause/resume playback)
+                e.preventDefault();
+                toggleAudioPlayback();
+            } else if (e.key === 'r' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+                // Ctrl/Cmd + Shift + R: 重播音频 (Replay audio)
+                e.preventDefault();
+                replayCurrentAudio();
+            } else if (e.key === 's' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+                // Ctrl/Cmd + Shift + S: 停止播放 (Stop playback)
+                e.preventDefault();
+                stopCurrentAudio();
+            } else if (e.key === 'ArrowUp' && (e.ctrlKey || e.metaKey)) {
+                // Ctrl/Cmd + Arrow Up: 增加音量 (Increase volume)
+                e.preventDefault();
+                const currentVolume = audioPlayer.volume;
+                setAudioVolume(Math.min(1, currentVolume + 0.1));
+            } else if (e.key === 'ArrowDown' && (e.ctrlKey || e.metaKey)) {
+                // Ctrl/Cmd + Arrow Down: 减少音量 (Decrease volume)
+                e.preventDefault();
+                const currentVolume = audioPlayer.volume;
+                setAudioVolume(Math.max(0, currentVolume - 0.1));
+            } else if (e.key === 'ArrowRight' && (e.ctrlKey || e.metaKey)) {
+                // Ctrl/Cmd + Arrow Right: 加速播放 (Increase speed)
+                e.preventDefault();
+                const currentRate = audioPlayer.playbackRate;
+                setAudioPlaybackRate(Math.min(3, currentRate + 0.25));
+            } else if (e.key === 'ArrowLeft' && (e.ctrlKey || e.metaKey)) {
+                // Ctrl/Cmd + Arrow Left: 减速播放 (Decrease speed)
+                e.preventDefault();
+                const currentRate = audioPlayer.playbackRate;
+                setAudioPlaybackRate(Math.max(0.25, currentRate - 0.25));
             }
         }
     });
@@ -636,28 +2457,17 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
 
     // --- UI State Management ---
     function showStatus(message) {
-        statusText.textContent = message;
-        statusIndicator.style.display = 'block';
-        
-        // 重置状态图标 (Reset status icon)
-        const statusIcon = document.getElementById('status-icon');
-        statusIcon.className = 'fas fa-circle-notch fa-spin';
-        statusIcon.style.marginRight = '0.5rem';
+        statusIndicator.showLoading(message);
     }
     
     function showRecordingStatus(message) {
-        statusText.textContent = message;
-        statusIndicator.style.display = 'block';
-        
-        // 显示录音图标 (Show recording icon)
-        const statusIcon = document.getElementById('status-icon');
-        statusIcon.className = 'fas fa-microphone';
-        statusIcon.style.marginRight = '0.5rem';
-        statusIcon.style.color = '#ef4444';
+        statusIndicator.showRecording(message);
         
         // 显示录音计时器 (Show recording timer)
         const recordingTimerEl = document.getElementById('recording-timer');
-        recordingTimerEl.style.display = 'block';
+        if (recordingTimerEl) {
+            recordingTimerEl.style.display = 'block';
+        }
         
         // 禁用文本输入和发送按钮 (Disable text input and send button)
         textInput.disabled = true;
@@ -665,18 +2475,13 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
     }
     
     function showProcessingStatus(message) {
-        statusText.textContent = message;
-        statusIndicator.style.display = 'block';
-        
-        // 显示处理图标 (Show processing icon)
-        const statusIcon = document.getElementById('status-icon');
-        statusIcon.className = 'fas fa-cog fa-spin';
-        statusIcon.style.marginRight = '0.5rem';
-        statusIcon.style.color = '#3b82f6';
+        statusIndicator.showProcessing(message);
         
         // 隐藏录音计时器 (Hide recording timer)
         const recordingTimerEl = document.getElementById('recording-timer');
-        recordingTimerEl.style.display = 'none';
+        if (recordingTimerEl) {
+            recordingTimerEl.style.display = 'none';
+        }
         
         // 禁用所有输入控件 (Disable all input controls)
         textInput.disabled = true;
@@ -685,26 +2490,51 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
     }
     
     function showErrorStatus(message) {
-        statusText.textContent = message;
-        statusIndicator.style.display = 'block';
-        
-        // 显示错误图标 (Show error icon)
-        const statusIcon = document.getElementById('status-icon');
-        statusIcon.className = 'fas fa-exclamation-triangle';
-        statusIcon.style.marginRight = '0.5rem';
-        statusIcon.style.color = '#ef4444';
+        statusIndicator.showError(message);
         
         // 隐藏录音计时器 (Hide recording timer)
         const recordingTimerEl = document.getElementById('recording-timer');
-        recordingTimerEl.style.display = 'none';
+        if (recordingTimerEl) {
+            recordingTimerEl.style.display = 'none';
+        }
+    }
+    
+    function showSuccessStatus(message) {
+        statusIndicator.showSuccess(message);
+    }
+    
+    function showAudioPlaybackStatus(status) {
+        let message;
+        switch(status) {
+            case 'playing':
+                message = 'Playing audio...';
+                statusIndicator.showPlaying(message);
+                break;
+            case 'paused':
+                message = 'Audio paused';
+                statusIndicator.showInfo(message);
+                break;
+            case 'completed':
+                message = 'Audio completed';
+                statusIndicator.showSuccess(message);
+                break;
+            case 'error':
+                message = 'Audio playback error';
+                statusIndicator.showError(message);
+                break;
+            default:
+                return;
+        }
     }
 
     function hideStatus() {
-        statusIndicator.style.display = 'none';
+        statusIndicator.hide();
         
         // 隐藏录音计时器 (Hide recording timer)
         const recordingTimerEl = document.getElementById('recording-timer');
-        recordingTimerEl.style.display = 'none';
+        if (recordingTimerEl) {
+            recordingTimerEl.style.display = 'none';
+        }
         
         // 重新启用所有输入控件 (Re-enable all input controls)
         textInput.disabled = false;
@@ -751,6 +2581,18 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
     let currentConfirmationData = null;
     let isEditingText = false;
     let originalTranscribedText = '';
+    
+    // 存储当前AI回复数据 (Store current AI response data)
+    let currentAIResponse = null;
+    
+    // 音频播放用户偏好设置 (Audio playback user preferences)
+    let audioPreferences = {
+        autoPlay: true,
+        defaultVolume: 1.0,
+        defaultSpeed: 1.0,
+        showControls: true,
+        enableKeyboardShortcuts: true
+    };
     
     function showConfirmation(transcribed, english) {
         return showConfirmationWithValidation(transcribed, english, null);
@@ -962,6 +2804,12 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
             currentConfirmationData.originalText = originalTranscribedText;
         }
         
+        // 记录操作用于撤销 (Record operation for undo)
+        uxEnhancer.recordOperation('text_edited', {
+            previousText: originalTranscribedText,
+            newText: editedText
+        });
+        
         // 结束编辑模式 (End editing mode)
         setTimeout(() => {
             endTextEditing();
@@ -1003,6 +2851,7 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
     
     async function retranslateEditedText() {
         const editedText = transcribedTextEditor.value.trim();
+        const operationId = `retranslate_${Date.now()}`;
         
         if (!editedText) {
             showErrorStatus('Please enter some text to translate.');
@@ -1014,7 +2863,7 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
         retranslateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Translating...';
         retranslateBtn.disabled = true;
         
-        try {
+        const retranslateOperation = async () => {
             showProcessingStatus('Re-translating text...');
             
             // 调用翻译API (Call translation API)
@@ -1030,12 +2879,16 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
             });
             
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const error = new Error(`HTTP ${response.status}: ${response.statusText}`);
+                error.status = response.status;
+                throw error;
             }
             
             const data = await response.json();
             if (!data.success) {
-                throw new Error(data.error || 'Re-translation failed.');
+                const error = new Error(data.error || 'Re-translation failed.');
+                error.status = data.status;
+                throw error;
             }
             
             // 更新英文翻译 (Update English translation)
@@ -1053,10 +2906,22 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
                 english: data.english_translation 
             });
             
+            return data;
+        };
+        
+        try {
+            return await retranslateOperation();
         } catch (error) {
             console.error('Re-translation Error:', error);
-            showErrorStatus('Re-translation failed. Please try again.');
-            setTimeout(() => hideStatus(), 3000);
+            
+            // 使用错误处理器处理错误 (Use error handler to handle error)
+            const handled = await errorHandler.handleError(error, {
+                operationId: operationId,
+                retryFunction: retranslateOperation,
+                context: 'retranslation'
+            });
+            
+            return handled;
         } finally {
             // 重置重新翻译按钮状态 (Reset re-translate button state)
             retranslateBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Re-translate';
@@ -1157,16 +3022,18 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
     }
     
     // --- Audio Processing ---
-    async function transcribeAudio(audioBlob, retryCount = 0) {
-        const maxRetries = 2;
+    async function transcribeAudio(audioBlob) {
+        const operationId = `transcribe_${Date.now()}`;
         
-        try {
+        const transcribeOperation = async () => {
             showProcessingStatus('Processing audio...');
             
             // 验证音频文件 (Validate audio file)
             const validation = audioProcessor.validateAudioFile(audioBlob);
             if (!validation.isValid) {
-                throw new Error(`Audio validation failed: ${validation.errors.join(', ')}`);
+                const error = new Error(`Audio validation failed: ${validation.errors.join(', ')}`);
+                error.name = 'AudioValidationError';
+                throw error;
             }
             
             // 处理音频文件 (Process audio file)
@@ -1190,45 +3057,36 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
             });
             
             if (!data.success) {
-                throw new Error(data.error || 'Transcription failed.');
+                const error = new Error(data.error || 'Transcription failed.');
+                error.status = data.status;
+                throw error;
             }
             
             hideStatus();
             
             // 集成确认流程到聊天逻辑 (Integrate confirmation flow into chat logic)
             showConfirmationWithValidation(data.chinese_text, data.english_translation, data);
-
+            
+            return data;
+        };
+        
+        try {
+            return await transcribeOperation();
         } catch (error) {
             console.error('Transcription Error:', error);
             
-            // 如果是网络错误且还有重试次数，则重试 (Retry if network error and retries available)
-            if ((error.message.includes('network') || error.message.includes('timeout')) && retryCount < maxRetries) {
-                console.log(`Retrying transcription... (${retryCount + 1}/${maxRetries})`);
-                showProcessingStatus(`Retrying... (${retryCount + 1}/${maxRetries})`);
-                
-                // 等待1秒后重试 (Wait 1 second before retry)
-                setTimeout(() => {
-                    transcribeAudio(audioBlob, retryCount + 1);
-                }, 1000);
-                return;
+            // 使用错误处理器处理错误 (Use error handler to handle error)
+            const handled = await errorHandler.handleError(error, {
+                operationId: operationId,
+                retryFunction: transcribeOperation,
+                context: 'audio_transcription'
+            });
+            
+            if (!handled) {
+                setTimeout(() => resetInputState(), 3000);
             }
             
-            // 显示用户友好的错误信息 (Show user-friendly error message)
-            let errorMessage = 'Transcription failed. ';
-            if (error.message.includes('too large')) {
-                errorMessage = 'Audio file is too large. Please record a shorter message.';
-            } else if (error.message.includes('empty')) {
-                errorMessage = 'No audio was recorded. Please try again.';
-            } else if (error.message.includes('format')) {
-                errorMessage = 'Audio format not supported. Please try again.';
-            } else if (error.message.includes('network') || error.message.includes('HTTP') || error.message.includes('timeout')) {
-                errorMessage = 'Network error. Please check your connection and try again.';
-            } else {
-                errorMessage += 'Please try again.';
-            }
-            
-            showErrorStatus(errorMessage);
-            setTimeout(() => resetInputState(), 3000);
+            return handled;
         }
     }
 
@@ -1343,6 +3201,7 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
     async function sendMessageWithMetadata(messageData) {
         const message = messageData.text;
         const inputMethod = messageData.inputMethod || 'text';
+        const operationId = `send_message_${Date.now()}`;
         
         // Add user message to chat immediately
         appendMessage('user', { 
@@ -1351,9 +3210,16 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
             english_translation: messageData.englishTranslation
         });
         
-        showProcessingStatus('AI is thinking...');
+        // 记录操作用于撤销 (Record operation for undo)
+        uxEnhancer.recordOperation('message_sent', {
+            message: message,
+            inputMethod: inputMethod,
+            englishTranslation: messageData.englishTranslation
+        });
+        
+        const sendOperation = async () => {
+            showProcessingStatus('AI is thinking...');
 
-        try {
             // 准备发送数据 (Prepare data to send)
             const requestData = { 
                 message: message, 
@@ -1376,12 +3242,16 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
             });
             
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const error = new Error(`HTTP ${response.status}: ${response.statusText}`);
+                error.status = response.status;
+                throw error;
             }
             
             const data = await response.json();
             if (!data.success) {
-                throw new Error(data.error || 'Chat API failed.');
+                const error = new Error(data.error || 'Chat API failed.');
+                error.status = data.status;
+                throw error;
             }
             
             // Add AI response with delay for better UX
@@ -1393,9 +3263,9 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
                     updateTokenDisplay(data.token_info);
                 }
                 
-                // Play TTS audio if available
+                // Play TTS audio if available with enhanced state management
                 if (data.tts_audio) {
-                    playAudio(data.tts_audio);
+                    playAudioWithStateManagement(data.tts_audio, data.ai_response);
                 }
                 
                 // Show conversation end message if needed
@@ -1409,23 +3279,31 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
                     hasTranslation: !!messageData.englishTranslation
                 });
             }, 500);
+            
+            return data;
+        };
 
+        try {
+            return await sendOperation();
         } catch (error) {
             console.error('Chat Error:', error);
             
-            // 显示用户友好的错误信息 (Show user-friendly error message)
-            let errorMessage = 'Failed to send message. ';
-            if (error.message.includes('network') || error.message.includes('HTTP')) {
-                errorMessage += 'Please check your connection and try again.';
-            } else {
-                errorMessage += 'Please try again.';
+            // 使用错误处理器处理错误 (Use error handler to handle error)
+            const handled = await errorHandler.handleError(error, {
+                operationId: operationId,
+                retryFunction: sendOperation,
+                context: 'chat_message'
+            });
+            
+            if (!handled) {
+                setTimeout(() => resetInputState(), 3000);
             }
             
-            showErrorStatus(errorMessage);
-            setTimeout(() => resetInputState(), 3000);
+            return handled;
         } finally {
             // 只有在没有错误时才重置状态 (Only reset state if no error)
-            if (!document.getElementById('status-indicator').style.display.includes('block')) {
+            if (!statusIndicator.getCurrentStatus().isVisible || 
+                statusIndicator.getCurrentStatus().type === 'success') {
                 resetInputState();
             }
         }
@@ -1462,6 +3340,21 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
                 <div class="chinese-text">${content.chinese}</div>
                 <hr class="pinyin-divider">
                 <div class="pinyin-text">${content.pinyin}</div>
+                <div class="audio-status-indicator" id="audio-status-${Date.now()}" style="
+                    margin-top: 0.75rem;
+                    padding: 0.5rem;
+                    background: rgba(59, 130, 246, 0.1);
+                    border: 1px solid rgba(59, 130, 246, 0.2);
+                    border-radius: 0.5rem;
+                    font-size: 0.75rem;
+                    color: #3b82f6;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                ">
+                    <i class="fas fa-volume-up" style="color: #3b82f6;"></i>
+                    <span>Audio will play automatically</span>
+                </div>
             `;
         } else {
             let userMessageHtml = `<div class="chinese-text">${content.chinese_text}</div>`;
@@ -1515,16 +3408,465 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
 
     // --- Audio Playback ---
     function playAudio(base64Audio) {
-        if (base64Audio && ttsAudio) {
-            try {
-                ttsAudio.src = 'data:audio/mp3;base64,' + base64Audio;
-                ttsAudio.play().catch(error => {
-                    console.error('Audio playback failed:', error);
-                });
-            } catch (error) {
-                console.error('Audio setup failed:', error);
+        if (base64Audio) {
+            audioPlayer.playBase64Audio(base64Audio).catch(error => {
+                console.error('Audio playback failed:', error);
+            });
+        }
+    }
+    
+    /**
+     * 播放音频并管理状态 (Play audio with state management)
+     */
+    function playAudioWithStateManagement(base64Audio, aiResponse) {
+        if (!base64Audio) {
+            console.warn('No TTS audio available for AI response');
+            return;
+        }
+        
+        // 存储当前AI回复信息用于重播 (Store current AI response info for replay)
+        currentAIResponse = {
+            audio: base64Audio,
+            response: aiResponse,
+            timestamp: Date.now()
+        };
+        
+        // 显示播放状态指示器 (Show playback status indicator)
+        showAudioPlaybackStatus('preparing');
+        
+        // 播放音频 (Play audio)
+        audioPlayer.playBase64Audio(base64Audio, {
+            autoPlay: true,
+            playbackRate: 1.0,
+            volume: 1.0
+        }).then(success => {
+            if (success) {
+                console.log('AI response TTS playback started successfully');
+            } else {
+                console.error('Failed to start AI response TTS playback');
+                showAudioPlaybackStatus('error');
+            }
+        }).catch(error => {
+            console.error('AI response TTS playback error:', error);
+            showAudioPlaybackStatus('error');
+        });
+    }
+    
+    // --- Audio Control Functions ---
+    function updateAudioControlsState(state) {
+        // 更新音频控制按钮状态 (Update audio control button states)
+        const audioControlButtons = document.querySelectorAll('.audio-control-btn');
+        
+        audioControlButtons.forEach(btn => {
+            btn.classList.remove('playing', 'paused', 'error');
+            
+            switch(state) {
+                case 'playing':
+                    if (btn.id === 'stop-tts-btn') {
+                        btn.classList.add('playing');
+                        btn.disabled = false;
+                    } else {
+                        btn.disabled = true;
+                    }
+                    break;
+                    
+                case 'paused':
+                    btn.classList.add('paused');
+                    btn.disabled = false;
+                    break;
+                    
+                case 'stopped':
+                case 'error':
+                    btn.disabled = false;
+                    if (state === 'error') {
+                        btn.classList.add('error');
+                    }
+                    break;
+                    
+                default:
+                    btn.disabled = false;
+                    break;
+            }
+        });
+        
+        console.log('Audio control state updated:', state);
+    }
+    
+    function showAudioFeedback(message, type = 'info') {
+        // 显示音频反馈信息 (Show audio feedback information)
+        const feedbackElement = document.getElementById('audio-feedback');
+        const feedbackMessage = document.getElementById('feedback-message');
+        
+        if (feedbackElement && feedbackMessage) {
+            // 更新消息内容 (Update message content)
+            const textSpan = feedbackMessage.querySelector('span') || feedbackMessage;
+            textSpan.textContent = message;
+            
+            // 更新图标和样式 (Update icon and style)
+            const icon = feedbackMessage.querySelector('i');
+            if (icon) {
+                switch(type) {
+                    case 'success':
+                        icon.className = 'fas fa-check-circle';
+                        feedbackMessage.className = 'feedback-message success';
+                        break;
+                    case 'error':
+                        icon.className = 'fas fa-exclamation-triangle';
+                        feedbackMessage.className = 'feedback-message error';
+                        break;
+                    case 'info':
+                    default:
+                        icon.className = 'fas fa-info-circle';
+                        feedbackMessage.className = 'feedback-message';
+                        break;
+                }
+            }
+            
+            // 显示反馈区域 (Show feedback area)
+            feedbackElement.style.display = 'block';
+            
+            // 自动隐藏成功和信息消息 (Auto-hide success and info messages)
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    if (feedbackElement) {
+                        feedbackElement.style.display = 'none';
+                    }
+                }, 3000);
             }
         }
+        
+        console.log(`Audio feedback [${type}]:`, message);
+    }
+    
+    function updateAudioProgress(progress) {
+        // 更新音频进度条 (Update audio progress bar)
+        const progressBar = document.querySelector('.audio-progress-bar');
+        
+        if (progressBar && progress.duration > 0) {
+            const percentage = Math.min(100, Math.max(0, progress.percentage));
+            progressBar.style.width = `${percentage}%`;
+            
+            // 更新时间显示 (Update time display)
+            const timeDisplay = document.getElementById('audio-time-display');
+            if (timeDisplay) {
+                const currentMinutes = Math.floor(progress.currentTime / 60);
+                const currentSeconds = Math.floor(progress.currentTime % 60);
+                const totalMinutes = Math.floor(progress.duration / 60);
+                const totalSeconds = Math.floor(progress.duration % 60);
+                
+                timeDisplay.textContent = 
+                    `${currentMinutes}:${currentSeconds.toString().padStart(2, '0')} / ` +
+                    `${totalMinutes}:${totalSeconds.toString().padStart(2, '0')}`;
+            }
+        }
+        
+        console.log('Audio progress updated:', progress);
+    }
+    
+    /**
+     * 显示音频播放状态 (Show audio playback status)
+     */
+    function showAudioPlaybackStatus(status) {
+        const statusMessages = {
+            'preparing': 'Preparing audio...',
+            'playing': 'Playing AI response...',
+            'paused': 'Audio paused',
+            'stopped': 'Audio stopped',
+            'error': 'Audio playback failed',
+            'completed': 'Audio playback completed'
+        };
+        
+        const message = statusMessages[status] || 'Audio status unknown';
+        const type = status === 'error' ? 'error' : 
+                    status === 'completed' ? 'success' : 'info';
+        
+        // 显示状态在聊天界面 (Show status in chat interface)
+        if (status === 'preparing' || status === 'playing') {
+            showStatus(message);
+        } else {
+            hideStatus();
+        }
+        
+        // 显示音频反馈 (Show audio feedback)
+        showAudioFeedback(message, type);
+        
+        console.log('Audio playback status:', status, message);
+    }
+    
+    // --- Audio Control Functions ---
+    
+    /**
+     * 重播当前音频 (Replay current audio)
+     */
+    function replayCurrentAudio() {
+        if (currentAIResponse && currentAIResponse.audio) {
+            console.log('Replaying current AI response audio');
+            showAudioPlaybackStatus('preparing');
+            
+            audioPlayer.playBase64Audio(currentAIResponse.audio, {
+                autoPlay: true,
+                playbackRate: 1.0,
+                volume: audioPlayer.volume
+            }).catch(error => {
+                console.error('Replay failed:', error);
+                showAudioPlaybackStatus('error');
+            });
+        } else {
+            console.warn('No audio available to replay');
+            showAudioFeedback('No audio available to replay', 'error');
+        }
+    }
+    
+    /**
+     * 慢速播放当前音频 (Play current audio slowly)
+     */
+    function playSlowAudio() {
+        if (currentAIResponse && currentAIResponse.audio) {
+            console.log('Playing current AI response audio slowly');
+            showAudioPlaybackStatus('preparing');
+            
+            audioPlayer.playBase64Audio(currentAIResponse.audio, {
+                autoPlay: true,
+                playbackRate: 0.7, // 70% speed for slow playback
+                volume: audioPlayer.volume
+            }).catch(error => {
+                console.error('Slow playback failed:', error);
+                showAudioPlaybackStatus('error');
+            });
+        } else {
+            console.warn('No audio available for slow playback');
+            showAudioFeedback('No audio available for slow playback', 'error');
+        }
+    }
+    
+    /**
+     * 停止当前音频播放 (Stop current audio playback)
+     */
+    function stopCurrentAudio() {
+        console.log('Stopping current audio playback');
+        audioPlayer.stop();
+        showAudioPlaybackStatus('stopped');
+    }
+    
+    /**
+     * 播放当前音频 (Play current audio)
+     */
+    function playCurrentAudio() {
+        if (currentAIResponse && currentAIResponse.audio) {
+            console.log('Playing current AI response audio');
+            showAudioPlaybackStatus('preparing');
+            
+            audioPlayer.playBase64Audio(currentAIResponse.audio, {
+                autoPlay: true,
+                playbackRate: 1.0,
+                volume: audioPlayer.volume
+            }).catch(error => {
+                console.error('Playback failed:', error);
+                showAudioPlaybackStatus('error');
+            });
+        } else {
+            console.warn('No audio available to play');
+            showAudioFeedback('No audio available to play', 'error');
+        }
+    }
+    
+    /**
+     * 暂停/恢复音频播放 (Pause/resume audio playback)
+     */
+    function toggleAudioPlayback() {
+        const state = audioPlayer.getState();
+        
+        if (state.isPlaying) {
+            audioPlayer.pause();
+            console.log('Audio playback paused');
+        } else if (state.isPaused) {
+            audioPlayer.play().catch(error => {
+                console.error('Resume playback failed:', error);
+                showAudioPlaybackStatus('error');
+            });
+            console.log('Audio playback resumed');
+        } else {
+            // If not playing or paused, start playing current audio
+            playCurrentAudio();
+        }
+    }
+    
+    /**
+     * 设置音频播放速度 (Set audio playback speed)
+     */
+    function setAudioPlaybackRate(rate) {
+        if (rate > 0 && rate <= 3) {
+            audioPlayer.setPlaybackRate(rate);
+            updateAudioPreference('defaultSpeed', rate);
+            console.log('Audio playback rate set to:', rate);
+            
+            // 如果正在播放，重新开始以应用新速度 (If playing, restart to apply new speed)
+            if (audioPlayer.getState().isPlaying && currentAIResponse) {
+                audioPlayer.playBase64Audio(currentAIResponse.audio, {
+                    autoPlay: true,
+                    playbackRate: rate,
+                    volume: audioPlayer.volume
+                });
+            }
+        }
+    }
+    
+    /**
+     * 设置音频音量 (Set audio volume)
+     */
+    function setAudioVolume(volume) {
+        if (volume >= 0 && volume <= 1) {
+            audioPlayer.setVolume(volume);
+            updateAudioPreference('defaultVolume', volume);
+            console.log('Audio volume set to:', volume);
+            showAudioFeedback(`Volume set to ${Math.round(volume * 100)}%`, 'info');
+        }
+    }
+    
+    /**
+     * 创建音频控制面板 (Create audio control panel)
+     */
+    function createAudioControlPanel() {
+        // 这个函数可以在未来扩展以创建更高级的控制面板
+        // This function can be expanded in the future to create more advanced control panels
+        const controlPanel = document.createElement('div');
+        controlPanel.id = 'advanced-audio-controls';
+        controlPanel.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none;
+        `;
+        
+        controlPanel.innerHTML = `
+            <div style="margin-bottom: 0.5rem; font-weight: 600; color: #374151;">
+                Audio Controls
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <div>
+                    <label style="font-size: 0.75rem; color: #6b7280;">Volume:</label>
+                    <input type="range" id="volume-slider" min="0" max="100" value="100" 
+                           style="width: 100%; margin-top: 0.25rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; color: #6b7280;">Speed:</label>
+                    <select id="speed-selector" style="width: 100%; margin-top: 0.25rem; padding: 0.25rem;">
+                        <option value="0.5">0.5x (Very Slow)</option>
+                        <option value="0.7">0.7x (Slow)</option>
+                        <option value="1.0" selected>1.0x (Normal)</option>
+                        <option value="1.25">1.25x (Fast)</option>
+                        <option value="1.5">1.5x (Very Fast)</option>
+                    </select>
+                </div>
+                <button onclick="document.getElementById('advanced-audio-controls').style.display='none'" 
+                        style="margin-top: 0.5rem; padding: 0.25rem; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 0.25rem; cursor: pointer;">
+                    Close
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(controlPanel);
+        
+        // 添加事件监听器 (Add event listeners)
+        const volumeSlider = document.getElementById('volume-slider');
+        const speedSelector = document.getElementById('speed-selector');
+        
+        if (volumeSlider) {
+            volumeSlider.addEventListener('input', (e) => {
+                setAudioVolume(e.target.value / 100);
+            });
+        }
+        
+        if (speedSelector) {
+            speedSelector.addEventListener('change', (e) => {
+                setAudioPlaybackRate(parseFloat(e.target.value));
+            });
+        }
+        
+        return controlPanel;
+    }
+    
+    // --- User Preferences Functions ---
+    
+    /**
+     * 加载用户音频偏好设置 (Load user audio preferences)
+     */
+    function loadAudioPreferences() {
+        try {
+            const saved = localStorage.getItem('speak_practice_audio_preferences');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                audioPreferences = { ...audioPreferences, ...parsed };
+                
+                // 应用加载的偏好设置 (Apply loaded preferences)
+                audioPlayer.setVolume(audioPreferences.defaultVolume);
+                audioPlayer.setPlaybackRate(audioPreferences.defaultSpeed);
+                
+                console.log('Audio preferences loaded:', audioPreferences);
+            }
+        } catch (error) {
+            console.warn('Failed to load audio preferences:', error);
+        }
+    }
+    
+    /**
+     * 保存用户音频偏好设置 (Save user audio preferences)
+     */
+    function saveAudioPreferences() {
+        try {
+            localStorage.setItem('speak_practice_audio_preferences', JSON.stringify(audioPreferences));
+            console.log('Audio preferences saved:', audioPreferences);
+        } catch (error) {
+            console.warn('Failed to save audio preferences:', error);
+        }
+    }
+    
+    /**
+     * 更新音频偏好设置 (Update audio preferences)
+     */
+    function updateAudioPreference(key, value) {
+        if (audioPreferences.hasOwnProperty(key)) {
+            audioPreferences[key] = value;
+            saveAudioPreferences();
+            
+            // 立即应用某些设置 (Apply certain settings immediately)
+            switch(key) {
+                case 'defaultVolume':
+                    audioPlayer.setVolume(value);
+                    break;
+                case 'defaultSpeed':
+                    audioPlayer.setPlaybackRate(value);
+                    break;
+            }
+            
+            console.log(`Audio preference updated: ${key} = ${value}`);
+        }
+    }
+    
+    /**
+     * 重置音频偏好设置为默认值 (Reset audio preferences to defaults)
+     */
+    function resetAudioPreferences() {
+        audioPreferences = {
+            autoPlay: true,
+            defaultVolume: 1.0,
+            defaultSpeed: 1.0,
+            showControls: true,
+            enableKeyboardShortcuts: true
+        };
+        
+        saveAudioPreferences();
+        loadAudioPreferences();
+        
+        console.log('Audio preferences reset to defaults');
+        showAudioFeedback('Audio preferences reset to defaults', 'info');
     }
 
     // --- Initialization ---
@@ -1545,6 +3887,55 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
             console.warn('Voice recording not supported in this browser');
         }
         
+        // 加载用户音频偏好设置 (Load user audio preferences)
+        loadAudioPreferences();
+        
+        // 创建高级音频控制面板 (Create advanced audio control panel)
+        createAudioControlPanel();
+        
+        // 添加音频控制面板切换按钮 (Add audio control panel toggle button)
+        const audioControlToggle = document.createElement('button');
+        audioControlToggle.id = 'audio-control-toggle';
+        audioControlToggle.innerHTML = '<i class="fas fa-sliders-h"></i>';
+        audioControlToggle.title = 'Advanced Audio Controls';
+        audioControlToggle.style.cssText = `
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        `;
+        
+        audioControlToggle.addEventListener('click', () => {
+            const controlPanel = document.getElementById('advanced-audio-controls');
+            if (controlPanel) {
+                controlPanel.style.display = controlPanel.style.display === 'none' ? 'block' : 'none';
+            }
+        });
+        
+        audioControlToggle.addEventListener('mouseenter', () => {
+            audioControlToggle.style.transform = 'scale(1.1)';
+            audioControlToggle.style.background = '#2563eb';
+        });
+        
+        audioControlToggle.addEventListener('mouseleave', () => {
+            audioControlToggle.style.transform = 'scale(1)';
+            audioControlToggle.style.background = '#3b82f6';
+        });
+        
+        document.body.appendChild(audioControlToggle);
+        
         console.log('Chat initialized successfully');
     }
     
@@ -1552,6 +3943,9 @@ function initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl
     window.addEventListener('beforeunload', () => {
         if (voiceRecorder) {
             voiceRecorder.destroy();
+        }
+        if (audioPlayer) {
+            audioPlayer.destroy();
         }
     });
 

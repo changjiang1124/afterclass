@@ -231,3 +231,49 @@ CACHES = {
         }
     }
 }
+
+# Security Configuration
+# 安全配置 (Security Configuration)
+
+# Rate Limiting Settings
+CHAT_API_RATE_LIMIT = int(os.environ.get('CHAT_API_RATE_LIMIT', 30))
+AUDIO_API_RATE_LIMIT = int(os.environ.get('AUDIO_API_RATE_LIMIT', 10))
+TRANSLATE_API_RATE_LIMIT = int(os.environ.get('TRANSLATE_API_RATE_LIMIT', 20))
+
+# Audio Security Settings
+AUDIO_MAX_FILE_SIZE = int(os.environ.get('AUDIO_MAX_FILE_SIZE', 10 * 1024 * 1024))  # 10MB
+AUDIO_MAX_DURATION = int(os.environ.get('AUDIO_MAX_DURATION', 300))  # 5 minutes
+AUDIO_MALWARE_SCAN_ENABLED = os.environ.get('AUDIO_MALWARE_SCAN_ENABLED', 'True').lower() == 'true'
+
+# Input Validation Settings
+INPUT_MAX_TEXT_LENGTH = int(os.environ.get('INPUT_MAX_TEXT_LENGTH', 1000))
+INPUT_STRICT_VALIDATION = os.environ.get('INPUT_STRICT_VALIDATION', 'True').lower() == 'true'
+
+# Security Logging Settings
+SECURITY_LOG_RATE_LIMITS = os.environ.get('SECURITY_LOG_RATE_LIMITS', 'True').lower() == 'true'
+SECURITY_LOG_MALICIOUS_UPLOADS = os.environ.get('SECURITY_LOG_MALICIOUS_UPLOADS', 'True').lower() == 'true'
+SECURITY_ALERT_THRESHOLD = int(os.environ.get('SECURITY_ALERT_THRESHOLD', 10))
+
+# Session Security
+SESSION_TIMEOUT_MINUTES = int(os.environ.get('SESSION_TIMEOUT_MINUTES', 30))
+MAX_SESSIONS_PER_USER = int(os.environ.get('MAX_SESSIONS_PER_USER', 5))
+
+# CSRF Protection
+CSRF_COOKIE_SECURE = not DEBUG  # HTTPS only in production
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Strict'
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if os.environ.get('CSRF_TRUSTED_ORIGINS') else []
+
+# Security Headers
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = 'DENY'
+
+# Production Security Settings (only apply in production)
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
