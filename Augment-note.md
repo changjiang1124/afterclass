@@ -160,6 +160,53 @@
 
 **完整详情请见**: `deployment/SIMPLE_UPDATE_GUIDE.md`
 
+## 2025-07-31: 聊天标题显示优化
+
+### 问题描述
+用户反馈聊天页面 (http://127.0.0.1:8000/speak/chat/7/) 的标题可能过长，需要优化显示效果：
+- 标题应该限制在最多2行显示
+- 超出长度时显示省略号（...）
+- 悬停时显示完整内容
+
+### 解决方案
+1. **HTML模板修改** (`speak_practice/templates/speak_practice/chat.html`)
+   - 为聊天标题h4元素添加了`chat-title`类名
+   - 添加了`title`属性用于悬停提示
+
+2. **CSS样式添加** (`speak_practice/static/speak_practice/speak_practice.css`)
+   - 使用`-webkit-line-clamp: 2`限制显示2行
+   - 使用`text-overflow: ellipsis`添加省略号
+   - 添加悬停效果显示完整内容
+   - 包含背景、阴影等视觉增强
+
+3. **响应式设计**
+   - 为768px以下屏幕调整行高和最大高度
+   - 为480px以下屏幕进一步优化
+
+### 技术实现细节
+- 使用CSS的`-webkit-box`和`-webkit-line-clamp`实现多行文本截断
+- 使用`::after`伪元素创建悬停提示框
+- 提示框使用`attr(title)`获取完整标题内容
+- 标题本身保持2行截断状态不变
+- 添加过渡动画和定位效果提升用户体验
+
+### 用户体验改进 (2025-07-31 更新)
+- **修正悬停效果**: 移除了标题本身的样式变化
+- **固定提示框**: 标题保持2行截断，悬停时显示跟随光标的提示框
+- **更好的视觉效果**: 提示框居中显示在标题下方，不影响页面布局
+
+### 文件修改列表
+- `speak_practice/templates/speak_practice/chat.html` - 添加类名和title属性，响应式样式
+- `speak_practice/static/speak_practice/speak_practice.css` - 添加截断和悬停样式
+
+### 测试建议
+建议测试以下场景：
+1. 短标题正常显示
+2. 长标题截断为2行并显示省略号
+3. 悬停时显示完整标题
+4. 移动端响应式效果
+5. 不同浏览器兼容性
+
 ## 后续步骤:
 - 测试修改后的生产配置。
 - 验证 Django 服务器是否成功启动。

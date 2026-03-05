@@ -562,6 +562,52 @@ body {
     z-index: 1;
 }
 
+/* Chat title truncation styles */
+.chat-title {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+    max-height: calc(1.3em * 2) !important;
+    word-wrap: break-word !important;
+    hyphens: auto !important;
+    cursor: help !important;
+    position: relative !important;
+}
+
+/* Tooltip for full title on hover */
+.chat-title::after {
+    content: attr(title);
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.4;
+    white-space: normal;
+    word-wrap: break-word;
+    max-width: 300px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    pointer-events: none;
+    margin-top: 0.5rem;
+}
+
+.chat-title:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
 .chat-box {
     flex: 1;
     overflow-y: auto;
