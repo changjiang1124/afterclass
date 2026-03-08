@@ -55,7 +55,10 @@ def scene_selection(request):
 
     if request.method == 'POST':
         raw_scene = request.POST.get('scene', '')
-        scene = InputSanitizer.sanitize_text(raw_scene, 1000, allow_html=False)
+        # Use allow_html=True so that html.escape() is NOT called here.
+        # We store plain text in the DB; Django templates handle HTML escaping at render time.
+        # Other security checks (XSS patterns, SQL injection, etc.) still apply.
+        scene = InputSanitizer.sanitize_text(raw_scene, 1000, allow_html=True)
         scene_source = request.POST.get('scene_source', 'custom')
         template_id = request.POST.get('scene_template_id')
         template = None
@@ -669,7 +672,7 @@ def _validate_request_origin(request):
 
 
 def _sanitize_input(text, max_length=1000):
-    """清理和验证用户输入，防止XSS攻击"""
+    """清理和验证用户输入，防止XSS攻击 (HTML-escapes output for safe insertion into HTML)"""
     if not text or not isinstance(text, str):
         return ""
     
@@ -680,6 +683,30 @@ def _sanitize_input(text, max_length=1000):
     text = html.escape(text)
     
     # 移除潜在的恶意脚本标签
+    text = re.sub(r'<script[^>]*>.*?</script>', '', text, flags=re.IGNORECASE | re.DOTALL)
+    text = re.sub(r'javascript:', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'on\w+\s*=', '', text, flags=re.IGNORECASE)
+    
+    # 清理多余的空白字符
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    return text
+
+
+def _sanitize_input_plain(text, max_length=1000):
+    """清理文本但不做 HTML 转义 — 用于 JSON API 序列化的话题数据.
+    
+    话题数据经 JSON 序列化后由前端设置为表单 value 提交到后端，
+    不会直接插入 innerHTML，所以不需要 html.escape()。
+    JSON 序列化本身会处理特殊字符。
+    """
+    if not text or not isinstance(text, str):
+        return ""
+    
+    # 限制长度
+    text = text[:max_length]
+    
+    # 移除潜在的恶意脚本标签（纯文本检查，不 HTML 转义）
     text = re.sub(r'<script[^>]*>.*?</script>', '', text, flags=re.IGNORECASE | re.DOTALL)
     text = re.sub(r'javascript:', '', text, flags=re.IGNORECASE)
     text = re.sub(r'on\w+\s*=', '', text, flags=re.IGNORECASE)
@@ -1106,7 +1133,11 @@ def _record_scene_exposure(user, topic, exposure_type='shown', session=None):
 
 
 def _sanitize_topic_data(topics):
-    """清理话题数据，防止XSS攻击"""
+    """清理话题数据，防止XSS攻击.
+    
+    注意: 话题字段经 JSON API 序列化后由前端设为表单 value 提交，
+    不会直接插入 HTML，所以使用 _sanitize_input_plain（不 HTML 转义）。
+    """
     if not isinstance(topics, list):
         return []
     
@@ -1116,13 +1147,13 @@ def _sanitize_topic_data(topics):
             continue
         
         sanitized_topic = {
-            'title': _sanitize_input(topic.get('title', ''), 100),
-            'description': _sanitize_input(topic.get('description', ''), 500),
-            'level': _sanitize_input(topic.get('level', ''), 50),
+            'title': _sanitize_input_plain(topic.get('title', ''), 100),
+            'description': _sanitize_input_plain(topic.get('description', ''), 500),
+            'level': _sanitize_input_plain(topic.get('level', ''), 50),
             'icon': _sanitize_icon_class(topic.get('icon', '')),
-            'scene_text': _sanitize_input(topic.get('scene_text', ''), 1000),
+            'scene_text': _sanitize_input_plain(topic.get('scene_text', ''), 1000),
             'source': _coerce_topic_source(topic.get('source')),
-            'category': _sanitize_input(topic.get('category', ''), 100),
+            'category': _sanitize_input_plain(topic.get('category', ''), 100),
         }
 
         template_id = topic.get('template_id')
@@ -1499,7 +1530,11 @@ def get_tts_audio(text):
         'audioConfig': {'audioEncoding': 'MP3'},
     }
     try:
-        response = requests.post(GOOGLE_TTS_URL, json=payload, timeout=15)
+        headers = {
+            'Content-Type': 'application/json',
+            'Referer': 'https://afterclass.tongcove.com/',
+        }
+        response = requests.post(GOOGLE_TTS_URL, headers=headers, json=payload, timeout=15)
         response.raise_for_status()
         return response.json().get('audioContent')
     except requests.RequestException as e:

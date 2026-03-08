@@ -509,8 +509,10 @@
             return;
         }
 
-        const hasAssistantLine = Boolean(String(el.assistantLiveCaption?.textContent || '').trim())
-            && !el.assistantLiveCaption.classList.contains('is-empty');
+        const latestAiTexts = el.chatBox?.querySelectorAll('.chat-message.ai .chinese-text');
+        const hasAssistantLine = latestAiTexts && latestAiTexts.length > 0 &&
+            Boolean(latestAiTexts[latestAiTexts.length - 1].textContent.trim());
+
         const canTeach = state.realtime.connected
             && !state.realtime.micEnabled
             && state.currentStage === 'ready'
@@ -1610,8 +1612,11 @@
         }
         if (el.teachReplyBtn) {
             el.teachReplyBtn.addEventListener('click', async () => {
-                const latestAiLine = String(el.assistantLiveCaption?.textContent || '').trim();
-                if (!latestAiLine || el.assistantLiveCaption.classList.contains('is-empty')) {
+                const latestAiTexts = el.chatBox?.querySelectorAll('.chat-message.ai .chinese-text');
+                const latestAiLine = latestAiTexts && latestAiTexts.length > 0 ?
+                    String(latestAiTexts[latestAiTexts.length - 1].textContent || '').trim() : '';
+
+                if (!latestAiLine) {
                     return;
                 }
                 await fetchReplySuggestion(latestAiLine);

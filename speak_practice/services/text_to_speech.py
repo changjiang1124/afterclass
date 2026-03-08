@@ -158,7 +158,8 @@ class TextToSpeechService(TextToSpeechInterface):
         }
         
         headers = {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Referer': 'https://afterclass.tongcove.com/',
         }
         
         try:

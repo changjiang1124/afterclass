@@ -7,39 +7,39 @@ class TopicLoader {
         // API配置
         this.apiUrl = options.apiUrl || '/speak/api/topics/';
         this.csrfToken = options.csrfToken || this.getCSRFToken();
-        
+
         // 重试配置
         this.retryCount = 0;
         this.maxRetries = options.maxRetries || 3;
         this.retryDelay = options.retryDelay || 1000;
         this.retryMultiplier = options.retryMultiplier || 2;
-        
+
         // 超时配置
         this.timeout = options.timeout || 30000; // 30秒超时
-        
+
         // 状态回调函数
         this.onLoadingStart = options.onLoadingStart || null;
         this.onLoadingSuccess = options.onLoadingSuccess || null;
         this.onLoadingError = options.onLoadingError || null;
-        
+
         // DOM元素引用
         this.topicsGrid = document.getElementById('topics-grid');
         this.topicsContainer = document.getElementById('topics-container');
         this.skeletonState = document.getElementById('skeleton-state');
         this.loadingIndicator = document.getElementById('loading-indicator');
         this.errorState = document.getElementById('error-state');
-        
+
         // 网络状态检测
         this.isOnline = navigator.onLine;
         this.setupNetworkListeners();
-        
+
         // 绑定方法上下文
         this.loadTopics = this.loadTopics.bind(this);
         this.retryLoad = this.retryLoad.bind(this);
-        
+
         console.log('TopicLoader 初始化完成');
     }
-    
+
     /**
      * 获取CSRF令牌
      */
@@ -49,23 +49,23 @@ class TopicLoader {
         if (tokenElement && tokenElement.value) {
             return tokenElement.value;
         }
-        
+
         // 尝试从meta标签获取
         const metaToken = document.querySelector('meta[name="csrf-token"]');
         if (metaToken && metaToken.content) {
             return metaToken.content;
         }
-        
+
         // 尝试从cookie获取
         const cookieValue = this.getCookieValue('csrftoken');
         if (cookieValue) {
             return cookieValue;
         }
-        
+
         console.warn('无法获取CSRF令牌');
         return '';
     }
-    
+
     /**
      * 从cookie中获取值
      */
@@ -83,24 +83,24 @@ class TopicLoader {
         }
         return cookieValue;
     }
-    
+
     /**
      * 更新CSRF令牌
      */
     updateCSRFToken(newToken) {
         if (newToken) {
             this.csrfToken = newToken;
-            
+
             // 更新页面中的CSRF令牌
             const tokenElement = document.querySelector('[name=csrfmiddlewaretoken]');
             if (tokenElement) {
                 tokenElement.value = newToken;
             }
-            
+
             console.log('CSRF令牌已更新');
         }
     }
-    
+
     /**
      * 设置网络状态监听器
      */
@@ -109,81 +109,81 @@ class TopicLoader {
             this.isOnline = true;
             console.log('网络连接已恢复');
         });
-        
+
         window.addEventListener('offline', () => {
             this.isOnline = false;
             console.log('网络连接已断开');
         });
     }
-    
+
     /**
      * 主要的话题加载方法 - 增强版本包含完整的降级策略
      */
     async loadTopics() {
         console.log('开始加载话题...');
-        
+
         // 重置重试计数
         this.retryCount = 0;
-        
+
         // 调用加载开始回调
         if (this.onLoadingStart) {
             this.onLoadingStart();
         }
-        
+
         try {
             // 尝试从API获取话题
             const topics = await this.fetchTopicsWithRetry();
             this.renderTopics(topics);
-            
+
             // 调用加载成功回调
             if (this.onLoadingSuccess) {
                 this.onLoadingSuccess();
             }
-            
+
             console.log('话题加载成功');
             return topics;
-            
+
         } catch (error) {
             console.error('API话题加载失败，尝试本地降级:', error);
-            
+
             try {
                 // 尝试使用本地备用话题
                 const fallbackTopics = await this.useLocalFallback();
                 console.log('本地备用话题加载成功');
                 return fallbackTopics;
-                
+
             } catch (fallbackError) {
                 console.error('所有降级策略都失败了:', fallbackError);
-                
+
                 // 处理完全失败的情况
                 this.handleCompleteFailure(error, fallbackError);
                 throw new Error('Complete failure: Unable to load any topics');
             }
         }
     }
-    
+
     /**
      * 处理完全失败的情况
      */
     handleCompleteFailure(originalError, fallbackError) {
         console.error('完全失败 - 原始错误:', originalError);
         console.error('完全失败 - 降级错误:', fallbackError);
-        
+
         // 调用错误回调
         if (this.onLoadingError) {
             this.onLoadingError(originalError, 'complete-failure');
         }
-        
+
         // 显示完全失败的错误信息
         this.updateErrorMessage('Complete system failure', 'complete-failure');
-        
+
         // 记录严重错误事件
         this.logErrorEvent('complete-failure', `Original: ${originalError.message}, Fallback: ${fallbackError.message}`);
-        
+
         // 显示紧急通知
         this.showEmergencyNotification();
     }
-    
+
     /**
      * 显示紧急通知
      */
@@ -223,39 +223,39 @@ class TopicLoader {
                 </button>
             </div>
         `;
-        
+
         document.body.appendChild(notification);
     }
-    
+
     /**
      * 带重试机制的话题获取 - 增强版本包含智能重试策略
      */
     async fetchTopicsWithRetry() {
         let lastError = null;
-        
+
         while (this.retryCount <= this.maxRetries) {
             try {
                 // 检查网络状态
                 if (!this.isOnline) {
                     throw new Error('网络连接不可用');
                 }
-                
+
                 const response = await this.fetchWithTimeout();
                 const data = await response.json();
-                
+
                 // 处理成功响应
                 if (data.success && data.topics) {
                     // 更新CSRF令牌（如果服务器提供了新的）
                     if (data.csrf_token) {
                         this.updateCSRFToken(data.csrf_token);
                     }
-                    
+
                     // 验证话题数据
                     const validatedTopics = this.validateTopicsData(data.topics);
                     if (validatedTopics.length === 0) {
                         throw new Error('No valid topics received from server');
                     }
-                    
+
                     // 如果是降级响应，记录但仍然返回话题
                     if (data.source === 'fallback') {
                         console.warn(`使用备用话题 (原因: ${data.fallback_reason}):`, data.message);
@@ -265,60 +265,60 @@ class TopicLoader {
                     }
                     return validatedTopics;
                 }
-                
+
                 // 处理失败响应但有备用话题的情况
                 if (data.fallback_topics) {
                     console.warn('API返回错误，使用备用话题:', data.error);
                     this.showFallbackNotification('Using backup topics due to AI service issues');
                     return data.fallback_topics;
                 }
-                
+
                 // 如果没有话题数据，抛出错误
                 throw new Error(data.error || 'API响应格式错误');
-                
+
             } catch (error) {
                 lastError = error;
                 this.retryCount++;
-                
+
                 // 如果达到最大重试次数，抛出最后的错误
                 if (this.retryCount > this.maxRetries) {
                     console.error(`所有重试尝试失败 (${this.maxRetries}次)，最后错误:`, error.message);
                     throw error;
                 }
-                
+
                 // 判断是否应该重试
                 if (!this.shouldRetry(error)) {
                     console.warn('错误类型不适合重试:', error.message);
                     throw error;
                 }
-                
+
                 console.warn(`第${this.retryCount}次重试失败:`, error.message);
-                
+
                 // 计算指数退避延迟，包含抖动
                 const baseDelay = this.retryDelay * Math.pow(this.retryMultiplier, this.retryCount - 1);
                 const jitter = Math.random() * 0.3 * baseDelay; // 30%的随机抖动
                 const delay = Math.min(baseDelay + jitter, 30000); // 最大延迟30秒
-                
+
                 console.log(`等待 ${Math.round(delay)}ms 后进行第${this.retryCount + 1}次重试...`);
-                
+
                 // 更新加载状态显示重试信息
                 this.updateLoadingState(`Retrying... (${this.retryCount}/${this.maxRetries})`);
-                
+
                 // 等待指数退避延迟
                 await this.sleep(delay);
             }
         }
-        
+
         // 这行代码理论上不会执行到，但为了类型安全
         throw lastError || new Error('未知的重试错误');
     }
-    
+
     /**
      * 判断错误是否应该重试
      */
     shouldRetry(error) {
         const errorMessage = error.message.toLowerCase();
-        
+
         // 不应该重试的错误类型
         const nonRetryableErrors = [
             'http 401',  // 认证错误
@@ -328,14 +328,14 @@ class TopicLoader {
             'invalid json', // JSON格式错误
             'csrf'       // CSRF错误
         ];
-        
+
         // 检查是否为不可重试的错误
         for (const nonRetryable of nonRetryableErrors) {
             if (errorMessage.includes(nonRetryable)) {
                 return false;
             }
         }
-        
+
         // 应该重试的错误类型
         const retryableErrors = [
             'timeout',     // 超时
@@ -345,18 +345,18 @@ class TopicLoader {
             'connection',  // 连接错误
             'fetch'        // Fetch API错误
         ];
-        
+
         // 检查是否为可重试的错误
         for (const retryable of retryableErrors) {
             if (errorMessage.includes(retryable)) {
                 return true;
             }
         }
-        
+
         // 默认情况下，未知错误可以重试
         return true;
     }
-    
+
     /**
      * 显示降级通知
      */
@@ -385,9 +385,9 @@ class TopicLoader {
                 <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: #92400e; cursor: pointer; font-size: 16px; padding: 0; margin-left: auto;">×</button>
             </div>
         `;
-        
+
         document.body.appendChild(notification);
-        
+
         // 5秒后自动移除通知
         setTimeout(() => {
             if (notification.parentElement) {
@@ -395,20 +395,20 @@ class TopicLoader {
             }
         }, 5000);
     }
-    
+
     /**
      * 带超时的fetch请求
      */
     async fetchWithTimeout() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-        
+
         try {
             // 确保有有效的CSRF令牌
             if (!this.csrfToken) {
                 this.csrfToken = this.getCSRFToken();
             }
-            
+
             const response = await fetch(this.apiUrl, {
                 method: 'GET',
                 headers: {
@@ -419,25 +419,25 @@ class TopicLoader {
                 credentials: 'same-origin',  // 包含同源cookie
                 signal: controller.signal
             });
-            
+
             clearTimeout(timeoutId);
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            
+
             return response;
         } catch (error) {
             clearTimeout(timeoutId);
-            
+
             if (error.name === 'AbortError') {
                 throw new Error('请求超时');
             }
-            
+
             throw error;
         }
     }
-    
+
     /**
      * 更新加载状态文本
      */
@@ -449,13 +449,13 @@ class TopicLoader {
             }
         }
     }
-    
+
     /**
      * 处理加载错误 - 增强版本包含错误分类和用户友好信息
      */
     handleLoadError(error) {
         console.error('处理加载错误:', error);
-        
+
         // 分析错误类型
         let errorType = 'general-error';
         if (error.message.includes('timeout') || error.message.includes('超时')) {
@@ -469,19 +469,19 @@ class TopicLoader {
         } else if (error.message.includes('HTTP 401')) {
             errorType = 'auth-error';
         }
-        
+
         // 调用错误回调
         if (this.onLoadingError) {
             this.onLoadingError(error, errorType);
         }
-        
+
         // 更新错误信息
         this.updateErrorMessage(error.message, errorType);
-        
+
         // 记录错误统计（如果需要）
         this.logErrorEvent(errorType, error.message);
     }
-    
+
     /**
      * 记录错误事件用于监控和分析
      */
@@ -495,24 +495,24 @@ class TopicLoader {
                 userAgent: navigator.userAgent,
                 url: window.location.href
             };
-            
+
             // 存储到本地存储用于调试
             const errorLog = JSON.parse(localStorage.getItem('topicLoader_errors') || '[]');
             errorLog.push(errorEvent);
-            
+
             // 只保留最近的50个错误记录
             if (errorLog.length > 50) {
                 errorLog.splice(0, errorLog.length - 50);
             }
-            
+
             localStorage.setItem('topicLoader_errors', JSON.stringify(errorLog));
-            
+
             console.log('错误事件已记录:', errorEvent);
         } catch (logError) {
             console.warn('无法记录错误事件:', logError);
         }
     }
-    
+
     /**
      * 更新错误信息 - 增强版本提供更详细的用户友好信息
      */
@@ -521,12 +521,12 @@ class TopicLoader {
             const errorContent = this.errorState.querySelector('.error-message');
             const errorTitle = this.errorState.querySelector('.error-title');
             const errorSuggestion = this.errorState.querySelector('.error-suggestion');
-            
+
             if (errorContent) {
                 let userFriendlyMessage = '';
                 let title = 'Connection Issue';
                 let suggestion = 'Please try again or use the custom scenario option above to continue practicing.';
-                
+
                 // 根据错误类型提供具体的用户友好信息
                 if (errorMessage.includes('网络') || errorMessage.includes('timeout') || errorMessage.includes('超时') || errorMessage.includes('请求超时')) {
                     title = 'Connection Timeout';
@@ -557,7 +557,7 @@ class TopicLoader {
                     userFriendlyMessage = 'We\'re having trouble connecting to our AI service. This could be due to network issues or temporary service problems.';
                     suggestion = 'Please try again in a moment. You can also use the custom scenario option above to continue practicing.';
                 }
-                
+
                 // 更新DOM元素
                 if (errorTitle) {
                     errorTitle.textContent = title;
@@ -566,13 +566,13 @@ class TopicLoader {
                 if (errorSuggestion) {
                     errorSuggestion.textContent = suggestion;
                 }
-                
+
                 // 添加错误类型的CSS类用于样式定制
                 this.errorState.className = `error-state ${errorType || 'general-error'}`;
             }
         }
     }
-    
+
     /**
      * 重试加载话题
      */
@@ -580,7 +580,7 @@ class TopicLoader {
         console.log('用户手动重试加载话题');
         await this.loadTopics();
     }
-    
+
     /**
      * 渲染话题卡片
      */
@@ -589,24 +589,24 @@ class TopicLoader {
             console.error('无法渲染话题: DOM元素不存在或话题数据无效');
             return;
         }
-        
+
         // 清除现有的话题卡片
         this.clearExistingTopics();
-        
+
         // 设置容器为网格布局
         this.topicsContainer.style.display = 'grid';
         this.topicsContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(320px, 1fr))';
         this.topicsContainer.style.gap = 'var(--space-xl)';
-        
+
         // 渲染新的话题卡片
         topics.forEach((topic, index) => {
             const card = this.createTopicCard(topic, index);
             this.topicsContainer.appendChild(card);
         });
-        
+
         console.log(`成功渲染${topics.length}个话题卡片`);
     }
-    
+
     /**
      * 创建单个话题卡片
      */
@@ -619,7 +619,7 @@ class TopicLoader {
         card.dataset.sceneTemplateId = topic.template_id || '';
         card.dataset.sceneSource = topic.source || 'ai_generated';
         card.dataset.sceneTitle = topic.title || '';
-        
+
         // 设置卡片内容
         card.innerHTML = `
             <div style="display: flex; align-items: flex-start; gap: 1.5rem; margin-bottom: 1.5rem;">
@@ -642,14 +642,14 @@ class TopicLoader {
                 <i class="fas fa-arrow-right topic-arrow" style="color: #9ca3af; font-size: 1rem; transition: all 0.3s ease;"></i>
             </div>
         `;
-        
+
         // 添加交互事件
         this.addCardInteractions(card);
         this.addCardSelectionMetadata(card);
-        
+
         // 添加入场动画
         this.addCardAnimation(card, index);
-        
+
         return card;
     }
 
@@ -677,7 +677,7 @@ class TopicLoader {
             }
         });
     }
-    
+
     /**
      * 添加卡片交互效果
      */
@@ -686,7 +686,7 @@ class TopicLoader {
             card.style.transform = 'translateY(-8px)';
             card.style.boxShadow = '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)';
             card.style.borderColor = '#fed7aa';
-            
+
             // 图标容器动画
             const iconContainer = card.querySelector('.topic-icon-container');
             const icon = card.querySelector('.topic-icon-container i');
@@ -695,7 +695,7 @@ class TopicLoader {
                 iconContainer.style.transform = 'scale(1.1)';
                 icon.style.color = '#ffffff';
             }
-            
+
             // 箭头动画
             const arrow = card.querySelector('.topic-arrow');
             if (arrow) {
@@ -703,12 +703,12 @@ class TopicLoader {
                 arrow.style.transform = 'translateX(4px)';
             }
         });
-        
+
         card.addEventListener('mouseleave', () => {
             card.style.transform = 'translateY(0)';
             card.style.boxShadow = '0 1px 2px 0 rgb(0 0 0 / 0.05)';
             card.style.borderColor = '#e5e7eb';
-            
+
             // 重置图标容器
             const iconContainer = card.querySelector('.topic-icon-container');
             const icon = card.querySelector('.topic-icon-container i');
@@ -717,7 +717,7 @@ class TopicLoader {
                 iconContainer.style.transform = 'scale(1)';
                 icon.style.color = '#FE4D01';
             }
-            
+
             // 重置箭头
             const arrow = card.querySelector('.topic-arrow');
             if (arrow) {
@@ -726,7 +726,7 @@ class TopicLoader {
             }
         });
     }
-    
+
     /**
      * 添加卡片入场动画
      */
@@ -734,7 +734,7 @@ class TopicLoader {
         // 初始状态
         card.style.opacity = '0';
         card.style.transform = 'translateY(20px)';
-        
+
         // 延迟显示动画
         setTimeout(() => {
             card.style.transition = 'all 0.3s ease';
@@ -742,7 +742,7 @@ class TopicLoader {
             card.style.transform = 'translateY(0)';
         }, index * 100);
     }
-    
+
     /**
      * 清除现有的话题卡片
      */
@@ -752,7 +752,7 @@ class TopicLoader {
             existingCards.forEach(card => card.remove());
         }
     }
-    
+
     /**
      * 获取静态备用话题 - 与后端保持一致的紧急备用话题
      */
@@ -797,32 +797,32 @@ class TopicLoader {
             }
         ];
     }
-    
+
     /**
      * 使用本地备用话题作为最后的降级选项
      */
     async useLocalFallback() {
         console.warn('使用本地备用话题作为最后的降级选项');
-        
+
         try {
             const fallbackTopics = this.getFallbackTopics();
             this.renderTopics(fallbackTopics);
-            
+
             // 显示降级通知
             this.showFallbackNotification('Using offline backup topics due to connection issues');
-            
+
             // 调用成功回调（虽然是降级，但对用户来说仍然是成功的）
             if (this.onLoadingSuccess) {
                 this.onLoadingSuccess();
             }
-            
+
             return fallbackTopics;
         } catch (error) {
             console.error('连本地备用话题都失败了:', error);
             throw new Error('Complete system failure - unable to load any topics');
         }
     }
-    
+
     /**
      * 验证话题数据结构和内容
      */
@@ -831,33 +831,36 @@ class TopicLoader {
             console.error('话题数据不是数组格式');
             return [];
         }
-        
+
         const validatedTopics = [];
-        
+
         for (const topic of topics) {
             if (!this.isValidTopic(topic)) {
                 console.warn('跳过无效话题:', topic);
                 continue;
             }
-            
+
             // 清理话题数据
+            // NOTE: scene_text is used as a form <button> value submitted to the server.
+            // It must NOT be HTML-escaped here; escaping is the browser's job at render time.
+            // Only title/description/level (rendered via innerHTML) need escapeHtml.
             const cleanTopic = {
                 title: this.sanitizeText(topic.title, 100),
                 description: this.sanitizeText(topic.description, 500),
                 level: this.sanitizeText(topic.level, 50),
                 icon: this.sanitizeIconClass(topic.icon),
-                scene_text: this.sanitizeText(topic.scene_text || `${topic.title}: ${topic.description}`, 1000),
-                source: this.sanitizeText(topic.source || 'ai_generated', 50),
-                category: this.sanitizeText(topic.category || '', 100),
+                scene_text: this.sanitizeTextPlain(topic.scene_text || `${topic.title}: ${topic.description}`, 1000),
+                source: this.sanitizeTextPlain(topic.source || 'ai_generated', 50),
+                category: this.sanitizeTextPlain(topic.category || '', 100),
                 template_id: Number.isInteger(topic.template_id) ? topic.template_id : null,
             };
-            
+
             validatedTopics.push(cleanTopic);
         }
-        
+
         return validatedTopics;
     }
-    
+
     /**
      * 验证单个话题是否有效
      */
@@ -865,42 +868,65 @@ class TopicLoader {
         if (!topic || typeof topic !== 'object') {
             return false;
         }
-        
+
         const requiredFields = ['title', 'description', 'level', 'icon'];
         for (const field of requiredFields) {
             if (!topic[field] || typeof topic[field] !== 'string' || topic[field].trim() === '') {
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     /**
-     * 清理文本内容，防止XSS攻击
+     * 清理文本内容并 HTML 转义 — 用于 innerHTML 显示
      */
     sanitizeText(text, maxLength = 1000) {
         if (!text || typeof text !== 'string') {
             return '';
         }
-        
+
         // 限制长度
         text = text.substring(0, maxLength);
-        
-        // HTML转义
+
+        // HTML转义（用于安全地插入 innerHTML）
         text = this.escapeHtml(text);
-        
+
         // 移除潜在的恶意内容
         text = text.replace(/<script[^>]*>.*?<\/script>/gi, '');
         text = text.replace(/javascript:/gi, '');
         text = text.replace(/on\w+\s*=/gi, '');
-        
+
         // 清理多余空白
         text = text.replace(/\s+/g, ' ').trim();
-        
+
         return text;
     }
-    
+
+    /**
+     * 清理文本内容但不 HTML 转义 — 用于表单 value / 数据提交
+     * Form values are plain text and must not be HTML-encoded.
+     */
+    sanitizeTextPlain(text, maxLength = 1000) {
+        if (!text || typeof text !== 'string') {
+            return '';
+        }
+
+        // 限制长度
+        text = text.substring(0, maxLength);
+
+        // 移除潜在的恶意内容（纯文本检查，不 HTML 转义）
+        text = text.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+        text = text.replace(/javascript:/gi, '');
+        text = text.replace(/on\w+\s*=/gi, '');
+
+        // 清理多余空白
+        text = text.replace(/\s+/g, ' ').trim();
+
+        return text;
+    }
+
     /**
      * 验证和清理图标类名
      */
@@ -908,16 +934,16 @@ class TopicLoader {
         if (!iconClass || typeof iconClass !== 'string') {
             return 'fas fa-comment';
         }
-        
+
         // 只允许Font Awesome图标格式
         const iconPattern = /^fas fa-[a-z0-9-]+$/;
         if (iconPattern.test(iconClass)) {
             return iconClass;
         }
-        
+
         return 'fas fa-comment'; // 默认图标
     }
-    
+
     /**
      * HTML转义函数，防止XSS攻击
      */
@@ -926,14 +952,14 @@ class TopicLoader {
         div.textContent = text;
         return div.innerHTML;
     }
-    
+
     /**
      * 睡眠函数，用于重试延迟
      */
     sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
-    
+
     /**
      * 销毁实例，清理事件监听器
      */
@@ -941,7 +967,7 @@ class TopicLoader {
         // 移除网络状态监听器
         window.removeEventListener('online', this.handleOnline);
         window.removeEventListener('offline', this.handleOffline);
-        
+
         console.log('TopicLoader 实例已销毁');
     }
 }
@@ -956,7 +982,7 @@ function initializeTopicLoader(options = {}) {
     if (topicLoaderInstance) {
         topicLoaderInstance.destroy();
     }
-    
+
     topicLoaderInstance = new TopicLoader(options);
     return topicLoaderInstance;
 }
