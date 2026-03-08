@@ -614,8 +614,11 @@ class TopicLoader {
         const card = document.createElement('button');
         card.type = 'submit';
         card.name = 'scene';
-        card.value = `${topic.title}: ${topic.description}`;
+        card.value = topic.scene_text || `${topic.title}: ${topic.description}`;
         card.className = 'scene-card';
+        card.dataset.sceneTemplateId = topic.template_id || '';
+        card.dataset.sceneSource = topic.source || 'ai_generated';
+        card.dataset.sceneTitle = topic.title || '';
         
         // 设置卡片内容
         card.innerHTML = `
@@ -642,11 +645,37 @@ class TopicLoader {
         
         // 添加交互事件
         this.addCardInteractions(card);
+        this.addCardSelectionMetadata(card);
         
         // 添加入场动画
         this.addCardAnimation(card, index);
         
         return card;
+    }
+
+    addCardSelectionMetadata(card) {
+        card.addEventListener('click', () => {
+            const form = card.form;
+            if (!form) {
+                return;
+            }
+
+            const templateInput = form.querySelector('input[name="scene_template_id"]');
+            const sourceInput = form.querySelector('input[name="scene_source"]');
+            const titleInput = form.querySelector('input[name="scene_title"]');
+
+            if (templateInput) {
+                templateInput.value = card.dataset.sceneTemplateId || '';
+            }
+
+            if (sourceInput) {
+                sourceInput.value = card.dataset.sceneSource || 'ai_generated';
+            }
+
+            if (titleInput) {
+                titleInput.value = card.dataset.sceneTitle || '';
+            }
+        });
     }
     
     /**
@@ -816,7 +845,11 @@ class TopicLoader {
                 title: this.sanitizeText(topic.title, 100),
                 description: this.sanitizeText(topic.description, 500),
                 level: this.sanitizeText(topic.level, 50),
-                icon: this.sanitizeIconClass(topic.icon)
+                icon: this.sanitizeIconClass(topic.icon),
+                scene_text: this.sanitizeText(topic.scene_text || `${topic.title}: ${topic.description}`, 1000),
+                source: this.sanitizeText(topic.source || 'ai_generated', 50),
+                category: this.sanitizeText(topic.category || '', 100),
+                template_id: Number.isInteger(topic.template_id) ? topic.template_id : null,
             };
             
             validatedTopics.push(cleanTopic);

@@ -8,44 +8,59 @@
 <style>
 /* Override Bootstrap styles for chat */
 .chat-container {
-    max-width: 900px !important;
+    max-width: 1180px !important;
     margin: 2rem auto !important;
     background: #ffffff !important;
     border-radius: 1.5rem !important;
     box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important;
     overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
     height: calc(100vh - 120px) !important;
     border: 1px solid #e5e7eb !important;
     animation: fadeInScale 0.6s ease-out;
 }
 
+.chat-main-layout {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.75fr);
+    align-items: stretch;
+}
+
 .chat-header {
     background: linear-gradient(135deg, #FE4D01, #ea580c) !important;
     color: #ffffff !important;
-    padding: 2rem !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 1.5rem !important;
+    padding: 1.45rem 1.6rem !important;
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start !important;
+    gap: 1rem !important;
     position: relative;
     overflow: hidden;
 }
 
 .chat-box {
-    flex: 1 !important;
     overflow-y: auto !important;
-    padding: 3rem !important;
+    padding: 1.9rem 2rem !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 1.5rem !important;
     background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%) !important;
+    min-height: 0 !important;
+    border-right: 1px solid #e5e7eb !important;
+}
+
+.chat-sidebar {
+    min-height: 0;
+    overflow-y: auto;
+    background: linear-gradient(180deg, #ffffff, #f8fafc) !important;
 }
 
 .chat-footer {
-    background: #ffffff !important;
-    border-top: 1px solid #e5e7eb !important;
-    padding: 2rem !important;
+    background: transparent !important;
+    border-top: none !important;
+    padding: 1.35rem !important;
 }
 
 .chat-message {
@@ -240,6 +255,10 @@
     position: relative;
     overflow: hidden;
     font-size: 1.1rem !important;
+}
+
+.record-button[hidden] {
+    display: none !important;
 }
 
 .record-button {
@@ -485,6 +504,358 @@
     font-weight: 600;
     white-space: nowrap;
     z-index: 10;
+}
+
+.voice-stage {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 1rem;
+    align-items: stretch;
+    margin-bottom: 1rem;
+}
+
+.voice-stage-panel {
+    background: linear-gradient(135deg, #fff7ed, #ffffff) !important;
+    border: 1px solid #fed7aa !important;
+    border-radius: 1.25rem !important;
+    padding: 1rem 1.25rem !important;
+    box-shadow: 0 10px 30px rgba(251, 146, 60, 0.12) !important;
+}
+
+.voice-stage-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.voice-stage-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #9a3412;
+}
+
+.voice-stage-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(254, 77, 1, 0.1);
+    color: #c2410c;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.voice-stage-status {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.35rem;
+}
+
+.voice-stage-hint {
+    color: #6b7280;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    margin-bottom: 0.9rem;
+}
+
+.turn-focus-card {
+    margin-bottom: 1rem;
+    padding: 1rem 1.05rem;
+    border-radius: 1rem;
+    border: 1px solid #fed7aa;
+    background: linear-gradient(135deg, rgba(255, 237, 213, 0.85), #ffffff);
+}
+
+.turn-focus-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9a3412;
+}
+
+.turn-focus-title {
+    margin: 0 0 0.3rem;
+    color: #111827;
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+.turn-focus-copy {
+    margin: 0;
+    color: #4b5563;
+    font-size: 0.94rem;
+    line-height: 1.6;
+}
+
+.voice-stage.is-ready .turn-focus-card,
+.voice-stage.is-listening .turn-focus-card {
+    border-color: #fb923c;
+    background: linear-gradient(135deg, rgba(255, 237, 213, 0.95), rgba(255, 255, 255, 0.98));
+    box-shadow: 0 14px 28px rgba(251, 146, 60, 0.16);
+}
+
+.voice-stage.is-ready .turn-focus-title,
+.voice-stage.is-listening .turn-focus-title {
+    color: #9a3412;
+}
+
+.voice-stage.is-processing .turn-focus-card,
+.voice-stage.is-speaking .turn-focus-card {
+    border-color: #e5e7eb;
+    background: linear-gradient(135deg, #f8fafc, #ffffff);
+}
+
+.voice-stage-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0;
+}
+
+.live-session-btn {
+    border: none !important;
+    border-radius: 999px !important;
+    padding: 0.9rem 1.25rem !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+.live-session-btn:hover {
+    transform: translateY(-1px);
+}
+
+.live-session-btn:disabled {
+    opacity: 0.55 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+}
+
+.live-session-btn.primary {
+    background: linear-gradient(135deg, #111827, #1f2937) !important;
+    color: #ffffff !important;
+    box-shadow: 0 12px 24px -16px rgba(17, 24, 39, 0.8) !important;
+}
+
+.live-session-btn.secondary {
+    background: #ffffff !important;
+    color: #374151 !important;
+    border: 1px solid #d1d5db !important;
+}
+
+.voice-stage-utility-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.95rem;
+}
+
+.voice-stage-utility-copy {
+    color: #6b7280;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.voice-wave-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: radial-gradient(circle at top, rgba(254, 215, 170, 0.6), rgba(255, 255, 255, 0.95)) !important;
+}
+
+.voice-wave-shell {
+    height: 120px;
+    border-radius: 1rem;
+    background: linear-gradient(180deg, rgba(17, 24, 39, 0.04), rgba(17, 24, 39, 0.08));
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    gap: 0.3rem;
+    padding: 1rem 0.85rem;
+    overflow: hidden;
+}
+
+.voice-wave-bar {
+    width: 7px;
+    min-height: 14px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #fb923c, #ea580c);
+    transform-origin: center bottom;
+    transform: scaleY(var(--bar-scale, 0.25));
+    transition: transform 90ms linear, opacity 120ms ease;
+    opacity: 0.4;
+}
+
+.voice-stage.is-listening .voice-wave-bar,
+.voice-stage.is-speaking .voice-wave-bar {
+    opacity: 1;
+}
+
+.voice-stage-footer {
+    margin-top: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    color: #6b7280;
+    font-size: 0.82rem;
+}
+
+.live-caption-strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.live-caption-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 1rem;
+    padding: 0.95rem 1rem;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.live-caption-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.55rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #9a3412;
+}
+
+.live-caption-text {
+    min-height: 3.8rem;
+    color: #111827;
+    font-size: 0.98rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+}
+
+.live-caption-text.is-empty {
+    color: #94a3b8;
+}
+
+.live-caption-text.is-partial {
+    color: #c2410c;
+}
+
+.reply-suggestion-card {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    border: 1px solid #fde68a;
+    background: linear-gradient(135deg, #fffbeb, #ffffff);
+    box-shadow: 0 10px 24px rgba(245, 158, 11, 0.08);
+}
+
+.reply-suggestion-card[hidden] {
+    display: none !important;
+}
+
+.reply-suggestion-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.reply-suggestion-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.35rem;
+    color: #92400e;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.reply-suggestion-title {
+    margin: 0;
+    color: #111827;
+    font-size: 1.02rem;
+    font-weight: 800;
+}
+
+.reply-suggestion-action {
+    border: 1px solid #fed7aa;
+    background: #ffffff;
+    color: #9a3412;
+    border-radius: 999px;
+    padding: 0.7rem 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.reply-suggestion-action.primary {
+    background: linear-gradient(135deg, #fff7ed, #ffedd5);
+}
+
+.reply-suggestion-action:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.reply-suggestion-text {
+    color: #111827;
+    font-size: 1.06rem;
+    line-height: 1.7;
+    font-weight: 700;
+}
+
+.reply-suggestion-text.is-empty {
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.reply-suggestion-pinyin {
+    margin-top: 0.4rem;
+    color: #9a3412;
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+
+.reply-suggestion-tip {
+    margin-top: 0.55rem;
+    color: #6b7280;
+    font-size: 0.88rem;
+    line-height: 1.55;
+}
+
+.voice-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.voice-toggle input {
+    accent-color: #ea580c;
 }
 
 .confirmation-area {
@@ -784,21 +1155,40 @@
 
 .header-content {
     flex: 1 !important;
+    min-width: 0 !important;
+    display: grid !important;
+    gap: 0.35rem !important;
 }
 
 .header-content h4 {
     font-weight: 700 !important;
     margin: 0 !important;
-    font-size: 1.5rem !important;
+    font-size: 1.45rem !important;
     position: relative;
     z-index: 1;
     color: #ffffff !important;
+    line-height: 1.2 !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+}
+
+.chat-title {
+    display: block !important;
+    max-width: 100% !important;
+}
+
+.header-content small {
+    display: block;
+    margin: 0;
+    line-height: 1.45;
 }
 
 .header-actions {
     display: flex !important;
     gap: 0.5rem !important;
     align-items: center !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
 }
 
 .header-action-btn {
@@ -927,10 +1317,13 @@
         height: calc(100vh - 40px) !important;
         border-radius: 1rem !important;
     }
+
+    .chat-main-layout {
+        grid-template-columns: 1fr !important;
+    }
     
     .chat-header {
         padding: 1rem 1.5rem !important;
-        flex-wrap: wrap !important;
         gap: 1rem !important;
     }
     
@@ -962,12 +1355,10 @@
         height: 36px !important;
     }
     
-    .chat-footer {
-        padding: 1rem 1.5rem !important;
-    }
-    
     .chat-box {
         padding: 1rem 1.5rem !important;
+        border-right: none !important;
+        border-bottom: 1px solid #e5e7eb !important;
     }
     
     .input-mode-selector {
@@ -1180,6 +1571,10 @@
     .chat-box {
         overflow-x: hidden !important;
     }
+
+    .chat-sidebar {
+        overflow-y: visible !important;
+    }
 }
 
 /* Additional mobile optimizations for very small screens */
@@ -1229,6 +1624,358 @@
         font-size: 0.85rem !important;
     }
 }
+
+/* 2026 simplification pass: compress the workflow into one primary practice console */
+.chat-box {
+    padding: 2rem 2.25rem !important;
+}
+
+.chat-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100%;
+    text-align: center;
+    padding: 2rem;
+    border: 1px dashed #fed7aa;
+    border-radius: 1.5rem;
+    background: linear-gradient(180deg, #fffaf5, #ffffff);
+    color: #6b7280;
+}
+
+.chat-empty-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, rgba(254, 77, 1, 0.14), rgba(234, 88, 12, 0.08));
+    color: #ea580c;
+    font-size: 1.75rem;
+}
+
+.chat-empty-state h5 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.3rem;
+    color: #111827;
+    font-weight: 700;
+}
+
+.chat-empty-state p {
+    margin: 0;
+    max-width: 32rem;
+    font-size: 1rem;
+    line-height: 1.7;
+}
+
+.chat-footer {
+    background: linear-gradient(180deg, #ffffff, #f8fafc) !important;
+    padding: 1.25rem !important;
+}
+
+.practice-console {
+    display: block !important;
+    margin-bottom: 1rem;
+}
+
+.practice-console-main {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.practice-console-summary,
+.practice-console-wave {
+    background: linear-gradient(135deg, #fff7ed, #ffffff) !important;
+    border: 1px solid #fed7aa !important;
+    border-radius: 1.25rem !important;
+    padding: 1.1rem 1.15rem !important;
+    box-shadow: 0 10px 30px rgba(251, 146, 60, 0.1) !important;
+}
+
+.practice-console-wave {
+    display: none;
+}
+
+.practice-action-row {
+    align-items: center;
+    margin-bottom: 0.85rem;
+}
+
+.practice-inline-toggle {
+    margin-left: auto;
+    padding: 0.85rem 0.95rem;
+    border-radius: 999px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+}
+
+.practice-console-notes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.practice-wave-label {
+    margin-bottom: 0.75rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9a3412;
+}
+
+.voice-wave-shell {
+    height: 96px;
+}
+
+.live-caption-strip {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+    margin-bottom: 0;
+}
+
+.live-caption-card {
+    padding: 0.85rem 0.95rem;
+    border-radius: 1rem;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: none;
+}
+
+.live-caption-text {
+    min-height: 2.8rem;
+    font-size: 0.95rem;
+    line-height: 1.65;
+}
+
+.input-mode-shell {
+    display: none !important;
+}
+
+.text-fallback-shell {
+    border: 1px solid #e5e7eb;
+    border-radius: 1rem;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.text-fallback-shell summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.95rem 1rem;
+    cursor: pointer;
+}
+
+.text-fallback-shell summary::-webkit-details-marker {
+    display: none;
+}
+
+.text-fallback-summary-copy strong {
+    display: block;
+    color: #111827;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.text-fallback-summary-copy span {
+    display: block;
+    margin-top: 0.2rem;
+    color: #6b7280;
+    font-size: 0.86rem;
+    line-height: 1.45;
+}
+
+.text-fallback-summary-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #9a3412;
+    background: rgba(254, 77, 1, 0.08);
+    transition: transform 0.2s ease;
+}
+
+.text-fallback-shell[open] .text-fallback-summary-icon {
+    transform: rotate(180deg);
+}
+
+.text-fallback-body {
+    padding: 0 1rem 1rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+.input-mode-selector {
+    margin-bottom: 0 !important;
+    width: 100%;
+}
+
+.input-controls {
+    margin-bottom: 0 !important;
+}
+
+#voice-input-area.active {
+    display: block !important;
+}
+
+.voice-answer-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1.25rem 1.4rem;
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, #f8fafc, #ffffff);
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.04);
+}
+
+.reply-suggestion-card[hidden] {
+    display: none !important;
+}
+
+.voice-answer-copy {
+    width: 100%;
+}
+
+.voice-answer-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.45rem;
+    color: #9a3412;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.voice-answer-title {
+    margin: 0 0 0.3rem;
+    color: #111827;
+    font-size: 1.12rem;
+    font-weight: 800;
+}
+
+.voice-answer-description {
+    margin: 0;
+    color: #4b5563;
+    line-height: 1.55;
+    font-size: 0.94rem;
+}
+
+#voice-input-area .record-button.voice-action-button {
+    width: auto !important;
+    height: auto !important;
+    min-width: 160px;
+    padding: 0.85rem 1.25rem !important;
+    border-radius: 999px !important;
+    gap: 0.5rem !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+    transition: all 0.2s ease;
+}
+
+#voice-input-area .record-button.voice-action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.3);
+}
+
+#voice-input-area .voice-action-stop {
+    background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+}
+
+#voice-input-area .voice-action-button.is-waiting {
+    background: linear-gradient(135deg, #e5e7eb, #cbd5e1) !important;
+    color: #475569 !important;
+    box-shadow: none !important;
+}
+
+.input-helper-label {
+    display: block;
+    margin-bottom: 0.55rem;
+    color: #374151;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+#chinese-input-area.active,
+#english-input-area.active {
+    display: flex !important;
+    align-items: end !important;
+}
+
+#chinese-input-area,
+#english-input-area,
+#reconnect-live-session-btn,
+.practice-inline-toggle,
+.voice-stage-utility-copy,
+.voice-stage-utility-row,
+#connection-status,
+.live-caption-strip .live-caption-card:last-child {
+    display: none !important;
+}
+
+@media (max-width: 768px) {
+    .chat-box {
+        padding: 1.25rem !important;
+    }
+
+    .practice-console-main,
+    .live-caption-strip {
+        grid-template-columns: 1fr !important;
+        display: grid !important;
+    }
+
+    .input-mode-selector {
+        width: 100%;
+    }
+
+    .voice-answer-card {
+        padding: 1rem 1.1rem;
+    }
+
+    #voice-input-area .record-button.voice-action-button {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    #voice-input-area .voice-answer-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    #voice-input-area .voice-answer-actions button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .practice-inline-toggle {
+        width: 100%;
+        justify-content: center;
+        margin-left: 0;
+    }
+
+    .reply-suggestion-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .reply-suggestion-action {
+        width: 100%;
+        justify-content: center;
+    }
+}
 </style>
 {% endblock %}
 
@@ -1245,7 +1992,7 @@
 <!-- Connection Status -->
 <div id="connection-status" class="connection-status">
     <div class="connection-indicator"></div>
-    <span class="connection-text">Online</span>
+    <span id="connection-text" class="connection-text">Live voice offline</span>
 </div>
 
 <div class="chat-container">
@@ -1268,35 +2015,126 @@
         </div>
     </div>
 
-    <!-- Chat Messages -->
-    <div class="chat-box" id="chat-box">
-        {% for message in messages %}
-            {% if message.sender_type == 'ai' %}
-            <div class="chat-message ai">
-                <div class="message-avatar ai">
-                    <i class="fas fa-robot"></i>
+    <div class="chat-main-layout">
+        <!-- Chat Messages -->
+        <div class="chat-box" id="chat-box">
+            {% if not messages %}
+                <div id="chat-empty-state" class="chat-empty-state">
+                    <div class="chat-empty-icon">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <h5>AI will start the scene</h5>
+                    <p>Press <strong>Start Conversation</strong>. The AI opens first, then you answer when you are ready.</p>
                 </div>
-                <div class="message-content">
-                    <div class="chinese-text">{{ message.message_content.chinese }}</div>
-                    <hr class="pinyin-divider">
-                    <div class="pinyin-text">{{ message.message_content.pinyin }}</div>
-                </div>
-            </div>
-            {% else %}
-            <div class="chat-message user">
-                <div class="message-avatar user">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="message-content">
-                    <div class="chinese-text">{{ message.message_content.chinese_text }}</div>
-                </div>
-            </div>
             {% endif %}
-        {% endfor %}
-    </div>
+            {% for message in messages %}
+                {% if message.sender_type == 'ai' %}
+                <div class="chat-message ai">
+                    <div class="message-avatar ai">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <div class="chinese-text">{{ message.message_content.chinese }}</div>
+                        <hr class="pinyin-divider">
+                        <div class="pinyin-text">{{ message.message_content.pinyin }}</div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="chat-message user">
+                    <div class="message-avatar user">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="message-content">
+                        <div class="chinese-text">{{ message.message_content.chinese_text }}</div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
 
-    <!-- Chat Footer -->
-    <div class="chat-footer">
+        <aside class="chat-sidebar">
+        <!-- Chat Footer -->
+        <div class="chat-footer">
+        <section id="voice-stage" class="voice-stage practice-console" aria-live="polite">
+            <div class="practice-console-main">
+                <div class="practice-console-summary">
+                    <div class="voice-stage-header">
+                        <div class="voice-stage-title">Live speaking coach</div>
+                        <div id="voice-stage-pill" class="voice-stage-pill">
+                            <i class="fas fa-headphones"></i>
+                            <span>AI opens first</span>
+                        </div>
+                    </div>
+                    <div id="voice-stage-status" class="voice-stage-status">Start once, then let the AI speak first.</div>
+                    <p id="voice-stage-hint" class="voice-stage-hint">
+                        After the AI finishes, answer only when you are ready. If you get stuck, ask for a sample reply.
+                    </p>
+                    <div id="turn-focus-card" class="turn-focus-card">
+                        <div id="turn-focus-label" class="turn-focus-label">
+                            <i class="fas fa-circle-play"></i>
+                            <span>Next step</span>
+                        </div>
+                        <h3 id="turn-focus-title" class="turn-focus-title">Press Start Conversation</h3>
+                        <p id="turn-focus-copy" class="turn-focus-copy">The AI will ask the first question before you speak.</p>
+                    </div>
+                    <div class="voice-stage-actions practice-action-row">
+                        <button id="start-live-session-btn" class="live-session-btn primary" type="button">
+                            <i class="fas fa-bolt"></i>
+                            <span>Start Conversation</span>
+                        </button>
+                        <button id="reconnect-live-session-btn" class="live-session-btn secondary" type="button">
+                            <i class="fas fa-rotate-right"></i>
+                            <span>Reconnect</span>
+                        </button>
+                        <label class="voice-toggle practice-inline-toggle" aria-hidden="true">
+                            <input id="auto-play-toggle" type="checkbox" checked>
+                            <span>Auto-play AI audio</span>
+                        </label>
+                    </div>
+                    <div class="voice-stage-utility-copy" style="margin-top: 0.5rem; margin-bottom: 0.5rem;">Start once. The AI speaks first. Then answer only when you are ready.</div>
+                </div>
+                <div class="practice-console-wave">
+                    <div class="practice-wave-label">Live voice activity</div>
+                    <div id="voice-wave-shell" class="voice-wave-shell" aria-hidden="true">
+                        {% for i in "123456789012" %}
+                            <span class="voice-wave-bar"></span>
+                        {% endfor %}
+                    </div>
+                    <div class="voice-stage-footer">
+                        <span id="voice-stage-footer-text">Waiting for the AI greeting.</span>
+                        <span id="recording-timer-inline">00:00</span>
+                    </div>
+                </div>
+            </div>
+            <div class="live-caption-strip" aria-live="polite">
+                <div class="live-caption-card" style="border-radius: 1.25rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);">
+                    <div class="live-caption-label" style="color: #4b5563;">
+                        <i class="fas fa-microphone-alt"></i>
+                        <span>Your live transcript</span>
+                    </div>
+                    <div id="user-live-caption" class="live-caption-text is-empty" style="font-size: 1rem; color: #1f2937;">Your speech transcript will appear here after each turn.</div>
+                </div>
+            </div>
+            <div id="reply-suggestion-card" class="reply-suggestion-card" aria-live="polite" hidden>
+                <div class="reply-suggestion-header">
+                    <div>
+                        <div class="reply-suggestion-label">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>Suggested reply</span>
+                        </div>
+                        <h3 class="reply-suggestion-title">Use this if you are not sure what to say.</h3>
+                    </div>
+                    <button id="play-suggestion-btn" class="reply-suggestion-action" type="button" disabled>
+                        <i class="fas fa-volume-high"></i>
+                        <span>Hear it</span>
+                    </button>
+                </div>
+                <div id="reply-suggestion-text" class="reply-suggestion-text is-empty">Tap "Teach me what to say" after the AI finishes.</div>
+                <div id="reply-suggestion-pinyin" class="reply-suggestion-pinyin"></div>
+                <div id="reply-suggestion-tip" class="reply-suggestion-tip"></div>
+            </div>
+        </section>
+
         <!-- Confirmation Area (hidden by default) -->
         <div id="confirmation-area" class="confirmation-area" style="display: none;" role="dialog" aria-labelledby="confirmation-title" aria-describedby="confirmation-description">
             <div class="confirmation-header">
@@ -1367,22 +2205,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Input Mode Selector -->
-        <div id="input-mode-selector" class="input-mode-selector">
-            <button id="voice-mode-btn" class="mode-button active" data-mode="voice" title="Voice input mode">
-                <i class="fas fa-microphone"></i>
-                <span>Voice</span>
-            </button>
-            <button id="chinese-mode-btn" class="mode-button" data-mode="chinese" title="Chinese text input mode">
-                <i class="fas fa-keyboard"></i>
-                <span>中文</span>
-            </button>
-            <button id="english-mode-btn" class="mode-button" data-mode="english" title="English input mode">
-                <i class="fas fa-language"></i>
-                <span>English</span>
-            </button>
         </div>
 
         <!-- English Translation Confirmation Area (hidden by default) -->
@@ -1486,7 +2308,7 @@
                         <i class="fas fa-paper-plane" aria-hidden="true"></i>
                         Send Message
                     </button>
-                    <button id="retranslate-btn" class="btn-rerecord" aria-describedby="retranslate-help">
+                    <button id="retranslate-translation-btn" class="btn-rerecord" aria-describedby="retranslate-help">
                         <i class="fas fa-language" aria-hidden="true"></i>
                         Re-translate
                     </button>
@@ -1500,25 +2322,73 @@
                         <span id="retranslate-help">Press Escape to re-translate</span>
                     </div>
                 </div>
+                </div>
             </div>
-        </div>
 
         <!-- Input Controls -->
         <div id="input-area" class="input-controls">
-            <!-- Voice Input Mode (default) -->
             <div id="voice-input-area" class="input-mode-area active">
-                <button id="record-btn" class="record-button" title="Record voice message">
-                    <i class="fas fa-microphone"></i>
-                </button>
-                <button id="stop-btn" class="record-button" style="display: none; background: linear-gradient(135deg, #dc2626, #b91c1c) !important;" title="Stop recording">
-                    <i class="fas fa-stop"></i>
-                    <div class="recording-pulse"></div>
-                </button>
+                <div id="voice-answer-card" class="voice-answer-card">
+                    <div class="voice-answer-copy">
+                        <div id="voice-answer-label" class="voice-answer-label">
+                            <i class="fas fa-microphone-alt"></i>
+                            <span>Your speaking turn</span>
+                        </div>
+                        <h3 id="voice-answer-title" class="voice-answer-title">Wait for the AI to finish</h3>
+                        <p id="voice-answer-description" class="voice-answer-description">After the AI finishes, tap Start speaking when you want to answer, then tap Stop talking to send your turn.</p>
+                    </div>
+                    <div class="voice-answer-actions" style="display: flex; flex-wrap: wrap; gap: 0.85rem; justify-content: flex-start; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 1rem;">
+                        <button id="teach-reply-btn" class="reply-suggestion-action primary" type="button" disabled style="padding: 0.85rem 1.2rem; font-size: 0.92rem;">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>Teach me what to say</span>
+                        </button>
+                        <button id="record-btn" class="record-button voice-action-button" title="Start speaking">
+                            <i class="fas fa-microphone"></i>
+                            <span>Start speaking</span>
+                        </button>
+                        <button id="stop-btn" class="record-button voice-action-button voice-action-stop" hidden title="Stop talking">
+                            <i class="fas fa-stop"></i>
+                            <span>Stop talking</span>
+                            <div class="recording-pulse"></div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-mode-shell">
+                <details id="text-fallback-shell" class="text-fallback-shell">
+                    <summary>
+                        <div class="text-fallback-summary-copy">
+                            <strong>Use text instead</strong>
+                            <span>Open this only if you want to type in Chinese or write in English first.</span>
+                        </div>
+                        <div class="text-fallback-summary-icon">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </summary>
+                    <div class="text-fallback-body">
+                        <div id="input-mode-selector" class="input-mode-selector">
+                            <button id="voice-mode-btn" class="mode-button active" data-mode="voice" title="Voice input mode">
+                                <i class="fas fa-microphone"></i>
+                                <span>Voice</span>
+                            </button>
+                            <button id="chinese-mode-btn" class="mode-button" data-mode="chinese" title="Chinese text input mode">
+                                <i class="fas fa-keyboard"></i>
+                                <span>中文</span>
+                            </button>
+                            <button id="english-mode-btn" class="mode-button" data-mode="english" title="English input mode">
+                                <i class="fas fa-language"></i>
+                                <span>English</span>
+                            </button>
+                        </div>
+                    </div>
+                </details>
             </div>
 
             <!-- Chinese Text Input Mode -->
             <div id="chinese-input-area" class="input-mode-area">
                 <div class="text-input-wrapper">
+                    <label class="input-helper-label" for="chinese-text-input">Write directly in Chinese</label>
                     <textarea 
                         id="chinese-text-input" 
                         class="text-input" 
@@ -1534,6 +2404,7 @@
             <!-- English Input Mode -->
             <div id="english-input-area" class="input-mode-area">
                 <div class="text-input-wrapper">
+                    <label class="input-helper-label" for="english-text-input">Write in English and generate a Chinese reply</label>
                     <textarea 
                         id="english-text-input" 
                         class="text-input english-input" 
@@ -1547,918 +2418,33 @@
             </div>
         </div>
 
-        <!-- Status Indicator -->
-        <div id="status-indicator" style="display: none; text-align: center; padding: 0.75rem; color: #6b7280; font-size: 0.875rem;">
-            <i id="status-icon" class="fas fa-circle-notch fa-spin" style="margin-right: 0.5rem;"></i>
-            <span id="status-text">Processing...</span>
-            <div id="recording-timer" style="display: none; margin-top: 0.5rem; font-weight: 600; color: #ef4444;">
-                <i class="fas fa-circle" style="margin-right: 0.25rem; animation: blink 1s infinite;"></i>
-                <span id="timer-display">00:00</span>
-            </div>
         </div>
+        </aside>
     </div>
 </div>
 
 <!-- Audio element for TTS playback -->
 <audio id="tts-audio" preload="none"></audio>
-
-<script>
-// Global variables for input mode management
-let currentInputMode = 'voice';
-let currentTranslationData = null;
-
-// User preferences
-const UserPreferences = {
-    PINYIN_DISPLAY: 'chat_pinyin_display',
-    
-    get: function(key, defaultValue = null) {
-        try {
-            const value = localStorage.getItem(key);
-            return value !== null ? JSON.parse(value) : defaultValue;
-        } catch (e) {
-            return defaultValue;
-        }
-    },
-    
-    set: function(key, value) {
-        try {
-            localStorage.setItem(key, JSON.stringify(value));
-        } catch (e) {
-            console.warn('Failed to save user preference:', key, value);
-        }
-    }
-};
-
-// Auto-resize textarea function
-function setupTextareaAutoResize(textarea) {
-    if (!textarea) return;
-    textarea.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = (this.scrollHeight) + 'px';
-        
-        // Limit max height
-        const maxHeight = 120;
-        if (this.scrollHeight > maxHeight) {
-            this.style.height = maxHeight + 'px';
-            this.style.overflowY = 'auto';
-        } else {
-            this.style.overflowY = 'hidden';
-        }
-    });
-}
-
-// Auto-scroll chat to bottom
-function scrollToBottom() {
-    const chatBox = document.getElementById('chat-box');
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-// Add new message to chat
-function addMessage(content, isUser = false) {
-    const chatBox = document.getElementById('chat-box');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `chat-message ${isUser ? 'user' : 'ai'}`;
-    messageDiv.style.opacity = '0';
-    
-    const avatarDiv = document.createElement('div');
-    avatarDiv.className = `message-avatar ${isUser ? 'user' : 'ai'}`;
-    avatarDiv.innerHTML = `<i class="fas fa-${isUser ? 'user' : 'robot'}"></i>`;
-    
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'message-content';
-    
-    if (isUser) {
-        contentDiv.innerHTML = `<div class="chinese-text">${content}</div>`;
-    } else {
-        contentDiv.innerHTML = `
-            <div class="chinese-text">${content.chinese}</div>
-            <hr class="pinyin-divider">
-            <div class="pinyin-text">${content.pinyin}</div>
-        `;
-    }
-    
-    // Append elements based on message type
-    if (isUser) {
-        messageDiv.appendChild(contentDiv);
-        messageDiv.appendChild(avatarDiv);
-    } else {
-        messageDiv.appendChild(avatarDiv);
-        messageDiv.appendChild(contentDiv);
-    }
-    
-    chatBox.appendChild(messageDiv);
-    
-    // Trigger animation
-    setTimeout(() => {
-        messageDiv.style.opacity = '1';
-        messageDiv.style.transform = 'translateX(0)';
-    }, 50);
-    
-    scrollToBottom();
-}
-
-// Show/hide status indicator
-function showStatus(text) {
-    const statusEl = document.getElementById('status-indicator');
-    const statusText = document.getElementById('status-text');
-    statusText.textContent = text;
-    statusEl.style.display = 'block';
-}
-
-function hideStatus() {
-    document.getElementById('status-indicator').style.display = 'none';
-}
-
-// Input mode management
-function switchInputMode(mode) {
-    // Hide all input areas
-    document.getElementById('voice-input-area').classList.remove('active');
-    document.getElementById('chinese-input-area').classList.remove('active');
-    document.getElementById('english-input-area').classList.remove('active');
-    
-    // Remove active class from all mode buttons
-    document.querySelectorAll('.mode-button').forEach(btn => btn.classList.remove('active'));
-    
-    // Show selected input area and activate button
-    switch(mode) {
-        case 'voice':
-            document.getElementById('voice-input-area').classList.add('active');
-            document.getElementById('voice-mode-btn').classList.add('active');
-            break;
-        case 'chinese':
-            document.getElementById('chinese-input-area').classList.add('active');
-            document.getElementById('chinese-mode-btn').classList.add('active');
-            // Focus on Chinese input
-            setTimeout(() => {
-                const input = document.getElementById('chinese-text-input');
-                if (input) input.focus();
-            }, 100);
-            break;
-        case 'english':
-            document.getElementById('english-input-area').classList.add('active');
-            document.getElementById('english-mode-btn').classList.add('active');
-            // Focus on English input
-            setTimeout(() => {
-                const input = document.getElementById('english-text-input');
-                if (input) input.focus();
-            }, 100);
-            break;
-    }
-    
-    currentInputMode = mode;
-    hideAllConfirmationAreas();
-}
-
-// Hide all confirmation areas
-function hideAllConfirmationAreas() {
-    const confirmationArea = document.getElementById('confirmation-area');
-    const translationConfirmationArea = document.getElementById('translation-confirmation-area');
-    const inputArea = document.getElementById('input-area');
-    
-    if (confirmationArea) confirmationArea.style.display = 'none';
-    if (translationConfirmationArea) translationConfirmationArea.style.display = 'none';
-    if (inputArea) inputArea.style.display = 'flex';
-}
-
-// Show/hide voice confirmation area
-function showConfirmation(transcribed, english) {
-    const transcribedTextEl = document.getElementById('transcribed-text');
-    const englishTranslationEl = document.getElementById('english-translation');
-    const confirmationArea = document.getElementById('confirmation-area');
-    const inputArea = document.getElementById('input-area');
-    
-    if (transcribedTextEl) transcribedTextEl.textContent = transcribed;
-    if (englishTranslationEl) englishTranslationEl.textContent = english;
-    if (confirmationArea) confirmationArea.style.display = 'block';
-    if (inputArea) inputArea.style.display = 'none';
-}
-
-function hideConfirmation() {
-    const confirmationArea = document.getElementById('confirmation-area');
-    const inputArea = document.getElementById('input-area');
-    
-    if (confirmationArea) confirmationArea.style.display = 'none';
-    if (inputArea) inputArea.style.display = 'flex';
-}
-
-// Show/hide translation confirmation area
-function showTranslationConfirmation(originalEnglish, chineseTranslation, ttsAudio = null, pinyin = null) {
-    const originalEnglishEl = document.getElementById('original-english-text');
-    const chineseTranslationEl = document.getElementById('chinese-translation-text');
-    const translationConfirmationArea = document.getElementById('translation-confirmation-area');
-    const inputArea = document.getElementById('input-area');
-    
-    if (originalEnglishEl) originalEnglishEl.textContent = originalEnglish;
-    if (chineseTranslationEl) chineseTranslationEl.textContent = chineseTranslation;
-    
-    // Store translation data for later use
-    currentTranslationData = {
-        originalEnglish: originalEnglish,
-        chineseTranslation: chineseTranslation,
-        ttsAudio: ttsAudio,
-        pinyin: pinyin
-    };
-    
-    // Show/hide pinyin section based on availability
-    const pinyinSection = document.getElementById('pinyin-section');
-    const pinyinTextEl = document.getElementById('pinyin-text');
-    const togglePinyinBtn = document.getElementById('toggle-pinyin-btn');
-    
-    if (pinyin && pinyinSection && pinyinTextEl) {
-        setPinyinText(pinyinTextEl, pinyin);
-        
-        // Check user preference for pinyin display
-        const shouldShowPinyin = UserPreferences.get(UserPreferences.PINYIN_DISPLAY, true);
-        const pinyinDisplay = document.getElementById('pinyin-display');
-        
-        if (shouldShowPinyin && pinyinDisplay) {
-            pinyinSection.style.display = 'block';
-            pinyinDisplay.style.display = 'block';
-            
-            // Update toggle button state
-            if (togglePinyinBtn) {
-                const icon = togglePinyinBtn.querySelector('i');
-                if (icon) {
-                    icon.className = 'fas fa-eye-slash';
-                    togglePinyinBtn.title = 'Hide pinyin';
-                    togglePinyinBtn.classList.add('active');
-                }
-            }
-        } else {
-            pinyinSection.style.display = 'block';
-            if (pinyinDisplay) pinyinDisplay.style.display = 'none';
-            
-            // Update toggle button state
-            if (togglePinyinBtn) {
-                const icon = togglePinyinBtn.querySelector('i');
-                if (icon) {
-                    icon.className = 'fas fa-eye';
-                    togglePinyinBtn.title = 'Show pinyin';
-                    togglePinyinBtn.classList.remove('active');
-                }
-            }
-        }
-    } else if (pinyinSection) {
-        pinyinSection.style.display = 'none';
-        
-        // Reset toggle button state
-        if (togglePinyinBtn) {
-            const icon = togglePinyinBtn.querySelector('i');
-            if (icon) {
-                icon.className = 'fas fa-eye';
-                togglePinyinBtn.title = 'Show pinyin';
-                togglePinyinBtn.classList.remove('active');
-            }
-        }
-    }
-    
-    // Show translation confirmation area
-    if (translationConfirmationArea) translationConfirmationArea.style.display = 'block';
-    if (inputArea) inputArea.style.display = 'none';
-    
-    // Auto-play TTS if available
-    if (ttsAudio) {
-        playTTSAudio(ttsAudio);
-    }
-}
-
-function hideTranslationConfirmation() {
-    const translationConfirmationArea = document.getElementById('translation-confirmation-area');
-    const inputArea = document.getElementById('input-area');
-    
-    if (translationConfirmationArea) translationConfirmationArea.style.display = 'none';
-    if (inputArea) inputArea.style.display = 'flex';
-    currentTranslationData = null;
-}
-
-// Format pinyin text for better display
-function formatPinyinText(pinyinText) {
-    if (!pinyinText) return '';
-    
-    // Split by spaces and clean up
-    const pinyinWords = pinyinText.split(' ').filter(word => word.trim());
-    
-    // Create formatted HTML with individual syllable spans
-    const formattedHTML = pinyinWords.map(word => {
-        return `<span class="pinyin-syllable">${word.trim()}</span>`;
-    }).join('');
-    
-    return formattedHTML;
-}
-
-// Set pinyin text with HTML formatting
-function setPinyinText(element, pinyinText) {
-    if (!element || !pinyinText) return;
-    
-    const formattedHTML = formatPinyinText(pinyinText);
-    element.innerHTML = formattedHTML;
-}
-
-// Enhanced TTS Audio playback with controls and feedback
-let currentAudioPlayback = null;
-
-function playTTSAudio(base64Audio, playbackRate = 1.0) {
-    if (!base64Audio) {
-        showAudioFeedback('No audio available', 'error');
-        return;
-    }
-    
-    const audio = document.getElementById('tts-audio');
-    if (!audio) return;
-    
-    // Stop any current playback
-    stopTTSAudio();
-    
-    // Set up audio
-    audio.src = `data:audio/mp3;base64,${base64Audio}`;
-    audio.playbackRate = playbackRate;
-    
-    // Update UI state
-    updateAudioControlsState('playing');
-    showAudioFeedback('Playing pronunciation...', 'info');
-    
-    // Set up event listeners
-    const onEnded = () => {
-        updateAudioControlsState('stopped');
-        showAudioFeedback('Playback complete. Practice speaking along!', 'success');
-        audio.removeEventListener('ended', onEnded);
-        audio.removeEventListener('error', onError);
-    };
-    
-    const onError = (error) => {
-        updateAudioControlsState('error');
-        showAudioFeedback('Audio playback failed', 'error');
-        console.warn('TTS audio playback failed:', error);
-        audio.removeEventListener('ended', onEnded);
-        audio.removeEventListener('error', onError);
-    };
-    
-    audio.addEventListener('ended', onEnded);
-    audio.addEventListener('error', onError);
-    
-    // Start playback
-    audio.play().catch(error => {
-        onError(error);
-    });
-    
-    currentAudioPlayback = {
-        audio: audio,
-        base64Audio: base64Audio,
-        playbackRate: playbackRate
-    };
-}
-
-function stopTTSAudio() {
-    const audio = document.getElementById('tts-audio');
-    if (audio && !audio.paused) {
-        audio.pause();
-        audio.currentTime = 0;
-    }
-    
-    updateAudioControlsState('stopped');
-    currentAudioPlayback = null;
-}
-
-function replayTTSAudio() {
-    if (currentTranslationData && currentTranslationData.ttsAudio) {
-        playTTSAudio(currentTranslationData.ttsAudio, 1.0);
-    } else {
-        showAudioFeedback('No audio to replay', 'error');
-    }
-}
-
-function playSlowTTSAudio() {
-    if (currentTranslationData && currentTranslationData.ttsAudio) {
-        playTTSAudio(currentTranslationData.ttsAudio, 0.7); // 70% speed
-        showAudioFeedback('Playing slowly for practice...', 'info');
-    } else {
-        showAudioFeedback('No audio available for slow playback', 'error');
-    }
-}
-
-function updateAudioControlsState(state) {
-    const replayBtn = document.getElementById('replay-tts-btn');
-    const slowBtn = document.getElementById('slow-tts-btn');
-    const stopBtn = document.getElementById('stop-tts-btn');
-    const playBtn = document.getElementById('play-tts-btn');
-    
-    // Reset all button states
-    [replayBtn, slowBtn, stopBtn, playBtn].forEach(btn => {
-        if (btn) btn.classList.remove('playing');
-    });
-    
-    switch(state) {
-        case 'playing':
-            if (stopBtn) stopBtn.classList.add('playing');
-            [replayBtn, slowBtn, playBtn].forEach(btn => {
-                if (btn) btn.disabled = true;
-            });
-            if (stopBtn) stopBtn.disabled = false;
-            break;
-            
-        case 'stopped':
-        case 'error':
-            [replayBtn, slowBtn, playBtn, stopBtn].forEach(btn => {
-                if (btn) btn.disabled = false;
-            });
-            break;
-    }
-}
-
-function showAudioFeedback(message, type = 'info') {
-    const feedbackEl = document.getElementById('feedback-message');
-    if (!feedbackEl) return;
-    
-    // Update message
-    const textSpan = feedbackEl.querySelector('span');
-    if (textSpan) textSpan.textContent = message;
-    
-    // Update icon based on type
-    const icon = feedbackEl.querySelector('i');
-    if (icon) {
-        switch(type) {
-            case 'success':
-                icon.className = 'fas fa-check-circle';
-                feedbackEl.className = 'feedback-message success';
-                break;
-            case 'error':
-                icon.className = 'fas fa-exclamation-triangle';
-                feedbackEl.className = 'feedback-message error';
-                break;
-            case 'info':
-            default:
-                icon.className = 'fas fa-info-circle';
-                feedbackEl.className = 'feedback-message';
-                break;
-        }
-    }
-    
-    // Add animation
-    feedbackEl.style.animation = 'none';
-    setTimeout(() => {
-        feedbackEl.style.animation = 'fadeInUp 0.3s ease-out';
-    }, 10);
-}
-
-// English text translation
-async function translateEnglishText(englishText) {
-    if (!englishText.trim()) {
-        alert('Please enter some English text to translate.');
-        return;
-    }
-    
-    showStatus('Translating...');
-    
-    try {
-        const response = await fetch('{% url "speak_practice:translate_text_api" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({
-                text: englishText
-            })
-        });
-        
-        const data = await response.json();
-        hideStatus();
-        
-        if (data.success) {
-            // Show translation confirmation with TTS audio
-            showTranslationConfirmation(
-                englishText,
-                data.chinese_text,
-                data.tts_audio,
-                data.pinyin || null
-            );
-        } else {
-            alert('Translation failed: ' + (data.error || 'Unknown error'));
-        }
-        
-    } catch (error) {
-        hideStatus();
-        console.error('Translation error:', error);
-        alert('Translation failed. Please check your connection and try again.');
-    }
-}
-
-// Send Chinese message (from any input mode)
-function sendChineseMessage(chineseText) {
-    if (!chineseText.trim()) return;
-    
-    // Add user message to chat
-    addMessage(chineseText, true);
-    
-    // Clear inputs and hide confirmations
-    const chineseTextInput = document.getElementById('chinese-text-input');
-    const englishTextInput = document.getElementById('english-text-input');
-    
-    if (chineseTextInput) chineseTextInput.value = '';
-    if (englishTextInput) englishTextInput.value = '';
-    
-    hideAllConfirmationAreas();
-    
-    showStatus('AI is thinking...');
-    
-    // Here the actual chat API call would happen
-    // For now, just hide status after a delay
-    setTimeout(() => {
-        hideStatus();
-    }, 2000);
-}
-
-// Initialize chat when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    scrollToBottom();
-    
-    // Setup input mode switching
-    const voiceModeBtn = document.getElementById('voice-mode-btn');
-    const chineseModeBtn = document.getElementById('chinese-mode-btn');
-    const englishModeBtn = document.getElementById('english-mode-btn');
-    
-    if (voiceModeBtn) voiceModeBtn.addEventListener('click', () => switchInputMode('voice'));
-    if (chineseModeBtn) chineseModeBtn.addEventListener('click', () => switchInputMode('chinese'));
-    if (englishModeBtn) englishModeBtn.addEventListener('click', () => switchInputMode('english'));
-    
-    // Setup auto-resize for textareas
-    setupTextareaAutoResize(document.getElementById('chinese-text-input'));
-    setupTextareaAutoResize(document.getElementById('english-text-input'));
-    
-    // Voice input handlers (placeholder)
-    const recordBtn = document.getElementById('record-btn');
-    const stopBtn = document.getElementById('stop-btn');
-    
-    if (recordBtn) {
-        recordBtn.addEventListener('click', function() {
-            this.classList.add('recording');
-            this.style.display = 'none';
-            if (stopBtn) stopBtn.style.display = 'flex';
-            showStatus('Listening...');
-        });
-    }
-    
-    if (stopBtn) {
-        stopBtn.addEventListener('click', function() {
-            if (recordBtn) {
-                recordBtn.classList.remove('recording');
-                recordBtn.style.display = 'flex';
-            }
-            this.style.display = 'none';
-            showStatus('Processing audio...');
-            
-            // Simulate voice recognition result
-            setTimeout(() => {
-                hideStatus();
-                showConfirmation('你好，我想学中文。', 'Hello, I want to learn Chinese.');
-            }, 2000);
-        });
-    }
-    
-    // Chinese text input handlers
-    const chineseTextInput = document.getElementById('chinese-text-input');
-    const sendChineseBtn = document.getElementById('send-chinese-btn');
-    
-    if (chineseTextInput) {
-        chineseTextInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendChineseMessage(this.value);
-            }
-        });
-    }
-    
-    if (sendChineseBtn) {
-        sendChineseBtn.addEventListener('click', function() {
-            if (chineseTextInput) sendChineseMessage(chineseTextInput.value);
-        });
-    }
-    
-    // English text input handlers
-    const englishTextInput = document.getElementById('english-text-input');
-    const translateBtn = document.getElementById('translate-btn');
-    
-    if (englishTextInput) {
-        englishTextInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                translateEnglishText(this.value);
-            }
-        });
-    }
-    
-    if (translateBtn) {
-        translateBtn.addEventListener('click', function() {
-            if (englishTextInput) translateEnglishText(englishTextInput.value);
-        });
-    }
-    
-    // Voice confirmation handlers
-    const confirmSendBtn = document.getElementById('confirm-send-btn');
-    const rerecordBtn = document.getElementById('rerecord-btn');
-    
-    if (confirmSendBtn) {
-        confirmSendBtn.addEventListener('click', function() {
-            const transcribedTextEl = document.getElementById('transcribed-text');
-            if (transcribedTextEl) {
-                sendChineseMessage(transcribedTextEl.textContent);
-            }
-        });
-    }
-    
-    if (rerecordBtn) {
-        rerecordBtn.addEventListener('click', function() {
-            hideConfirmation();
-        });
-    }
-    
-    // Translation confirmation handlers
-    const confirmTranslationSendBtn = document.getElementById('confirm-translation-send-btn');
-    const retranslateBtn = document.getElementById('retranslate-btn');
-    
-    if (confirmTranslationSendBtn) {
-        confirmTranslationSendBtn.addEventListener('click', function() {
-            if (currentTranslationData) {
-                sendChineseMessage(currentTranslationData.chineseTranslation);
-            }
-        });
-    }
-    
-    if (retranslateBtn) {
-        retranslateBtn.addEventListener('click', function() {
-            hideTranslationConfirmation();
-            // Focus back on English input
-            setTimeout(() => {
-                const englishInput = document.getElementById('english-text-input');
-                if (englishInput) englishInput.focus();
-            }, 100);
-        });
-    }
-    
-    // TTS audio control handlers
-    const playTtsBtn = document.getElementById('play-tts-btn');
-    const replayTtsBtn = document.getElementById('replay-tts-btn');
-    const slowTtsBtn = document.getElementById('slow-tts-btn');
-    const stopTtsBtn = document.getElementById('stop-tts-btn');
-    
-    if (playTtsBtn) {
-        playTtsBtn.addEventListener('click', function() {
-            if (currentTranslationData && currentTranslationData.ttsAudio) {
-                playTTSAudio(currentTranslationData.ttsAudio);
-            } else {
-                showAudioFeedback('No audio available', 'error');
-            }
-        });
-    }
-    
-    if (replayTtsBtn) {
-        replayTtsBtn.addEventListener('click', replayTTSAudio);
-    }
-    
-    if (slowTtsBtn) {
-        slowTtsBtn.addEventListener('click', playSlowTTSAudio);
-    }
-    
-    if (stopTtsBtn) {
-        stopTtsBtn.addEventListener('click', stopTTSAudio);
-    }
-    
-    // Global keyboard shortcuts for translation confirmation
-    document.addEventListener('keydown', function(e) {
-        // Only handle shortcuts when translation confirmation is visible
-        const translationConfirmationArea = document.getElementById('translation-confirmation-area');
-        if (!translationConfirmationArea || translationConfirmationArea.style.display === 'none') {
-            return;
-        }
-        
-        // Audio control shortcuts
-        if (e.key === 'p' && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault();
-            if (currentTranslationData && currentTranslationData.ttsAudio) {
-                playTTSAudio(currentTranslationData.ttsAudio);
-            }
-        } else if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault();
-            playSlowTTSAudio();
-        } else if (e.key === ' ' && !e.ctrlKey && !e.metaKey) {
-            e.preventDefault();
-            if (currentAudioPlayback) {
-                stopTTSAudio();
-            } else {
-                replayTTSAudio();
-            }
-        } else if (e.key === 'r' && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault();
-            replayTTSAudio();
-        }
-    });
-    
-    // Pinyin toggle handler
-    const togglePinyinBtn = document.getElementById('toggle-pinyin-btn');
-    if (togglePinyinBtn) {
-        // Initialize pinyin display based on user preference
-        const pinyinDisplayPreference = UserPreferences.get(UserPreferences.PINYIN_DISPLAY, true);
-        
-        togglePinyinBtn.addEventListener('click', function() {
-            const pinyinDisplay = document.getElementById('pinyin-display');
-            const icon = this.querySelector('i');
-            
-            if (pinyinDisplay && icon) {
-                const isCurrentlyVisible = pinyinDisplay.style.display !== 'none';
-                const newVisibility = !isCurrentlyVisible;
-                
-                // Update display
-                if (newVisibility) {
-                    pinyinDisplay.style.display = 'block';
-                    icon.className = 'fas fa-eye-slash';
-                    this.title = 'Hide pinyin';
-                    this.classList.add('active');
-                } else {
-                    pinyinDisplay.style.display = 'none';
-                    icon.className = 'fas fa-eye';
-                    this.title = 'Show pinyin';
-                    this.classList.remove('active');
-                }
-                
-                // Save user preference
-                UserPreferences.set(UserPreferences.PINYIN_DISPLAY, newVisibility);
-            }
-        });
-    }
-});
-</script>
+{{ conversation_history|json_script:"conversation-history-data" }}
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'speak_practice/speak_practice.js' %}"></script>
 <script>
-    const sessionId = "{{ session.id }}";
-    const chatApiUrl = "{% url 'speak_practice:chat_api' %}";
-    const transcribeApiUrl = "{% url 'speak_practice:transcribe_audio_api' %}";
-    const translateApiUrl = "{% url 'speak_practice:translate_text_api' %}";
-    const translateChineseApiUrl = "{% url 'speak_practice:translate_chinese_api' %}";
-    const csrfToken = "{{ csrf_token }}";
-
-    document.addEventListener('DOMContentLoaded', () => {
-        initializeChat(sessionId, chatApiUrl, transcribeApiUrl, translateApiUrl, translateChineseApiUrl, csrfToken);
-        initializeNavigationControls();
-    });
-
-    // Navigation control functions
-    function initializeNavigationControls() {
-        const restartBtn = document.getElementById('restart-conversation-btn');
-        const changeTopicBtn = document.getElementById('change-topic-btn');
-
-        if (restartBtn) {
-            restartBtn.addEventListener('click', handleRestartConversation);
-        }
-
-        if (changeTopicBtn) {
-            changeTopicBtn.addEventListener('click', handleChangeTopic);
-        }
-    }
-
-    function handleRestartConversation() {
-        if (confirm('Are you sure you want to restart this conversation? All current messages will be cleared.')) {
-            showNavigationStatus('Restarting conversation...');
-            
-            // Clear the chat box
-            const chatBox = document.getElementById('chat-box');
-            if (chatBox) {
-                chatBox.innerHTML = '';
-            }
-
-            // Hide confirmation area if visible
-            const confirmationArea = document.getElementById('confirmation-area');
-            if (confirmationArea) {
-                confirmationArea.style.display = 'none';
-            }
-
-            // Reset input area
-            const textInput = document.getElementById('text-input');
-            if (textInput) {
-                textInput.value = '';
-            }
-
-            // Make API call to restart the session
-            fetch('/speak/api/restart-session/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify({
-                    session_id: sessionId
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Add the new opening message
-                    if (data.opening_message) {
-                        addMessageToChat(data.opening_message, false, true);
-                    }
-                    showNavigationStatus('Conversation restarted successfully!');
-                    setTimeout(() => hideNavigationStatus(), 2000);
-                } else {
-                    throw new Error(data.error || 'Failed to restart conversation');
-                }
-            })
-            .catch(error => {
-                console.error('Error restarting conversation:', error);
-                showNavigationStatus('Failed to restart conversation. Please try again.', 'error');
-                setTimeout(() => hideNavigationStatus(), 3000);
-            });
-        }
-    }
-
-    function handleChangeTopic() {
-        if (confirm('Are you sure you want to change the topic? Current conversation progress will be lost.')) {
-            window.location.href = "{% url 'speak_practice:scene_selection' %}";
-        }
-    }
-
-    function showNavigationStatus(message, type = 'info') {
-        const statusIndicator = document.getElementById('status-indicator') || createStatusIndicator();
-        const statusText = document.getElementById('status-text');
-        
-        if (statusText) {
-            statusText.textContent = message;
-        }
-        
-        statusIndicator.className = `status-indicator ${type}`;
-        statusIndicator.style.display = 'flex';
-    }
-
-    function hideNavigationStatus() {
-        const statusIndicator = document.getElementById('status-indicator');
-        if (statusIndicator) {
-            statusIndicator.style.display = 'none';
-        }
-    }
-
-    function createStatusIndicator() {
-        const statusIndicator = document.createElement('div');
-        statusIndicator.id = 'status-indicator';
-        statusIndicator.className = 'status-indicator';
-        statusIndicator.innerHTML = '<span id="status-text"></span>';
-        statusIndicator.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #FE4D01;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            z-index: 1000;
-            display: none;
-            align-items: center;
-            font-weight: 500;
-            font-size: 14px;
-        `;
-        document.body.appendChild(statusIndicator);
-        return statusIndicator;
-    }
-
-    // Helper function to add messages to chat (if not already available)
-    function addMessageToChat(messageContent, isUser = false, hasAudio = false) {
-        const chatBox = document.getElementById('chat-box');
-        if (!chatBox) return;
-
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `chat-message ${isUser ? 'user' : 'ai'}`;
-        
-        const avatarDiv = document.createElement('div');
-        avatarDiv.className = `message-avatar ${isUser ? 'user' : 'ai'}`;
-        avatarDiv.innerHTML = `<i class="fas fa-${isUser ? 'user' : 'robot'}"></i>`;
-        
-        const contentDiv = document.createElement('div');
-        contentDiv.className = 'message-content';
-        
-        if (isUser) {
-            contentDiv.innerHTML = `<div class="chinese-text">${messageContent.chinese_text || messageContent}</div>`;
-        } else {
-            contentDiv.innerHTML = `
-                <div class="chinese-text">${messageContent.chinese || messageContent}</div>
-                ${messageContent.pinyin ? `<hr class="pinyin-divider"><div class="pinyin-text">${messageContent.pinyin}</div>` : ''}
-            `;
-        }
-        
-        messageDiv.appendChild(avatarDiv);
-        messageDiv.appendChild(contentDiv);
-        chatBox.appendChild(messageDiv);
-        
-        // Scroll to bottom
-        chatBox.scrollTop = chatBox.scrollHeight;
-        
-        // Play TTS audio if available
-        if (hasAudio && messageContent.tts_audio) {
-            // Assuming audioPlayer is available globally
-            if (window.audioPlayer) {
-                window.audioPlayer.playBase64Audio(messageContent.tts_audio);
-            }
-        }
-    }
+    window.speakPracticeConfig = {
+        sessionId: "{{ session.id }}",
+        chatApiUrl: "{% url 'speak_practice:chat_api' %}",
+        transcribeApiUrl: "{% url 'speak_practice:transcribe_audio_api' %}",
+        translateApiUrl: "{% url 'speak_practice:translate_text_api' %}",
+        translateChineseApiUrl: "{% url 'speak_practice:translate_chinese_api' %}",
+        realtimeSessionApiUrl: "{% url 'speak_practice:realtime_session_api' %}",
+        realtimeMessageApiUrl: "{% url 'speak_practice:realtime_message_api' %}",
+        replySuggestionApiUrl: "{% url 'speak_practice:reply_suggestion_api' %}",
+        restartSessionApiUrl: "{% url 'speak_practice:restart_session_api' %}",
+        sceneSelectionUrl: "{% url 'speak_practice:scene_selection' %}",
+        csrfToken: "{{ csrf_token }}",
+        initialAiAudio: "{{ initial_ai_audio|default:''|escapejs }}",
+        conversationHistory: JSON.parse(document.getElementById('conversation-history-data').textContent),
+    };
 </script>
+<script src="{% static 'speak_practice/chat_realtime.js' %}"></script>
 {% endblock %}

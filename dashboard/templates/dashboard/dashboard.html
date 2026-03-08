@@ -8,76 +8,170 @@
 
 {% block content %}
 <div class="dashboard-container">
-    <!-- Top Welcome Section -->
-    <div class="welcome-section">
+    <section class="welcome-section">
         <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-7">
+            <div class="welcome-shell">
+                <div class="welcome-copy">
+                    <span class="welcome-badge">
+                        <i class="fas fa-microphone-alt"></i>
+                        Speaking Practice Is Ready
+                    </span>
                     <h1 class="welcome-title">Hello, {{ user.username }}!</h1>
-                    <p class="welcome-subtitle">Welcome to Learn Chinese Perth Platform</p>
-                    <p class="welcome-message">Start your Chinese learning journey today.</p>
+                    <p class="welcome-subtitle">Pick one clear next step and keep the practice loop short.</p>
+                    <p class="welcome-message">
+                        Start with live speaking when you want conversation flow, use typing when you want more control,
+                        and open pinyin support when pronunciation needs a quick check.
+                    </p>
+                    <div class="hero-actions">
+                        <a href="{% url 'speak_practice:scene_selection' %}" class="hero-btn hero-btn-primary">
+                            <i class="fas fa-headset"></i>
+                            Start Speaking
+                        </a>
+                        {% if recent_speaking_session %}
+                            <a href="{% url 'speak_practice:chat_view' recent_speaking_session.id %}" class="hero-btn hero-btn-secondary">
+                                <i class="fas fa-history"></i>
+                                Continue Last Scene
+                            </a>
+                        {% else %}
+                            <a href="{% url 'accounts:profile' %}" class="hero-btn hero-btn-secondary">
+                                <i class="fas fa-user-cog"></i>
+                                Update Learning Profile
+                            </a>
+                        {% endif %}
+                    </div>
                 </div>
-                <div class="col-md-5">
-                    <div class="quick-stats">
-                        <div class="stat-card">
-                            <i class="fas fa-calendar-check"></i>
-                            <div class="stat-info">
-                                <h3>Today's Learning</h3>
-                                <p>Let's start learning</p>
-                            </div>
+
+                <div class="hero-panel">
+                    <div class="hero-panel-head">
+                        <span class="hero-panel-label">Today's Learning</span>
+                        <span class="hero-panel-status {% if profile_ready %}is-ready{% else %}is-waiting{% endif %}">
+                            {% if profile_ready %}Profile Ready{% else %}Profile Incomplete{% endif %}
+                        </span>
+                    </div>
+                    <div class="hero-metrics">
+                        <div class="hero-metric-card">
+                            <span class="hero-metric-value">{{ speaking_session_count }}</span>
+                            <span class="hero-metric-label">Speaking Sessions</span>
+                        </div>
+                        <div class="hero-metric-card">
+                            <span class="hero-metric-value">{{ voice_message_count }}</span>
+                            <span class="hero-metric-label">Voice Turns</span>
+                        </div>
+                        <div class="hero-metric-card">
+                            <span class="hero-metric-value">{{ typing_record_count }}</span>
+                            <span class="hero-metric-label">Typing Attempts</span>
+                        </div>
+                        <div class="hero-metric-card">
+                            <span class="hero-metric-value">{{ completed_typing_count }}</span>
+                            <span class="hero-metric-label">Completed Drills</span>
                         </div>
                     </div>
+                    <div class="hero-note">
+                        {% if recent_speaking_session %}
+                            <strong>Last speaking scene:</strong> {{ recent_speaking_session.scene|truncatechars:72 }}
+                        {% else %}
+                            <strong>Best next move:</strong> start one short speaking scene and keep each turn under two sentences.
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Main Content Area -->
     <div class="container main-content">
-        <!-- Feature Categories -->
-        <div class="row">
-            <!-- Pinyin Assistant Card -->
-            <div class="col-md-4 mb-4">
-                <div class="feature-card pinyin-feature-card">
-                    <div class="pinyin-icon-wrapper">
-                        <i class="fas fa-language card-icon"></i>
-                    </div>
-                    <h3>Pinyin Assistant</h3>
-                    <p>Learn Chinese pinyin with ease and improve pronunciation accuracy. Automatically recognize multi-pronunciation characters and provide precise pinyin annotations.</p>
-                    <a href="{% url 'pinyinit:index' %}" class="btn btn-feature">
-                        <i class="fas fa-arrow-right"></i> Start Using
-                    </a>
+        <section class="section-block">
+            <div class="section-heading">
+                <div>
+                    <span class="section-eyebrow">Core Practice</span>
+                    <h2 class="section-title">Choose Your Practice Mode</h2>
                 </div>
+                <p class="section-description">Speaking is now the clearest entry point, with typing and pinyin as support tools around it.</p>
             </div>
-            <!-- Typing Practice Card -->
-            <div class="col-md-4 mb-4">
-                <div class="feature-card typing-feature-card">
-                    <div class="typing-icon-wrapper">
-                        <i class="fas fa-keyboard card-icon"></i>
-                    </div>
-                    <h3>Typing Practice</h3>
-                    <p>Improve Chinese typing speed and accuracy. Customize or generate practice text, and track typing efficiency and progress in real-time.</p>
-                    <a href="{% url 'typingchinese:home' %}" class="btn btn-feature">
-                        <i class="fas fa-arrow-right"></i> Start Practice
-                    </a>
-                </div>
-            </div>
-            <!-- Speaking Practice Card - Hidden until feature is completed
-            <div class="col-md-4 mb-4">
-                <div class="feature-card speaking-feature-card">
-                    <div class="speaking-icon-wrapper">
-                        <i class="fas fa-microphone-alt card-icon"></i>
+
+            <div class="feature-grid">
+                <article class="feature-card speaking-feature-card feature-card-primary">
+                    <div class="feature-card-top">
+                        <div class="feature-icon-wrapper">
+                            <i class="fas fa-microphone-alt card-icon"></i>
+                        </div>
+                        <span class="feature-pill">Recommended</span>
                     </div>
                     <h3>Speaking Practice</h3>
-                    <p>Practice your spoken Chinese with an AI partner. Choose a scene and start a conversation, with real-time feedback and pinyin support.</p>
-                    <a href="{% url 'speak_practice:scene_selection' %}" class="btn btn-feature">
-                        <i class="fas fa-arrow-right"></i> Start Speaking
-                    </a>
+                    <p>Choose or write a scene, then jump into a live Chinese conversation where the AI opens first and you answer in short turns.</p>
+                    <ul class="feature-points">
+                        <li>Realtime voice conversation</li>
+                        <li>Scene-based role play</li>
+                        <li>Pinyin-supported transcript history</li>
+                    </ul>
+                    <div class="feature-card-footer">
+                        <a href="{% url 'speak_practice:scene_selection' %}" class="btn btn-feature">
+                            <i class="fas fa-arrow-right"></i> Start Speaking
+                        </a>
+                        {% if recent_speaking_session %}
+                            <a href="{% url 'speak_practice:chat_view' recent_speaking_session.id %}" class="feature-secondary-link">Continue latest</a>
+                        {% endif %}
+                    </div>
+                </article>
+
+                <article class="feature-card typing-feature-card">
+                    <div class="feature-card-top">
+                        <div class="feature-icon-wrapper">
+                            <i class="fas fa-keyboard card-icon"></i>
+                        </div>
+                        <span class="feature-pill subtle">Control</span>
+                    </div>
+                    <h3>Typing Practice</h3>
+                    <p>Slow the pace down and focus on sentence accuracy, character recall, and text production with guided prompts.</p>
+                    <ul class="feature-points">
+                        <li>AI-generated practice text</li>
+                        <li>Custom topics and lengths</li>
+                        <li>Progress tracking while typing</li>
+                    </ul>
+                    <div class="feature-card-footer">
+                        <a href="{% url 'typingchinese:home' %}" class="btn btn-feature">
+                            <i class="fas fa-arrow-right"></i> Start Practice
+                        </a>
+                    </div>
+                </article>
+
+                <article class="feature-card pinyin-feature-card">
+                    <div class="feature-card-top">
+                        <div class="feature-icon-wrapper">
+                            <i class="fas fa-language card-icon"></i>
+                        </div>
+                        <span class="feature-pill subtle">Support</span>
+                    </div>
+                    <h3>Pinyin Assistant</h3>
+                    <p>Check pronunciation, disambiguate tricky characters, and use pinyin markup when you need support before speaking again.</p>
+                    <ul class="feature-points">
+                        <li>Character-by-character pinyin markup</li>
+                        <li>Polyphonic character support</li>
+                        <li>Useful before shadowing or review</li>
+                    </ul>
+                    <div class="feature-card-footer">
+                        <a href="{% url 'pinyinit:index' %}" class="btn btn-feature">
+                            <i class="fas fa-arrow-right"></i> Open Assistant
+                        </a>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="section-block practice-strip">
+            <div class="practice-strip-card">
+                <div>
+                    <span class="section-eyebrow">Best Flow</span>
+                    <h3 class="practice-strip-title">A cleaner path through the product</h3>
+                    <p class="practice-strip-text">Speak first, review transcript and pinyin second, then use typing only when you want a slower form-focused loop.</p>
+                </div>
+                <div class="practice-strip-steps">
+                    <span>1. Pick a scene</span>
+                    <span>2. Talk in short turns</span>
+                    <span>3. Review transcript</span>
+                    <span>4. Repeat with a new scene</span>
                 </div>
             </div>
-            -->
-            <!-- Additional feature cards can be added here -->
-        </div>
+        </section>
     </div>
 </div>
 {% endblock %}

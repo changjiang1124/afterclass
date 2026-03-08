@@ -9,9 +9,9 @@
 <style>
 /* Override Bootstrap styles */
 .scene-selection-container {
-    max-width: 1200px !important;
+    max-width: 1280px !important;
     margin: 0 auto !important;
-    padding: 3rem 1.5rem !important;
+    padding: 2rem 1.5rem 3rem !important;
     animation: fadeInUp 0.6s ease-out;
 }
 
@@ -19,28 +19,247 @@
     box-sizing: border-box;
 }
 
-.hero-section {
-    text-align: center;
-    margin-bottom: 4rem !important;
-    padding: 3rem 0 !important;
+.hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.95fr);
+    gap: 1.25rem;
+    align-items: start;
+    margin-bottom: 2rem !important;
+}
+
+.hero-panel,
+.context-panel,
+.custom-scene-section,
+.topics-panel {
+    background: #ffffff !important;
+    border-radius: 1.5rem !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06) !important;
+}
+
+.hero-panel {
+    padding: 2.4rem 2.5rem !important;
+    background:
+        radial-gradient(circle at top left, rgba(255, 217, 102, 0.18), transparent 26%),
+        linear-gradient(135deg, #fff8f1, #ffffff 58%);
+}
+
+.hero-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 0.85rem;
+    margin-bottom: 1rem;
+    border-radius: 999px;
+    background: rgba(254, 77, 1, 0.08);
+    color: #c2410c;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.hero-title {
+    margin: 0 0 1rem;
+    font-size: clamp(2.6rem, 5vw, 4.2rem);
+    line-height: 0.98;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #FE4D01, #ea580c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-description {
+    margin: 0;
+    max-width: 42rem;
+    font-size: 1.12rem;
+    color: #5b6472;
+    line-height: 1.75;
+}
+
+.hero-steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem;
+    margin-top: 1.35rem;
+}
+
+.hero-step {
+    padding: 0.95rem 1rem;
+    border-radius: 1rem;
+    background: #ffffff;
+    border: 1px solid rgba(254, 77, 1, 0.12);
+}
+
+.hero-step strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: #111827;
+    font-size: 0.95rem;
+}
+
+.hero-step span {
+    display: block;
+    color: #6b7280;
+    font-size: 0.86rem;
+    line-height: 1.5;
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    margin-top: 1.5rem;
+}
+
+.hero-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.9rem 1.2rem;
+    border-radius: 999px;
+    font-weight: 700;
+    text-decoration: none !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hero-link-btn:hover {
+    transform: translateY(-1px);
+}
+
+.hero-link-btn.primary {
+    background: linear-gradient(135deg, #111827, #1f2937);
+    color: #ffffff;
+    box-shadow: 0 16px 28px rgba(17, 24, 39, 0.18);
+}
+
+.hero-link-btn.secondary {
+    background: #ffffff;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+}
+
+.context-panel {
+    padding: 1.1rem !important;
+    display: grid;
+    gap: 0.9rem;
+}
+
+.context-card {
+    padding: 1rem 1.1rem;
+    border-radius: 1.1rem;
+    border: 1px solid #e5e7eb;
+    background: #fffdfa;
+}
+
+.context-card.profile-card {
+    border-color: #fed7aa;
+    background: #fff7ed;
+}
+
+.context-card.profile-alert {
+    border-color: #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.context-card.neutral-card {
+    background: #f8fafc;
+}
+
+.context-card-label {
+    display: inline-block;
+    margin-bottom: 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9a3412;
+}
+
+.context-card-title {
+    margin: 0 0 0.4rem;
+    font-size: 1.1rem;
+    color: #111827;
+    font-weight: 700;
+}
+
+.context-card-text {
+    margin: 0;
+    color: #4b5563;
+    line-height: 1.65;
+}
+
+.context-card-link {
+    color: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.selection-layout {
+    display: grid;
+    grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.5fr);
+    gap: 1.25rem;
+    align-items: start;
 }
 
 .custom-scene-section {
-    background: #ffffff !important;
-    border-radius: 1.5rem !important;
-    padding: 3rem !important;
-    margin-bottom: 4rem !important;
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
-    border: 1px solid #e5e7eb !important;
-    position: relative;
-    overflow: hidden;
+    padding: 1.5rem !important;
+    position: sticky;
+    top: 1.25rem;
+}
+
+.custom-scene-section h2,
+.topics-panel-title {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.custom-scene-section p {
+    margin: 0 0 1rem;
+    color: #6b7280;
+    line-height: 1.65;
+}
+
+.custom-scene-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.custom-scene-textarea {
+    width: 100%;
+    min-height: 180px;
+    padding: 1.15rem 1.2rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 1rem;
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: all 0.3s ease;
+    background: #f9fafb;
+    color: #111827;
+}
+
+.custom-scene-textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px #dbeafe;
+    background: #ffffff;
 }
 
 .suggested-scenes-grid {
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)) !important;
-    gap: 2rem !important;
-    margin-bottom: 3rem !important;
+    gap: 1.2rem !important;
+    margin-bottom: 0 !important;
 }
 
 .scene-card {
@@ -57,6 +276,39 @@
     box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
     text-decoration: none !important;
     color: inherit !important;
+}
+
+.topics-panel {
+    padding: 1.4rem !important;
+}
+
+.topics-panel-header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.topics-panel-copy p {
+    margin: 0;
+    color: #6b7280;
+    line-height: 1.6;
+}
+
+.topics-panel-tools {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.4rem 0.5rem 0.4rem 0.9rem;
+    border-radius: 999px;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #9a3412;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
 }
 
 .btn-customize {
@@ -100,136 +352,246 @@
 #topics-container.topics-loaded {
     display: grid;
 }
+
+@media (max-width: 980px) {
+    .hero-grid,
+    .selection-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-steps {
+        grid-template-columns: 1fr;
+    }
+
+    .custom-scene-section {
+        position: static;
+    }
+}
+
+@media (max-width: 640px) {
+    .scene-selection-container {
+        padding: 1.25rem 1rem 2rem !important;
+    }
+
+    .hero-panel,
+    .topics-panel,
+    .custom-scene-section {
+        padding: 1.1rem !important;
+    }
+
+    .topics-panel-header {
+        align-items: start;
+        flex-direction: column;
+    }
+
+    .hero-actions {
+        flex-direction: column;
+    }
+
+    .hero-link-btn {
+        justify-content: center;
+    }
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="scene-selection-container">
-    <div class="hero-section">
-        <h1 style="font-size: 3.5rem; font-weight: 800; margin-bottom: 1.5rem; background: linear-gradient(135deg, #FE4D01, #ea580c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: -0.02em;">
-            Chinese Speaking Practice
-        </h1>
-        <p style="font-size: 1.25rem; color: #6b7280; max-width: 600px; margin: 0 auto 3rem; font-weight: 400; line-height: 1.7;">
-            Choose a scenario or create your own to start a conversation with your AI language partner.
-        </p>
-    </div>
-
-
-
-    <!-- Custom Scene Section -->
-    <div class="custom-scene-section">
-        <h2 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
-            <i class="fas fa-edit" style="color: #2563eb;"></i>
-            Create Custom Scenario
-        </h2>
-        <form method="post" style="display: flex; flex-direction: column; gap: 1.5rem;">
-            {% csrf_token %}
-            <div style="position: relative;">
-                <textarea 
-                    style="width: 100%; min-height: 120px; padding: 1.5rem; border: 2px solid #e5e7eb; border-radius: 1rem; font-size: 1rem; font-family: inherit; resize: vertical; transition: all 0.3s ease; background: #f9fafb; color: #111827;"
-                    id="customScene" 
-                    name="scene" 
-                    rows="4" 
-                    placeholder="Describe your ideal conversation scenario... For example: 'Negotiating rent with a landlord in Beijing', 'Ordering street food in Shanghai', or 'Having a job interview for a tech company'..."
-                    onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px #dbeafe'; this.style.background='#ffffff';"
-                    onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'; this.style.background='#f9fafb';"
-                ></textarea>
+    <section class="hero-grid">
+        <div class="hero-panel">
+            <span class="hero-kicker">
+                <i class="fas fa-microphone-alt"></i>
+                Voice-First Practice
+            </span>
+            <h1 class="hero-title">Chinese Speaking Practice</h1>
+            <p class="hero-description">
+                Pick a scene, let the AI open first, then answer in short Chinese turns. Use a custom scenario when you want something specific, or choose a recommended topic when you just want to start quickly.
+            </p>
+            <div class="hero-steps">
+                <div class="hero-step">
+                    <strong>1. Pick a scene</strong>
+                    <span>Choose a recommended topic or describe your own situation.</span>
+                </div>
+                <div class="hero-step">
+                    <strong>2. AI asks first</strong>
+                    <span>The conversation opens naturally so you can react instead of planning everything up front.</span>
+                </div>
+                <div class="hero-step">
+                    <strong>3. Answer briefly</strong>
+                    <span>One or two sentences per turn works best for speaking flow.</span>
+                </div>
             </div>
-            <button type="submit" class="btn-customize">
-                <i class="fas fa-cog"></i>
-                Customise & Start Practice
-            </button>
-        </form>
-    </div>
+            <div class="hero-actions">
+                <a href="#recommended-scenes" class="hero-link-btn primary">
+                    <i class="fas fa-sparkles"></i>
+                    Browse Recommended Scenes
+                </a>
+                <a href="#custom-scene-builder" class="hero-link-btn secondary">
+                    <i class="fas fa-pen"></i>
+                    Write My Own Scene
+                </a>
+            </div>
+        </div>
 
-    <div style="display: flex; align-items: center; margin: 4rem 0; text-align: center; color: #6b7280; font-weight: 500; font-size: 0.875rem; letter-spacing: 0.05em; text-transform: uppercase;">
-        <div style="content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #d1d5db, transparent);"></div>
-        <span style="padding: 0 1.5rem; background: #f9fafb; border-radius: 9999px; display: flex; align-items: center; gap: 0.5rem;">
-            <i class="fas fa-magic" style="color: #FE4D01; margin-right: 0.5rem;"></i>
-            AI Generated Topics - Refresh for New Scenarios
-            <button id="refresh-topics-btn" class="refresh-button" onclick="refreshTopics()" title="Refresh topics">
-                <i class="fas fa-sync-alt"></i>
-            </button>
-        </span>
-        <div style="content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #d1d5db, transparent);"></div>
-    </div>
-
-    <!-- Dynamic AI Generated Scenes Grid -->
-    <form method="post" id="scene-form">
-        {% csrf_token %}
-        <div class="suggested-scenes-grid" id="topics-grid">
-            <!-- 条件渲染：异步加载模式 -->
-            {% if load_topics_async %}
-                <!-- 骨架屏加载状态 -->
-                <div id="skeleton-state" class="skeleton-container">
-                    {% for i in "123456" %}
-                    <div class="skeleton-card">
-                        <div class="skeleton-element skeleton-icon"></div>
-                        <div class="skeleton-element skeleton-title"></div>
-                        <div class="skeleton-element skeleton-description"></div>
-                        <div class="skeleton-element skeleton-description"></div>
-                        <div class="skeleton-element skeleton-badge"></div>
-                    </div>
-                    {% endfor %}
-                </div>
-                
-                <!-- 加载指示器 -->
-                <div id="loading-indicator" class="loading-indicator" style="display: none;">
-                    <div class="loading-content">
-                        <i class="fas fa-spinner loading-spinner"></i>
-                        <span class="loading-text">
-                            Generating AI-powered conversation topics<span class="loading-dots"></span>
-                        </span>
-                    </div>
-                </div>
-                
-                <!-- 错误状态 - 增强版本支持详细错误信息 -->
-                <div id="error-state" class="error-state" style="display: none;">
-                    <div class="error-container">
-                        <i class="fas fa-exclamation-triangle error-icon"></i>
-                        <h3 class="error-title">Unable to Generate Topics</h3>
-                        <p class="error-message">
-                            We're having trouble connecting to our AI service. You can try again or use the custom scenario option above to continue practicing.
-                        </p>
-                        <p class="error-suggestion" style="font-size: 0.875rem; color: #6b7280; margin-top: 0.75rem; line-height: 1.5;">
-                            Please try again or use the custom scenario option above to continue practicing.
-                        </p>
-                        <div class="error-actions">
-                            <button type="button" class="btn-retry" onclick="retryLoadTopics()">
-                                <i class="fas fa-redo"></i>
-                                Try Again
-                            </button>
-                            <button type="button" class="btn-fallback" onclick="showFallbackTopics()">
-                                <i class="fas fa-list"></i>
-                                Show Sample Topics
-                            </button>
-                        </div>
-                        <div class="error-details" style="margin-top: 1rem; padding: 1rem; background: #f9fafb; border-radius: 0.5rem; border-left: 4px solid #f59e0b; display: none;">
-                            <details>
-                                <summary style="cursor: pointer; font-size: 0.875rem; color: #6b7280; font-weight: 500;">
-                                    <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i>
-                                    Technical Details
-                                </summary>
-                                <div class="error-technical-info" style="margin-top: 0.5rem; font-size: 0.75rem; color: #6b7280; font-family: monospace;">
-                                    <!-- 技术错误信息将在这里显示 -->
-                                </div>
-                            </details>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 动态生成的话题内容容器 -->
-                <div id="topics-container" style="display: none;">
-                    <!-- 动态生成的话题卡片将插入这里 -->
-                </div>
-            {% else %}
-                <!-- 同步加载模式的备用内容 -->
-                <div class="sync-fallback-message">
-                    <p>Loading topics...</p>
+        <aside class="context-panel">
+            {% if profile_summary %}
+                <div class="context-card profile-card">
+                    <span class="context-card-label">Current Profile</span>
+                    <h2 class="context-card-title">Speaking setup</h2>
+                    <p class="context-card-text">{{ profile_summary }}</p>
                 </div>
             {% endif %}
-        </div>
-    </form>
+
+            {% if not profile_ready %}
+                <div class="context-card profile-alert">
+                    <span class="context-card-label">Profile Signal</span>
+                    <p class="context-card-text">
+                        Your learning goals and interests are still empty, so scenario matching is using generic recommendations.
+                        <a href="{% url 'accounts:profile' %}" class="context-card-link">Add your background here</a>.
+                    </p>
+                </div>
+            {% endif %}
+
+            <div class="context-card neutral-card">
+                <span class="context-card-label">Scene Source</span>
+                <p class="context-card-text">
+                    {% if active_template_count == 0 %}
+                        No curated scene templates have been added in the backend yet. The page will fall back to AI-generated topics until reusable scene descriptions are added in admin.
+                    {% else %}
+                        Recommended scenes combine your background with reusable backend templates to reduce repetition.
+                    {% endif %}
+                </p>
+            </div>
+        </aside>
+    </section>
+
+    <div class="selection-layout">
+        <!-- Custom Scene Section -->
+        <section class="custom-scene-section" id="custom-scene-builder">
+            <h2>
+                <i class="fas fa-edit" style="color: #2563eb;"></i>
+                Create Custom Scenario
+            </h2>
+            <p>Use this when you already know the situation you want to practise. Be concrete about location, goal, and who the AI should be.</p>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="scene_source" value="custom">
+                <input type="hidden" name="scene_template_id" value="">
+                <input type="hidden" name="scene_title" value="">
+                <div style="position: relative;">
+                    <textarea
+                        class="custom-scene-textarea"
+                        id="customScene"
+                        name="scene"
+                        rows="5"
+                        placeholder="Describe your ideal conversation scenario... For example: 'Negotiating rent with a landlord in Beijing', 'Ordering street food in Shanghai', or 'Having a job interview for a tech company'..."
+                    ></textarea>
+                </div>
+                <button type="submit" class="btn-customize">
+                    <i class="fas fa-cog"></i>
+                    Customise & Start Practice
+                </button>
+            </form>
+        </section>
+
+        <section class="topics-panel" id="recommended-scenes">
+            <div class="topics-panel-header">
+                <div class="topics-panel-copy">
+                    <h2 class="topics-panel-title">
+                        <i class="fas fa-sparkles" style="color: #FE4D01;"></i>
+                        Recommended Scenes
+                    </h2>
+                    <p>Start faster with AI-generated scenes tailored for conversational speaking practice. Refresh when you want a new set.</p>
+                </div>
+                <div class="topics-panel-tools">
+                    <span>Refresh for new scenarios</span>
+                    <button id="refresh-topics-btn" class="refresh-button" onclick="refreshTopics()" title="Refresh topics">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dynamic AI Generated Scenes Grid -->
+            <form method="post" id="scene-form">
+                {% csrf_token %}
+                <input type="hidden" name="scene_template_id" id="selected-scene-template-id" value="">
+                <input type="hidden" name="scene_source" id="selected-scene-source" value="custom">
+                <input type="hidden" name="scene_title" id="selected-scene-title" value="">
+                <div class="suggested-scenes-grid" id="topics-grid">
+                    <!-- 条件渲染：异步加载模式 -->
+                    {% if load_topics_async %}
+                        <!-- 骨架屏加载状态 -->
+                        <div id="skeleton-state" class="skeleton-container">
+                            {% for i in "123456" %}
+                            <div class="skeleton-card">
+                                <div class="skeleton-element skeleton-icon"></div>
+                                <div class="skeleton-element skeleton-title"></div>
+                                <div class="skeleton-element skeleton-description"></div>
+                                <div class="skeleton-element skeleton-description"></div>
+                                <div class="skeleton-element skeleton-badge"></div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- 加载指示器 -->
+                        <div id="loading-indicator" class="loading-indicator" style="display: none;">
+                            <div class="loading-content">
+                                <i class="fas fa-spinner loading-spinner"></i>
+                                <span class="loading-text">
+                                    Generating AI-powered conversation topics<span class="loading-dots"></span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- 错误状态 - 增强版本支持详细错误信息 -->
+                        <div id="error-state" class="error-state" style="display: none;">
+                            <div class="error-container">
+                                <i class="fas fa-exclamation-triangle error-icon"></i>
+                                <h3 class="error-title">Unable to Generate Topics</h3>
+                                <p class="error-message">
+                                    We're having trouble connecting to our AI service. You can try again or use the custom scenario option above to continue practicing.
+                                </p>
+                                <p class="error-suggestion" style="font-size: 0.875rem; color: #6b7280; margin-top: 0.75rem; line-height: 1.5;">
+                                    Please try again or use the custom scenario option above to continue practicing.
+                                </p>
+                                <div class="error-actions">
+                                    <button type="button" class="btn-retry" onclick="retryLoadTopics()">
+                                        <i class="fas fa-redo"></i>
+                                        Try Again
+                                    </button>
+                                    <button type="button" class="btn-fallback" onclick="showFallbackTopics()">
+                                        <i class="fas fa-list"></i>
+                                        Show Sample Topics
+                                    </button>
+                                </div>
+                                <div class="error-details" style="margin-top: 1rem; padding: 1rem; background: #f9fafb; border-radius: 0.5rem; border-left: 4px solid #f59e0b; display: none;">
+                                    <details>
+                                        <summary style="cursor: pointer; font-size: 0.875rem; color: #6b7280; font-weight: 500;">
+                                            <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i>
+                                            Technical Details
+                                        </summary>
+                                        <div class="error-technical-info" style="margin-top: 0.5rem; font-size: 0.75rem; color: #6b7280; font-family: monospace;">
+                                            <!-- 技术错误信息将在这里显示 -->
+                                        </div>
+                                    </details>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 动态生成的话题内容容器 -->
+                        <div id="topics-container" style="display: none;">
+                            <!-- 动态生成的话题卡片将插入这里 -->
+                        </div>
+                    {% else %}
+                        <!-- 同步加载模式的备用内容 -->
+                        <div class="sync-fallback-message">
+                            <p>Loading topics...</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </form>
+        </section>
+    </div>
 </div>
 
 <!-- Simplified Customization Modal -->
@@ -244,6 +606,9 @@
         <div style="padding: 3rem;">
             <form method="post" id="customize-form">
                 {% csrf_token %}
+                <input type="hidden" name="scene_source" value="custom">
+                <input type="hidden" name="scene_template_id" value="">
+                <input type="hidden" name="scene_title" value="">
                 <div style="margin-bottom: 2rem;">
                     <label for="modal-scene" style="display: block; font-weight: 600; margin-bottom: 0.75rem; color: #111827;">
                         <i class="fas fa-theater-masks" style="color: #2563eb; margin-right: 0.5rem;"></i>

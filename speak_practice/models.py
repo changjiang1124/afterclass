@@ -4,6 +4,21 @@ from django.db.models import Prefetch, Q
 from django.core.paginator import Paginator
 
 
+SCENE_LEVEL_CHOICES = [
+    ('beginner', 'Beginner'),
+    ('intermediate', 'Intermediate'),
+    ('advanced', 'Advanced'),
+]
+
+SCENE_SOURCE_CHOICES = [
+    ('custom', 'Custom'),
+    ('template', 'Template'),
+    ('ai_generated', 'AI Generated'),
+    ('fallback', 'Fallback'),
+    ('emergency_fallback', 'Emergency Fallback'),
+]
+
+
 class ChatSessionManager(models.Manager):
     """聊天会话管理器 (Chat session manager)"""
     
@@ -160,7 +175,26 @@ class ChatMessageManager(models.Manager):
 
 class ChatSession(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="用户 (User)")
+    scene_template = models.ForeignKey(
+        'PracticeSceneTemplate',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='sessions',
+        verbose_name="场景模板 (Scene Template)"
+    )
     scene = models.TextField(verbose_name="场景 (Scene)")
+    scene_source = models.CharField(
+        max_length=20,
+        choices=SCENE_SOURCE_CHOICES,
+        default='custom',
+        verbose_name="场景来源 (Scene Source)"
+    )
+    scene_signature = models.CharField(
+        max_length=40,
+        blank=True,
+        verbose_name="场景签名 (Scene Signature)"
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间 (Created At)")
 
     objects = ChatSessionManager()
@@ -171,6 +205,7 @@ class ChatSession(models.Model):
         verbose_name_plural = "聊天会话 (Chat Sessions)"
         indexes = [
             models.Index(fields=['user', '-created_at']),  # 用户会话查询优化 (User session query optimization)
+            models.Index(fields=['user', 'scene_signature']),
             models.Index(fields=['-created_at']),  # 时间排序优化 (Time sorting optimization)
         ]
 
@@ -224,3 +259,92 @@ class ChatMessage(models.Model):
         method_display = f" ({self.get_input_method_display()})" if self.input_method != 'text' else ""
         duration_display = f" [{self.audio_duration}s]" if self.audio_duration else ""
         return f"Message from {self.sender_type}{method_display}{duration_display} in session {self.session.id} at {self.timestamp}"
+
+
+class PracticeSceneTemplate(models.Model):
+    title = models.CharField(max_length=120, verbose_name="标题 (Title)")
+    description = models.TextField(verbose_name="描述 (Description)")
+    scene_prompt = models.TextField(verbose_name="场景提示词 (Scene Prompt)")
+    level = models.CharField(
+        max_length=20,
+        choices=SCENE_LEVEL_CHOICES,
+        default='beginner',
+        verbose_name="难度 (Level)"
+    )
+    icon = models.CharField(
+        max_length=50,
+        default='fas fa-comments',
+        verbose_name="图标 (Icon)"
+    )
+    category = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="分类 (Category)"
+    )
+    target_profile = models.TextField(
+        blank=True,
+        verbose_name="适用背景 (Target Profile)"
+    )
+    keywords = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name="关键词 (Keywords)"
+    )
+    is_active = models.BooleanField(default=True, verbose_name="启用 (Active)")
+    sort_order = models.PositiveIntegerField(default=0, verbose_name="排序 (Sort Order)")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间 (Created At)")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间 (Updated At)")
+
+    class Meta:
+        ordering = ['sort_order', 'title']
+        verbose_name = "口语场景模板 (Practice Scene Template)"
+        verbose_name_plural = "口语场景模板 (Practice Scene Templates)"
+
+    def __str__(self):
+        return f"{self.title} ({self.get_level_display()})"
+
+
+class UserSceneExposure(models.Model):
+    EXPOSURE_TYPE_CHOICES = [
+        ('shown', 'Shown'),
+        ('selected', 'Selected'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='scene_exposures')
+    scene_template = models.ForeignKey(
+        PracticeSceneTemplate,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='exposures'
+    )
+    session = models.ForeignKey(
+        ChatSession,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='scene_exposures'
+    )
+    scene_title = models.CharField(max_length=120, blank=True)
+    scene_text = models.TextField()
+    scene_signature = models.CharField(max_length=40)
+    scene_source = models.CharField(
+        max_length=20,
+        choices=SCENE_SOURCE_CHOICES,
+        default='custom'
+    )
+    exposure_type = models.CharField(max_length=20, choices=EXPOSURE_TYPE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "用户场景记录 (User Scene Exposure)"
+        verbose_name_plural = "用户场景记录 (User Scene Exposures)"
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['user', 'scene_signature']),
+            models.Index(fields=['exposure_type', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} {self.exposure_type} {self.scene_title or self.scene_text[:40]}"
