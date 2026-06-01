@@ -12,8 +12,7 @@ import requests
 from ..services.text_to_speech import TextToSpeechService, tts_service, generate_tts_audio, is_tts_available
 from ..services.exceptions import (
     TTSError, TTSQuotaExceededError, TTSServiceUnavailableError,
-    TextValidationError, APITimeoutError, APIAuthenticationError,
-    MissingAPIKeyError
+    TextValidationError, APITimeoutError, APIAuthenticationError
 )
 from ..services.config import VoiceServiceConfig
 
@@ -50,10 +49,15 @@ class TextToSpeechServiceTest(TestCase):
         self.assertIsNotNone(service.cache_service)
     
     @patch.object(VoiceServiceConfig, 'GOOGLE_API_KEY', None)
-    def test_service_initialization_without_api_key(self):
-        """测试没有API密钥时的初始化失败 (Test initialization failure without API key)"""
-        with self.assertRaises(MissingAPIKeyError):
-            TextToSpeechService()
+    def test_missing_api_key_enforced_at_call_not_construction(self):
+        """缺少 API 密钥时：构造不再抛异常（模块级单例需 import-safe），
+        而是在调用 generate_speech 时由 @require_valid_config 守卫报错。
+        (No key: construction succeeds; the key is enforced at call time, not construction.)"""
+        service = TextToSpeechService()
+        self.assertIsNone(service.api_key)
+
+        with self.assertRaises(ValueError):
+            service.generate_speech(self.test_text, self.test_language)
     
     @patch.object(VoiceServiceConfig, 'GOOGLE_API_KEY', 'test_key')
     def test_validate_text_length_valid_text(self):

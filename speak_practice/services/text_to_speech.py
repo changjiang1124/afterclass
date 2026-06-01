@@ -15,7 +15,7 @@ from .cache import tts_cache
 from .exceptions import (
     TTSError, TTSQuotaExceededError, TTSServiceUnavailableError,
     TextValidationError, APITimeoutError, APIAuthenticationError,
-    MissingAPIKeyError, handle_api_errors
+    handle_api_errors
 )
 
 logger = logging.getLogger(__name__)
@@ -32,9 +32,11 @@ class TextToSpeechService(TextToSpeechInterface):
         self.api_url = VoiceServiceConfig.get_google_tts_url()
         self.timeout = VoiceServiceConfig.TTS_GENERATION_TIMEOUT
         self.cache_service = tts_cache
-        
-        if not self.api_key:
-            raise MissingAPIKeyError("Google TTS")
+        # 不在构造时因缺 key 抛异常：模块级单例 tts_service 在 import 时实例化，
+        # 若此处抛异常会让任何 import 本模块的代码失败（脆弱）。key 的校验交给
+        # generate_speech 上的 @require_valid_config('GOOGLE_API_KEY')，缺 key 时在调用时报错。
+        # (Don't fail-fast on missing key here; the module-level singleton is built at import
+        #  time. The key is enforced at call time by generate_speech's decorator.)
     
     def validate_input(self, input_data: Any) -> bool:
         """

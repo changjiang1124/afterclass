@@ -55,13 +55,30 @@ class RateLimiter:
     
     @classmethod
     def get_client_ip(cls, request) -> str:
-        """获取客户端IP地址 (Get client IP address)"""
+        """获取客户端真实 IP (Get the client's real IP).
+
+        站点位于 Cloudflare → nginx 之后。按可信度优先取：
+          1. CF-Connecting-IP —— Cloudflare 设置的权威客户端 IP（在"源站只接受 CF 回源"
+             的前提下不可伪造）；
+          2. X-Real-IP —— nginx 设置的真实 IP；
+          3. X-Forwarded-For 最左值 —— 仅作回退（可被客户端伪造，不应单独信任）；
+          4. REMOTE_ADDR。
+        要彻底防 XFF 伪造，需在源站防火墙只放行 Cloudflare 回源网段。
+        (Prefer trusted proxy headers; XFF is spoofable and used only as a fallback.)
+        """
+        cf_ip = request.META.get('HTTP_CF_CONNECTING_IP')
+        if cf_ip:
+            return cf_ip.strip()
+
+        real_ip = request.META.get('HTTP_X_REAL_IP')
+        if real_ip:
+            return real_ip.strip()
+
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0].strip()
-        else:
-            ip = request.META.get('REMOTE_ADDR', '127.0.0.1')
-        return ip
+            return x_forwarded_for.split(',')[0].strip()
+
+        return request.META.get('REMOTE_ADDR', '127.0.0.1')
     
     @classmethod
     def is_rate_limited(cls, request, endpoint: str) -> Tuple[bool, Dict[str, Any]]:
