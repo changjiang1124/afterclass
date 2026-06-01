@@ -1541,34 +1541,6 @@ def get_tts_audio(text):
         print(f"Error in get_tts_audio: {e}")
         return None
 
-def transcribe_audio(audio_file):
-    headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"}
-    files = {'file': (audio_file.name, audio_file.read(), audio_file.content_type)}
-    data = {'model': 'whisper-1', 'language': 'zh'}
-    try:
-        response = requests.post(OPENAI_WHISPER_URL, headers=headers, files=files, data=data, timeout=20)
-        response.raise_for_status()
-        return response.json().get('text')
-    except requests.RequestException as e:
-        print(f"Error in transcribe_audio: {e}")
-        return None
-
-def translate_text_openai(text, target_language="en"):
-    headers = {"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"}
-    messages = [
-        {"role": "system", "content": f"Translate the following text to {target_language}."},
-        {"role": "user", "content": text}
-    ]
-    payload = {"model": "gpt-4o", "messages": messages}
-    try:
-        response = requests.post(OPENAI_API_URL, headers=headers, json=payload, timeout=15)
-        response.raise_for_status()
-        return response.json()['choices'][0]['message']['content']
-    except (requests.RequestException, KeyError, IndexError) as e:
-        print(f"Error in translate_text_openai: {e}")
-        return None
-
-
 def generate_dynamic_topic_cards(user=None, recent_examples=None, batch_size=10):
     """Generate 6 dynamic topic cards using AI for the scene selection page"""
     import random

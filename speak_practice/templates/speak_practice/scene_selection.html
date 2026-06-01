@@ -594,95 +594,11 @@
     </div>
 </div>
 
-<!-- Simplified Customization Modal -->
-<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease;" id="customizeModal">
-    <div style="background: #ffffff; border-radius: 1.5rem; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25); transform: scale(0.9) translateY(20px); transition: transform 0.3s ease; border: 1px solid #e5e7eb;">
-        <div style="padding: 3rem; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between;">
-            <h3 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: #111827;">Customise Your Practice Session</h3>
-            <button type="button" style="background: none; border: none; color: #9ca3af; cursor: pointer; padding: 0.75rem; border-radius: 0.75rem; transition: all 0.3s ease;" onclick="closeCustomizeModal()" onmouseover="this.style.color='#111827'; this.style.background='#f3f4f6';" onmouseout="this.style.color='#9ca3af'; this.style.background='none';">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div style="padding: 3rem;">
-            <form method="post" id="customize-form">
-                {% csrf_token %}
-                <input type="hidden" name="scene_source" value="custom">
-                <input type="hidden" name="scene_template_id" value="">
-                <input type="hidden" name="scene_title" value="">
-                <div style="margin-bottom: 2rem;">
-                    <label for="modal-scene" style="display: block; font-weight: 600; margin-bottom: 0.75rem; color: #111827;">
-                        <i class="fas fa-theater-masks" style="color: #2563eb; margin-right: 0.5rem;"></i>
-                        Scenario Description
-                    </label>
-                    <textarea 
-                        style="width: 100%; min-height: 120px; padding: 1.5rem; border: 2px solid #e5e7eb; border-radius: 1rem; font-size: 1rem; font-family: inherit; resize: vertical; transition: all 0.3s ease; background: #f9fafb; color: #111827; margin-bottom: 1rem;"
-                        id="modal-scene" 
-                        name="scene" 
-                        rows="5" 
-                        placeholder="Describe your conversation scenario in detail. The more specific you are, the better your practice session will be..."
-                        onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px #dbeafe'; this.style.background='#ffffff';"
-                        onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'; this.style.background='#f9fafb';"
-                    ></textarea>
-                    <div style="font-size: 0.875rem; color: #6b7280;">
-                        <i class="fas fa-lightbulb" style="color: #f59e0b; margin-right: 0.5rem;"></i>
-                        <strong>Pro Tip:</strong> Include context like location, relationship to other person, and your goal in the conversation.
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button type="button" style="background: #ffffff; color: #6b7280; border: 2px solid #d1d5db; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;" onclick="closeCustomizeModal()" onmouseover="this.style.borderColor='#3b82f6'; this.style.color='#2563eb';" onmouseout="this.style.borderColor='#d1d5db'; this.style.color='#6b7280';">
-                        Cancel
-                    </button>
-                    <button type="submit" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: #ffffff; border: none; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 0.5rem;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
-                        <i class="fas fa-play"></i>
-                        Start Custom Practice
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'speak_practice/topic-loader.js' %}"></script>
 <script>
-// 模态框功能
-function openCustomizeModal() {
-    const customText = document.getElementById('customScene').value;
-    document.getElementById('modal-scene').value = customText;
-    const modal = document.getElementById('customizeModal');
-    modal.style.display = 'flex';
-    modal.style.opacity = '1';
-    modal.style.visibility = 'visible';
-    modal.querySelector('div').style.transform = 'scale(1) translateY(0)';
-    document.body.style.overflow = 'hidden';
-}
-
-function closeCustomizeModal() {
-    const modal = document.getElementById('customizeModal');
-    modal.style.opacity = '0';
-    modal.style.visibility = 'hidden';
-    modal.querySelector('div').style.transform = 'scale(0.9) translateY(20px)';
-    setTimeout(() => {
-        modal.style.display = 'none';
-        document.body.style.overflow = '';
-    }, 300);
-}
-
-// 模态框事件监听器
-document.getElementById('customizeModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeCustomizeModal();
-    }
-});
-
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeCustomizeModal();
-    }
-});
-
 // 状态管理函数
 function showSkeletonState() {
     const skeletonState = document.getElementById('skeleton-state');
