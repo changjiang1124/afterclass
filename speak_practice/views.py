@@ -49,6 +49,10 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def scene_selection(request):
+    # Speaking Practice 暂时下线（功能未完善、答非所问）——入口已隐藏，这里把直接访问也重定向回 dashboard。
+    # 待功能完善后删除下面这行即可恢复。(Temporarily disabled; remove this redirect to restore.)
+    return redirect('dashboard:dashboard')
+
     profile = _get_student_profile(request.user)
     profile_summary = _build_profile_summary(profile)
     active_template_count = PracticeSceneTemplate.objects.filter(is_active=True).count()
@@ -111,6 +115,9 @@ def scene_selection(request):
 
 @login_required
 def chat_view(request, session_id):
+    # Speaking Practice 暂时下线 —— 直接访问聊天页也重定向回 dashboard（见 scene_selection 说明）。
+    return redirect('dashboard:dashboard')
+
     try:
         session = ChatSession.objects.get(id=session_id, user=request.user)
         messages = session.messages.order_by('timestamp')

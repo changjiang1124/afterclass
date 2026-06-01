@@ -13,31 +13,24 @@
             <div class="welcome-shell">
                 <div class="welcome-copy">
                     <span class="welcome-badge">
-                        <i class="fas fa-microphone-alt"></i>
-                        Speaking Practice Is Ready
+                        <i class="fas fa-keyboard"></i>
+                        Typing &amp; Pinyin Practice
                     </span>
                     <h1 class="welcome-title">Hello, {{ user.username }}!</h1>
                     <p class="welcome-subtitle">Pick one clear next step and keep the practice loop short.</p>
                     <p class="welcome-message">
-                        Start with live speaking when you want conversation flow, use typing when you want more control,
-                        and open pinyin support when pronunciation needs a quick check.
+                        Use typing practice to build sentence accuracy and character recall, and open the
+                        pinyin assistant whenever pronunciation needs a quick check.
                     </p>
                     <div class="hero-actions">
-                        <a href="{% url 'speak_practice:scene_selection' %}" class="hero-btn hero-btn-primary">
-                            <i class="fas fa-headset"></i>
-                            Start Speaking
+                        <a href="{% url 'typingchinese:home' %}" class="hero-btn hero-btn-primary">
+                            <i class="fas fa-keyboard"></i>
+                            Start Typing Practice
                         </a>
-                        {% if recent_speaking_session %}
-                            <a href="{% url 'speak_practice:chat_view' recent_speaking_session.id %}" class="hero-btn hero-btn-secondary">
-                                <i class="fas fa-history"></i>
-                                Continue Last Scene
-                            </a>
-                        {% else %}
-                            <a href="{% url 'accounts:profile' %}" class="hero-btn hero-btn-secondary">
-                                <i class="fas fa-user-cog"></i>
-                                Update Learning Profile
-                            </a>
-                        {% endif %}
+                        <a href="{% url 'pinyinit:index' %}" class="hero-btn hero-btn-secondary">
+                            <i class="fas fa-language"></i>
+                            Open Pinyin Assistant
+                        </a>
                     </div>
                 </div>
 
@@ -50,14 +43,6 @@
                     </div>
                     <div class="hero-metrics">
                         <div class="hero-metric-card">
-                            <span class="hero-metric-value">{{ speaking_session_count }}</span>
-                            <span class="hero-metric-label">Speaking Sessions</span>
-                        </div>
-                        <div class="hero-metric-card">
-                            <span class="hero-metric-value">{{ voice_message_count }}</span>
-                            <span class="hero-metric-label">Voice Turns</span>
-                        </div>
-                        <div class="hero-metric-card">
                             <span class="hero-metric-value">{{ typing_record_count }}</span>
                             <span class="hero-metric-label">Typing Attempts</span>
                         </div>
@@ -67,11 +52,7 @@
                         </div>
                     </div>
                     <div class="hero-note">
-                        {% if recent_speaking_session %}
-                            <strong>Last speaking scene:</strong> {{ recent_speaking_session.scene|truncatechars:72 }}
-                        {% else %}
-                            <strong>Best next move:</strong> start one short speaking scene and keep each turn under two sentences.
-                        {% endif %}
+                        <strong>Best next move:</strong> generate a short typing passage and aim for accuracy over speed.
                     </div>
                 </div>
             </div>
@@ -85,40 +66,16 @@
                     <span class="section-eyebrow">Core Practice</span>
                     <h2 class="section-title">Choose Your Practice Mode</h2>
                 </div>
-                <p class="section-description">Speaking is now the clearest entry point, with typing and pinyin as support tools around it.</p>
+                <p class="section-description">Typing builds accuracy and character recall; the pinyin assistant is one click away when you need it.</p>
             </div>
 
             <div class="feature-grid">
-                <article class="feature-card speaking-feature-card feature-card-primary">
-                    <div class="feature-card-top">
-                        <div class="feature-icon-wrapper">
-                            <i class="fas fa-microphone-alt card-icon"></i>
-                        </div>
-                        <span class="feature-pill">Recommended</span>
-                    </div>
-                    <h3>Speaking Practice</h3>
-                    <p>Choose or write a scene, then jump into a live Chinese conversation where the AI opens first and you answer in short turns.</p>
-                    <ul class="feature-points">
-                        <li>Realtime voice conversation</li>
-                        <li>Scene-based role play</li>
-                        <li>Pinyin-supported transcript history</li>
-                    </ul>
-                    <div class="feature-card-footer">
-                        <a href="{% url 'speak_practice:scene_selection' %}" class="btn btn-feature">
-                            <i class="fas fa-arrow-right"></i> Start Speaking
-                        </a>
-                        {% if recent_speaking_session %}
-                            <a href="{% url 'speak_practice:chat_view' recent_speaking_session.id %}" class="feature-secondary-link">Continue latest</a>
-                        {% endif %}
-                    </div>
-                </article>
-
-                <article class="feature-card typing-feature-card">
+                <article class="feature-card typing-feature-card feature-card-primary">
                     <div class="feature-card-top">
                         <div class="feature-icon-wrapper">
                             <i class="fas fa-keyboard card-icon"></i>
                         </div>
-                        <span class="feature-pill subtle">Control</span>
+                        <span class="feature-pill">Recommended</span>
                     </div>
                     <h3>Typing Practice</h3>
                     <p>Slow the pace down and focus on sentence accuracy, character recall, and text production with guided prompts.</p>
@@ -162,13 +119,13 @@
                 <div>
                     <span class="section-eyebrow">Best Flow</span>
                     <h3 class="practice-strip-title">A cleaner path through the product</h3>
-                    <p class="practice-strip-text">Speak first, review transcript and pinyin second, then use typing only when you want a slower form-focused loop.</p>
+                    <p class="practice-strip-text">Generate a short passage, type it carefully, check any tricky characters in the pinyin assistant, then repeat with fresh text.</p>
                 </div>
                 <div class="practice-strip-steps">
-                    <span>1. Pick a scene</span>
-                    <span>2. Talk in short turns</span>
-                    <span>3. Review transcript</span>
-                    <span>4. Repeat with a new scene</span>
+                    <span>1. Generate a passage</span>
+                    <span>2. Type it carefully</span>
+                    <span>3. Check pinyin if stuck</span>
+                    <span>4. Repeat with new text</span>
                 </div>
             </div>
         </section>
