@@ -243,7 +243,9 @@
 
 .feature-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* 两张功能卡（Typing / Pinyin）等宽同排；窄屏才在下方 @media 里压成单列。
+       (Two feature cards share one row at equal width; stacks only on small screens.) */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.2rem;
 }
 
@@ -440,8 +442,7 @@
 }
 
 @media (max-width: 991px) {
-    .welcome-shell,
-    .feature-grid {
+    .welcome-shell {
         grid-template-columns: 1fr;
     }
 
@@ -479,6 +480,10 @@
 
     .hero-metrics {
         grid-template-columns: 1fr 1fr;
+    }
+
+    .feature-grid {
+        grid-template-columns: 1fr;
     }
 
     .hero-actions,
