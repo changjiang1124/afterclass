@@ -288,7 +288,10 @@ IMPORTANT: This conversation is approaching the token limit. You should naturall
     except ChatSession.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Session not found'}, status=404)
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        # 不要把内部异常原文返回给客户端（信息泄露）；记录到日志、对外返回安全文案
+        # (Don't leak the raw exception to the client; log it, return a safe message.)
+        logger.error(f"Unexpected error in chat_api for user {request.user.id}: {str(e)}")
+        return _create_safe_error_response("Failed to process chat message", "server_error", 500)
 
 
 @secure_api('transcribe_audio', require_auth=True)
@@ -1419,7 +1422,7 @@ def get_ai_response(conversation_history, model="gpt-4o"):
         response.raise_for_status()
         return response.json()['choices'][0]['message']['content']
     except (requests.RequestException, KeyError, IndexError) as e:
-        print(f"Error in get_ai_response: {e}")
+        logger.error(f"Error in get_ai_response: {e}")
         return None
 
 
@@ -1538,7 +1541,7 @@ def get_tts_audio(text):
         response.raise_for_status()
         return response.json().get('audioContent')
     except requests.RequestException as e:
-        print(f"Error in get_tts_audio: {e}")
+        logger.error(f"Error in get_tts_audio: {e}")
         return None
 
 def generate_dynamic_topic_cards(user=None, recent_examples=None, batch_size=10):
@@ -1547,12 +1550,12 @@ def generate_dynamic_topic_cards(user=None, recent_examples=None, batch_size=10)
     
     # 检查API密钥是否配置
     if not OPENAI_API_KEY:
-        print("Warning: OPENAI_API_KEY not configured, using fallback topics")
+        logger.warning("OPENAI_API_KEY not configured, using fallback topics")
         raise ValueError("OpenAI API key not configured")
-    
+
     # 检查API密钥格式
     if not OPENAI_API_KEY.startswith('sk-'):
-        print("Warning: Invalid OpenAI API key format, using fallback topics")
+        logger.warning("Invalid OpenAI API key format, using fallback topics")
         raise ValueError("Invalid OpenAI API key format")
     
     batch_size = max(6, min(int(batch_size or 10), 12))
@@ -1603,13 +1606,13 @@ Use noticeably different settings, roles, and communicative goals across the lis
             "frequency_penalty": 0.55
         }
         
-        print(f"Making OpenAI API request to: {OPENAI_API_URL}")
+        logger.debug("Making OpenAI API request to: %s", OPENAI_API_URL)
         response = requests.post(OPENAI_API_URL, headers=headers, json=payload, timeout=30)
-        print(f"OpenAI API response status: {response.status_code}")
+        logger.debug("OpenAI API response status: %s", response.status_code)
         response.raise_for_status()
-        
+
         ai_response = response.json()['choices'][0]['message']['content']
-        print(f"AI Response: {ai_response}")  # Debug log
+        logger.debug("AI topic response: %s", ai_response)  # 完整响应仅 DEBUG 级别记录
         
         # 清理AI响应，移除可能的markdown格式
         cleaned_response = ai_response.strip()
@@ -1626,22 +1629,21 @@ Use noticeably different settings, roles, and communicative goals across the lis
             for topic in topics:
                 if not all(key in topic for key in ['title', 'description', 'level', 'icon']):
                     raise ValueError("Invalid topic structure")
-            print("Successfully generated AI topics")  # Debug log
+            logger.debug("Successfully generated AI topics")
             return topics
         else:
             raise ValueError("Invalid response format")
             
     except requests.exceptions.HTTPError as e:
         if hasattr(e, 'response') and e.response.status_code == 401:
-            print("Error: Invalid OpenAI API key - falling back to static topics")
+            logger.warning("Invalid OpenAI API key - falling back to static topics")
         elif hasattr(e, 'response') and e.response.status_code == 429:
-            print("Error: OpenAI API rate limit exceeded - falling back to static topics")
+            logger.warning("OpenAI API rate limit exceeded - falling back to static topics")
         else:
-            print(f"Error: OpenAI API HTTP error - falling back to static topics")
+            logger.warning("OpenAI API HTTP error - falling back to static topics")
         return get_fallback_topics()
     except (requests.RequestException, json.JSONDecodeError, KeyError, ValueError) as e:
-        print(f"Error generating dynamic topics: {e}")
-        print("Falling back to randomised static topics")  # Debug log
+        logger.warning("Error generating dynamic topics: %s; falling back to static topics", e)
         
         # 返回静态备用话题
         return get_fallback_topics()
@@ -2037,12 +2039,12 @@ Randomness seed: {random_seed}.{recent_block}"""
             })
         
     except requests.RequestException as e:
-        print(f"Error calling OpenAI API: {e}")
+        logger.error(f"Error calling OpenAI API in generate_scene_api: {e}")
         return JsonResponse({'error': 'Failed to generate scenarios'}, status=500)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON in request'}, status=400)
     except Exception as e:
-        print(f"Unexpected error in generate_scene_api: {e}")
+        logger.error(f"Unexpected error in generate_scene_api: {e}")
         return JsonResponse({'error': 'Internal server error'}, status=500)
 
 
