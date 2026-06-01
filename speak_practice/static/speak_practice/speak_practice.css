@@ -101,6 +101,8 @@
     --space-md: 1rem;
     --space-lg: 1.5rem;
     --space-xl: 2rem;
+    --space-2xl: 3rem;
+    --space-3xl: 4rem;
 
     /* Z-index layers */
     --z-dropdown: 1000;
@@ -111,12 +113,6 @@
     --z-popover: 1060;
     --z-tooltip: 1070;
     --z-toast: 1080;
-}
-    --space-md: 1rem;
-    --space-lg: 1.5rem;
-    --space-xl: 2rem;
-    --space-2xl: 3rem;
-    --space-3xl: 4rem;
 }
 
 /* Base Styles */
