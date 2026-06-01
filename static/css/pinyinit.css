@@ -1,0 +1,143 @@
+/* Pinyin Converter — 与 dashboard 一致的品牌化样式 (brand-aligned styling)
+   品牌色来自 main.css 的 :root（--primary-color: #FE4D01）。
+   样式从模板内联 <style> 迁出，统一卡片圆角/阴影与品牌橙按钮，去掉原来的红色按钮。 */
+
+.pinyin-container {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 2.5rem;
+    background-color: #ffffff;
+    border: 1px solid rgba(24, 24, 27, 0.08);
+    border-radius: 20px;
+    box-shadow: 0 24px 50px rgba(80, 33, 11, 0.08);
+}
+
+.pinyin-container .page-title {
+    text-align: center;
+    margin-bottom: 1.75rem;
+    color: #18181b;
+    font-weight: 700;
+}
+
+.pinyin-form {
+    margin-bottom: 1.75rem;
+}
+
+.pinyin-form label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.6rem;
+}
+
+.pinyin-container .form-control {
+    border-radius: 14px;
+    border: 1.5px solid #e5e7eb;
+    background: #f9fafb;
+    resize: vertical;
+    min-height: 150px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.pinyin-container .form-control:focus {
+    border-color: var(--primary-color, #FE4D01);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(254, 77, 1, 0.12);
+}
+
+/* 品牌橙渐变 pill 按钮，替换原先的红色按钮 (brand-orange pill button, replaces the old red one) */
+.btn-submit {
+    background: linear-gradient(135deg, var(--primary-color, #FE4D01), #ff7d3c);
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    padding: 0.75rem 1.75rem;
+    font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-submit:hover {
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(254, 77, 1, 0.24);
+}
+
+.result-box {
+    padding: 1.5rem;
+    background-color: #fff8f3;
+    border: 1px solid rgba(254, 77, 1, 0.14);
+    border-radius: 16px;
+    margin-top: 1.5rem;
+}
+
+/* About 信息框：红边 → 品牌橙边 + 橙色软底 (info box: red accent -> brand orange) */
+.info-box {
+    margin-top: 1.75rem;
+    padding: 1.25rem 1.5rem;
+    background-color: #fff8f3;
+    border-radius: 16px;
+    border-left: 4px solid var(--primary-color, #FE4D01);
+}
+
+.info-box h5 {
+    color: #18181b;
+    font-weight: 700;
+}
+
+.info-box p {
+    margin-bottom: 0;
+    color: #5b6472;
+    line-height: 1.65;
+}
+
+/* 汉字 / 拼音逐字展示 (per-character hanzi/pinyin display) */
+.hanzi-group {
+    display: inline-block;
+    text-align: center;
+    width: 42px;
+    margin: 0 2px;
+    vertical-align: top;
+}
+
+.pinyin {
+    font-size: 13px;
+    height: 20px;
+    color: #666;
+    margin-top: 1em;
+    font-family: 'Poppins', sans-serif;
+}
+
+.hanzi {
+    font-size: 30px;
+}
+
+.punctuation {
+    display: inline-block;
+    width: 30px;
+    margin: 0 2px;
+    text-align: left;
+    vertical-align: bottom;
+}
+
+.result-box p {
+    margin-bottom: 2em;
+}
+
+.result-box p:not(:last-child) {
+    border-bottom: 1px solid rgba(254, 77, 1, 0.12);
+    padding-bottom: 1.5em;
+}
+
+.paragraph-with-indent {
+    margin-top: 2em;
+    position: relative;
+}
+
+.result-box p:first-child {
+    margin-top: 0.5em;
+}
+
+@media (max-width: 768px) {
+    .pinyin-container {
+        padding: 1.5rem;
+    }
+}
