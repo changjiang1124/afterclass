@@ -1742,15 +1742,18 @@ def get_fallback_topics():
 def count_tokens_in_conversation(session_id):
     """Count approximate tokens in a conversation session"""
     session = ChatSession.objects.get(id=session_id)
-    messages = ChatMessage.objects.filter(session=session).order_by('created_at')
-    
+    # ChatMessage 的时间字段是 timestamp，没有 created_at —— 用 created_at 会抛 FieldError
+    # (ChatMessage's time field is timestamp, not created_at; created_at raises FieldError)
+    messages = ChatMessage.objects.filter(session=session).order_by('timestamp')
+
     total_tokens = 0
     for message in messages:
         if message.sender_type == 'user':
             # For user messages, count the text length
             content = message.message_content
-            if isinstance(content, dict) and 'text' in content:
-                text = content['text']
+            if isinstance(content, dict):
+                # user 消息实际存储在 chinese_text 键 (user message is stored under chinese_text)
+                text = content.get('chinese_text') or content.get('chinese') or content.get('text') or ''
             elif isinstance(content, str):
                 text = content
             else:

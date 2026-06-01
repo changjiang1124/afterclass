@@ -149,7 +149,10 @@ staticfiles/*
 
 ozfavour-196110-71c7adee6fba.json
 
-# Temporary test files
-test*.js
-test*.py
-test*.html
+# Temporary scratch test files in the repo ROOT only.
+# Anchored with a leading slash so app test suites (e.g. speak_practice/tests/test_*.py)
+# stay tracked. A bare "test*.py" pattern matches at every depth and silently
+# excluded the entire test suite from version control.
+/test*.js
+/test*.py
+/test*.html

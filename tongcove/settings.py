@@ -12,8 +12,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
-import socket
+import platform
 from dotenv import load_dotenv, dotenv_values
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,17 +40,33 @@ DASHBOARD_COLORS = [
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-%e+3a^b1)*&c)cg9-h*ti+9b&5f^n@(7%f0mh$=g177u6b(z%g"
+# 从环境变量读取，绝不硬编码在源码里 —— 提交进 git 的密钥会让任何人伪造 session / 签名 cookie / CSRF token
+# (Read from the environment; never hardcode. A committed key lets anyone forge sessions / CSRF tokens.)
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-
-# CJs-MBP-1421.local is my local machine
-if socket.gethostname() == 'CJs-MBP-1421.local':
+# 本地开发是 macOS，生产是 Linux VM —— 因此 macOS 上自动开启 DEBUG，Linux 默认关闭。
+# 也可用 DEBUG 环境变量显式覆盖（DEBUG=true / DEBUG=false）。
+# 生产环境绝不能以 DEBUG=True 运行：会泄露完整 traceback / settings，并使下方的生产加固块失效。
+# (Local dev is macOS, production is a Linux VM; DEBUG auto-on for macOS, off for Linux. Override via DEBUG env var.)
+_debug_env = os.environ.get('DEBUG', '').strip().lower()
+if _debug_env in ('true', '1', 'yes'):
     DEBUG = True
+elif _debug_env in ('false', '0', 'no'):
+    DEBUG = False
 else:
-    DEBUG = True
+    DEBUG = platform.system() == 'Darwin'
 
-ALLOWED_HOSTS = ['127.0.0.1', 'afterclass.learnchineseperth.com.au']
+if not SECRET_KEY:
+    if DEBUG:
+        # 仅开发期回退，DEBUG=False 时绝不会用到 (Dev-only fallback; never used in production.)
+        SECRET_KEY = 'django-insecure-dev-only-key-do-not-use-in-production'
+    else:
+        raise ImproperlyConfigured(
+            'SECRET_KEY environment variable is required when DEBUG is False'
+        )
+
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'afterclass.learnchineseperth.com.au']
 
 
 # Application definition
@@ -271,7 +288,13 @@ X_FRAME_OPTIONS = 'DENY'
 
 # Production Security Settings (only apply in production)
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
+    # 站点位于 nginx/Cloudflare 之后（由它们终止 TLS）。让 Django 信任 X-Forwarded-Proto，
+    # 使 request.is_secure() 正确、SSL 重定向不会死循环（需代理设置该头，nginx/Cloudflare 默认会）。
+    # (Behind nginx/Cloudflare TLS termination; trust X-Forwarded-Proto to avoid redirect loops.)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    # 可通过环境变量关闭，以防代理链是纯 HTTP 时产生重定向死循环
+    # (Toggleable in case the proxy chain is HTTP-only.)
+    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True').lower() == 'true'
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 31536000  # 1 year
