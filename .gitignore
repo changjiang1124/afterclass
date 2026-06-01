@@ -141,7 +141,6 @@ cython_debug/
 
 pre-release.py
 
-deploy.sh
 GEMINI.md
 
 
