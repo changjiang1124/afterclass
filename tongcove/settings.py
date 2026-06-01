@@ -131,6 +131,18 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
+        # SQLite 并发加固 (Django 5.1+ 支持 SQLite OPTIONS.init_command)：
+        #   journal_mode=WAL  —— 允许读写并发，缓解多 worker 下的 "database is locked"
+        #                        （DatabaseCache 的限流写、TTS 缓存写、业务写共用一库时尤其重要）
+        #   synchronous=NORMAL —— WAL 下安全且更快
+        #   busy_timeout=5000  —— 拿不到锁时最多等 5s 再报错，而非立即失败
+        "OPTIONS": {
+            "init_command": (
+                "PRAGMA journal_mode=WAL; "
+                "PRAGMA synchronous=NORMAL; "
+                "PRAGMA busy_timeout=5000;"
+            ),
+        },
     }
 }
 
@@ -252,8 +264,10 @@ CACHES = {
         'LOCATION': 'afterclass_cache',  # 数据库缓存表名 (DB cache table name)
         'TIMEOUT': 300,  # 默认 5 分钟 (default 5 minutes)
         'OPTIONS': {
-            # 提高上限，避免大体积 TTS 音频被频繁逐出（24h TTL 的音频应能留存）
-            # (Higher cap so large TTS audio entries are not constantly culled.)
+            # 提高上限以降低逐出频率（默认 300 太小，大体积 TTS 音频会被快速清掉）。
+            # 注意：DatabaseCache 的 cull 不是 LRU、也不看 TTL 剩余 —— 超过上限时先删过期行、
+            # 再按 cache_key 近似随机删除一部分；所以高上限只是降低触发概率，并不保证某条音频留满 24h。
+            # (DatabaseCache cull is not LRU; a high cap only reduces eviction frequency.)
             'MAX_ENTRIES': 10000,
             'CULL_FREQUENCY': 4,
         }

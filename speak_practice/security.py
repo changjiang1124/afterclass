@@ -494,27 +494,10 @@ class InputSanitizer:
         r'data:application/javascript'
     ]
     
-    # SQL注入模式 (SQL injection patterns)
-    SQL_INJECTION_PATTERNS = [
-        r'(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE)\b)',
-        r'(\b(UNION|OR|AND)\s+\d+\s*=\s*\d+)',
-        r'(\b(OR|AND)\s+[\'"]?\w+[\'"]?\s*=\s*[\'"]?\w+[\'"]?)',
-        r'[\'"];?\s*(DROP|DELETE|INSERT|UPDATE)',
-        r'(\b(EXEC|EXECUTE)\s*\()',
-        r'(\b(SP_|XP_)\w+)',
-        r'(--|\#|/\*|\*/)',
-    ]
-    
-    # 命令注入模式 (Command injection patterns)
-    COMMAND_INJECTION_PATTERNS = [
-        r'(\b(system|exec|eval|shell_exec|passthru|popen|proc_open)\s*\()',
-        r'(\$\(.*\))',
-        r'(`.*`)',
-        r'(\|\s*(rm|del|format|fdisk|mkfs))',
-        r'(&&|\|\||;)\s*(rm|del|format)',
-        r'(\b(wget|curl|nc|netcat|telnet|ssh)\b)',
-    ]
-    
+    # 注：原 SQL_INJECTION_PATTERNS / COMMAND_INJECTION_PATTERNS 已移除 —— 本项目用 Django 参数化 ORM、
+    # 从不把用户输入当 shell 执行，这类黑名单无安全收益且会误杀正常语言输入（详见 sanitize_text 内注释）。
+    # (SQL/command-injection blocklists removed: parameterised ORM + no shell exec → zero value, real harm.)
+
     @classmethod
     def sanitize_text(cls, text: str, max_length: int = 1000, allow_html: bool = False) -> str:
         """
