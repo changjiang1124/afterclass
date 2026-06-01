@@ -42,7 +42,7 @@ class SpeechRecognitionService(SpeechRecognitionInterface):
         if not self.api_key:
             raise MissingAPIKeyError("OpenAI")
     
-    @require_valid_config
+    @require_valid_config('OPENAI_API_KEY')
     @handle_voice_service_errors
     def validate_input(self, input_data: Any) -> bool:
         """
@@ -108,7 +108,7 @@ class SpeechRecognitionService(SpeechRecognitionInterface):
         
         return True
     
-    @require_valid_config
+    @require_valid_config('OPENAI_API_KEY')
     @handle_voice_service_errors
     def process(self, input_data: Any) -> Dict[str, Any]:
         """

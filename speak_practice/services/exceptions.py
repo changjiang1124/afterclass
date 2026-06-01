@@ -2,6 +2,8 @@
 语音处理服务异常类定义 (Voice Processing Service Exception Classes)
 """
 
+from functools import wraps
+
 
 class VoiceServiceError(Exception):
     """语音服务基础异常类 (Base voice service exception class)"""
@@ -176,14 +178,19 @@ def handle_api_errors(service_name: str):
         service_name: 服务名称 (Service name)
     """
     def decorator(func):
+        @wraps(func)
         def wrapper(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
-            except APIError:
-                # 重新抛出已知的API异常 (Re-raise known API exceptions)
+            except VoiceServiceError:
+                # 任何已分类的语音服务异常（APIError / TTSError / TranslationError 等）
+                # 原样向上抛，保留其语义与 error_code —— 不要再包装成 APIError，
+                # 否则上层 `except (TTSError, ...)` 永远命中不到。
+                # (Propagate any already-typed VoiceServiceError as-is; do NOT re-wrap,
+                #  otherwise callers' `except (TTSError, ...)` branches can never match.)
                 raise
             except Exception as e:
-                # 将未知异常包装为API异常 (Wrap unknown exceptions as API exceptions)
+                # 仅把真正未知的异常包装为 APIError (Wrap only genuinely unknown exceptions)
                 raise APIError(f"{service_name} API error: {str(e)}")
         return wrapper
     return decorator

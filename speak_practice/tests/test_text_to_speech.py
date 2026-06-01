@@ -282,11 +282,12 @@ class TextToSpeechServiceTest(TestCase):
         """测试无效文本的语音生成 (Test speech generation with invalid text)"""
         service = TextToSpeechService()
         
-        # 由于异常装饰器的存在，会抛出APIError而不是TextValidationError (Due to exception decorator, APIError will be thrown instead of TextValidationError)
-        with self.assertRaises(Exception):
+        # 异常装饰器修复后，TextValidationError 会原样透传（不再被包装成 APIError）
+        # (After the decorator fix, TextValidationError propagates as-is instead of being wrapped.)
+        with self.assertRaises(TextValidationError):
             service.generate_speech("", self.test_language)
-        
-        with self.assertRaises(Exception):
+
+        with self.assertRaises(TextValidationError):
             service.generate_speech("   ", self.test_language)
     
     @patch.object(VoiceServiceConfig, 'GOOGLE_API_KEY', 'test_key')

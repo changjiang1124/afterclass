@@ -527,18 +527,18 @@ class InputSanitizer:
         # 移除XSS攻击模式 (Remove XSS attack patterns)
         for pattern in cls.XSS_PATTERNS:
             text = re.sub(pattern, '', text, flags=re.IGNORECASE | re.DOTALL)
-        
-        # 移除SQL注入模式 (Remove SQL injection patterns)
-        for pattern in cls.SQL_INJECTION_PATTERNS:
-            text = re.sub(pattern, '', text, flags=re.IGNORECASE)
-        
-        # 移除命令注入模式 (Remove command injection patterns)
-        for pattern in cls.COMMAND_INJECTION_PATTERNS:
-            text = re.sub(pattern, '', text, flags=re.IGNORECASE)
-        
+
+        # 注意：不再对 SQL/命令关键字做黑名单剥离。
+        # 本项目全程使用 Django 参数化 ORM（无裸 SQL 拼接），也从不把用户输入当 shell 命令执行，
+        # 因此剥离 SELECT/UPDATE/DELETE/and/or、rm/curl 等关键字几乎没有安全收益，
+        # 却会破坏这个中英文学习聊天里的正常输入（如 "update my plan" / "select the red one"）。
+        # SQL 安全由 ORM 保证，XSS 由上面的转义 + 模板/前端输出转义保证。
+        # (No SQL/command keyword stripping: parameterised ORM handles SQL safety;
+        #  blocklisting natural-language words corrupted legitimate learner input.)
+
         # 清理多余的空白字符 (Clean excessive whitespace)
         text = re.sub(r'\s+', ' ', text).strip()
-        
+
         return text
     
     @classmethod
@@ -562,25 +562,17 @@ class InputSanitizer:
             return validation_result
         
         threat_count = 0
-        
-        # 检查XSS模式 (Check XSS patterns)
+
+        # 仅检测 XSS 模式：这是唯一对本应用有实际意义的注入面（用户内容会被渲染）。
+        # SQL/命令注入检测已移除 —— 参数化 ORM 已保证 SQL 安全，且把正常语言输入
+        # （含 update/select/delete 等普通英文词）误判为威胁会拒收合法消息。
+        # (Only XSS detection is meaningful here; SQL/command checks removed to avoid
+        #  rejecting legitimate natural-language input in this learning chat.)
         for pattern in cls.XSS_PATTERNS:
             if re.search(pattern, text, re.IGNORECASE | re.DOTALL):
                 validation_result['threats_detected'].append(f'XSS pattern detected: {pattern}')
                 threat_count += 1
-        
-        # 检查SQL注入模式 (Check SQL injection patterns)
-        for pattern in cls.SQL_INJECTION_PATTERNS:
-            if re.search(pattern, text, re.IGNORECASE):
-                validation_result['threats_detected'].append(f'SQL injection pattern detected: {pattern}')
-                threat_count += 1
-        
-        # 检查命令注入模式 (Check command injection patterns)
-        for pattern in cls.COMMAND_INJECTION_PATTERNS:
-            if re.search(pattern, text, re.IGNORECASE):
-                validation_result['threats_detected'].append(f'Command injection pattern detected: {pattern}')
-                threat_count += 1
-        
+
         # 确定风险级别 (Determine risk level)
         if threat_count == 0:
             validation_result['risk_level'] = 'low'

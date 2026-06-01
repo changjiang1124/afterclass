@@ -74,7 +74,7 @@ class TextToSpeechService(TextToSpeechInterface):
         
         return True
     
-    @require_valid_config
+    @require_valid_config('GOOGLE_API_KEY')
     @handle_api_errors("Google TTS")
     def generate_speech(self, text: str, language_code: str = 'cmn-CN') -> str:
         """

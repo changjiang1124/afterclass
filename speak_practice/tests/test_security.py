@@ -173,21 +173,26 @@ class InputSanitizerTest(TestCase):
         self.assertIn('&lt;script&gt;', clean_text)
         self.assertIn('Hello World', clean_text)
     
-    def test_sql_injection_prevention(self):
-        """测试SQL注入防护 (Test SQL injection prevention)"""
-        malicious_text = "'; DROP TABLE users; --"
-        clean_text = InputSanitizer.sanitize_text(malicious_text)
-        
-        self.assertNotIn('DROP TABLE', clean_text)
-        self.assertNotIn('--', clean_text)
-    
-    def test_command_injection_prevention(self):
-        """测试命令注入防护 (Test command injection prevention)"""
-        malicious_text = "test && rm -rf /"
-        clean_text = InputSanitizer.sanitize_text(malicious_text)
-        
-        self.assertNotIn('rm -rf', clean_text)
-        self.assertNotIn('&&', clean_text)
+    def test_sql_words_preserved_safety_is_orm_responsibility(self):
+        """SQL 安全由参数化 ORM 保证，不靠剥离输入；普通英文词必须原样保留。
+        (SQL safety comes from the parameterised ORM, not input mangling — keep ordinary words.)"""
+        # 学习者消息里很自然会出现 update/select/delete 等词，旧黑名单会把它们删掉，肢解句子
+        text = "Please update my order and select the green tea, then delete the old note"
+        clean_text = InputSanitizer.sanitize_text(text)
+
+        self.assertIn('update', clean_text)
+        self.assertIn('select', clean_text)
+        self.assertIn('delete', clean_text)
+
+    def test_command_words_preserved_input_never_executed(self):
+        """命令样式的词不再被剥离 —— 应用从不把用户输入当 shell 命令执行。
+        (Command-like words are no longer stripped; user input is never run as a shell command.)"""
+        text = "Developers use curl and wget to download files and then run the report"
+        clean_text = InputSanitizer.sanitize_text(text)
+
+        self.assertIn('curl', clean_text)
+        self.assertIn('wget', clean_text)
+        self.assertIn('run', clean_text)
     
     def test_length_limitation(self):
         """测试长度限制 (Test length limitation)"""
@@ -399,17 +404,18 @@ class SecurityIntegrationTest(TestCase):
     def test_translate_text_api_security(self, mock_translate, mock_tts):
         """测试翻译API安全性 (Test translate text API security)
 
-        translate_text_api 同样"先清洗后放行"：SQL 注入片段(DROP / --)在调用翻译服务前已被剥离，
-        请求成功(200)，但传给下游服务的文本必须不含注入关键字。
-        (translate_text_api sanitises-then-allows: SQL-injection fragments (DROP / --) are stripped
-         before the translation service is called; the text reaching the service must be clean.)
+        translate_text_api 通过 HTML 转义中和危险字符（如引号 / 尖括号），但不再剥离 SQL 关键字：
+        SQL 安全由参数化 ORM 保证，而翻译服务只是翻译文本、从不执行 SQL，因此把 DROP/-- 当注入
+        删掉既无收益又会破坏正常输入。请求成功(200)，传给下游的文本被转义但内容保留。
+        (Dangerous chars are HTML-escaped; SQL keywords are NOT stripped — SQL safety is the ORM's job
+         and the translation service never executes SQL.)
         """
         mock_translate.return_value = {'translated_text': '你好世界'}
         # mock 掉 TTS，避免测试发起真实的 Google TTS 网络请求(否则会因 referer 被拒并重试,拖慢测试)
         # (mock TTS so the test makes no real Google TTS network call — otherwise it retries and stalls)
         mock_tts.return_value = 'fake_audio_data'
 
-        # 测试SQL注入尝试 (Test SQL injection attempt)
+        # 含有 SQL 样式片段 + 引号的输入 (input with SQL-like fragment + a quote)
         malicious_data = {
             'text': "Hello'; DROP TABLE users; --"
         }
@@ -420,14 +426,17 @@ class SecurityIntegrationTest(TestCase):
             content_type='application/json'
         )
 
-        # 注入内容被中和后请求成功 (request succeeds once the injection is neutralised)
+        # 请求成功 (request succeeds)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(mock_translate.called)
 
-        # 传给翻译服务的文本已剔除 SQL 注入片段 (text passed downstream has injection fragments stripped)
         passed_text = mock_translate.call_args[0][0]['text']
-        self.assertNotIn('DROP', passed_text.upper())
-        self.assertNotIn('--', passed_text)
+        # 引号被 HTML 转义中和 (the raw quote is HTML-escaped, neutralising HTML/XSS injection)
+        self.assertNotIn("'", passed_text)
+        self.assertIn('&#x27;', passed_text)
+        # 正常内容与 SQL 样式词均原样保留，未被肢解 (legitimate content / SQL-like words preserved intact)
+        self.assertIn('Hello', passed_text)
+        self.assertIn('DROP', passed_text.upper())
 
 
 class SecurityConfigTest(TestCase):
