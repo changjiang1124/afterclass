@@ -1,0 +1,18 @@
+[Unit]
+Description=GitHub webhook listener for afterclass auto-deploy
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/afterclass
+EnvironmentFile=/etc/afterclass-webhook.env
+ExecStart=/var/www/afterclass/.venv/bin/python /var/www/afterclass/webhook/listener.py
+Restart=on-failure
+RestartSec=3
+StandardOutput=append:/var/www/afterclass/logs/webhook.log
+StandardError=append:/var/www/afterclass/logs/webhook.log
+
+[Install]
+WantedBy=multi-user.target

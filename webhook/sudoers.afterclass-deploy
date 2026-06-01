@@ -1,0 +1,5 @@
+# Allow www-data to restart the afterclass gunicorn service without a password.
+# Install with: sudo install -m 0440 -o root -g root \
+#   /var/www/afterclass/webhook/sudoers.afterclass-deploy \
+#   /etc/sudoers.d/afterclass-deploy
+www-data ALL=(root) NOPASSWD: /usr/bin/systemctl restart afterclass, /usr/bin/systemctl status afterclass, /usr/bin/systemctl status afterclass --no-pager
