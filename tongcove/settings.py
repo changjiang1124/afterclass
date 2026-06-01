@@ -237,14 +237,25 @@ LOGGING = {
     },
 }
 
-# Cache configuration for IP location caching
+# 缓存配置 (Cache configuration)
+# 使用数据库缓存表（DatabaseCache）而非 LocMemCache：
+#   - LocMemCache 是每进程独立的，多 worker（gunicorn）部署下限流计数互不可见 →
+#     实际限额变成 配置值 × worker 数，且重启即丢；
+#   - 大体积的 TTS base64 音频在 MAX_ENTRIES=1000 的内存缓存里会被快速逐出、命中率极低，
+#     且每个 worker 各存一份占内存。
+# 改为 DatabaseCache 后：限流计数、TTS/翻译缓存、IP 地理缓存在所有 worker 间一致且持久。
+# 表通过 migration speak_practice/0005 由 createcachetable 创建。
+# (DatabaseCache gives cross-worker-consistent rate limiting + persistent audio cache.)
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-        'TIMEOUT': 300,  # 5 minutes
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'afterclass_cache',  # 数据库缓存表名 (DB cache table name)
+        'TIMEOUT': 300,  # 默认 5 分钟 (default 5 minutes)
         'OPTIONS': {
-            'MAX_ENTRIES': 1000,
+            # 提高上限，避免大体积 TTS 音频被频繁逐出（24h TTL 的音频应能留存）
+            # (Higher cap so large TTS audio entries are not constantly culled.)
+            'MAX_ENTRIES': 10000,
+            'CULL_FREQUENCY': 4,
         }
     }
 }
